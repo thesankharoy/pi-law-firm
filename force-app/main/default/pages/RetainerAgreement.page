@@ -1,0 +1,965 @@
+<apex:page
+    applyBodyTag="false"
+    applyHtmlTag="false"
+    showHeader="false"
+    sidebar="false"
+    docType="html-5.0">
+
+<!--
+════════════════════════════════════════════════════════════════════════════
+  DELIPAT PI INTAKE PLATFORM
+  Visualforce Retainer Agreement Template
+  Version: 1.0  |  June 2026
+
+  USAGE:
+    /apex/RetainerAgreement?id={Opportunity.Id}
+
+  CONTROLLER FIELDS EXPECTED (PIRetainerController):
+    firmName, firmAddress, firmPhone, firmEmail, firmBarNumber
+    clientFullName, clientAddress, clientPhone, clientEmail, clientDOB
+    incidentType, incidentDate, incidentLocation
+    contingencyPercent, contingencyPercentTrial
+    retainerDate, retainerRefNumber
+    attorneyName, attorneyBarNumber, attorneySignatureURL
+    clientSignatureURL, clientInitials
+    isSigned (Boolean)
+    signedDate
+
+  PDF RENDERING NOTE:
+    renderAs="pdf" uses the Salesforce PDF renderer (Flying Saucer / iText).
+    - Use inline styles only — external stylesheets are not supported.
+    - No JavaScript — PDF renderer ignores it.
+    - Use points (pt) for font sizes; cm or in for page dimensions.
+    - Avoid CSS grid — use tables for layout in PDF mode.
+    - @page rule controls page size and margins.
+    - page-break-before / page-break-after control pagination.
+
+  TO RENDER AS HTML (for preview / e-sign iframe):
+    Remove renderAs="pdf" and contentType attributes from <apex:page>.
+    The page will render as a standard HTML document for browser viewing.
+════════════════════════════════════════════════════════════════════════════
+-->
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Retainer Agreement — DeliPat Law Group, PLLC</title>
+    <style>
+
+        /* ── Page Setup ─────────────────────────────────────────────────── */
+        @page {
+            size: letter;
+            margin: 2.2cm 2.4cm 2.8cm 2.4cm;
+            @bottom-center {
+                content: "CONFIDENTIAL — " string(firmName) " — Page " counter(page) " of " counter(pages);
+                font-family: Georgia, serif;
+                font-size: 7.5pt;
+                color: #888;
+                letter-spacing: 0.04em;
+            }
+        }
+
+        @page :first {
+            @bottom-center { content: ""; }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 10.5pt;
+            color: #1a1a1a;
+            line-height: 1.65;
+            background: #fff;
+        }
+
+        /* ── Cover Header ───────────────────────────────────────────────── */
+        .cover-header {
+            border-bottom: 3px solid #1B2A4A;
+            padding-bottom: 18pt;
+            margin-bottom: 22pt;
+        }
+
+        .firm-name-display {
+            font-family: "Palatino Linotype", Palatino, Georgia, serif;
+            font-size: 22pt;
+            font-weight: bold;
+            color: #1B2A4A;
+            letter-spacing: 0.02em;
+            line-height: 1.2;
+        }
+
+        .firm-tagline {
+            font-family: Georgia, serif;
+            font-size: 8.5pt;
+            color: #6B7C93;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-top: 3pt;
+        }
+
+        .firm-contact-line {
+            font-size: 8.5pt;
+            color: #444;
+            margin-top: 6pt;
+        }
+
+        .doc-title-block {
+            text-align: center;
+            margin: 24pt 0 20pt 0;
+            border-top: 1px solid #C8D6E5;
+            border-bottom: 1px solid #C8D6E5;
+            padding: 14pt 0;
+        }
+
+        .doc-title-main {
+            font-family: "Palatino Linotype", Palatino, Georgia, serif;
+            font-size: 16pt;
+            font-weight: bold;
+            color: #1B2A4A;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .doc-title-sub {
+            font-size: 9pt;
+            color: #6B7C93;
+            margin-top: 4pt;
+            letter-spacing: 0.06em;
+        }
+
+        .doc-ref-row {
+            display: table;
+            width: 100%;
+            margin-top: 12pt;
+        }
+
+        .doc-ref-cell {
+            display: table-cell;
+            font-size: 8.5pt;
+            color: #444;
+        }
+
+        .doc-ref-cell.right {
+            text-align: right;
+        }
+
+        /* ── Party Info Table ───────────────────────────────────────────── */
+        .parties-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18pt 0 14pt 0;
+            font-size: 9.5pt;
+        }
+
+        .parties-table th {
+            background-color: #1B2A4A;
+            color: #fff;
+            font-family: Georgia, serif;
+            font-size: 8pt;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 6pt 10pt;
+            text-align: left;
+        }
+
+        .parties-table td {
+            padding: 5pt 10pt;
+            border-bottom: 1px solid #E8EDF2;
+            vertical-align: top;
+        }
+
+        .parties-table tr:nth-child(even) td {
+            background-color: #F9FAFB;
+        }
+
+        .label-cell {
+            color: #6B7C93;
+            font-size: 8pt;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            width: 28%;
+            white-space: nowrap;
+        }
+
+        .value-cell {
+            font-weight: bold;
+            color: #1a1a1a;
+        }
+
+        /* ── Section Headings ───────────────────────────────────────────── */
+        .section-heading {
+            font-family: "Palatino Linotype", Palatino, Georgia, serif;
+            font-size: 11pt;
+            font-weight: bold;
+            color: #1B2A4A;
+            margin-top: 22pt;
+            margin-bottom: 8pt;
+            padding-bottom: 3pt;
+            border-bottom: 1.5px solid #C8D6E5;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .section-number {
+            color: #2E5F8A;
+            margin-right: 4pt;
+        }
+
+        /* ── Body Text ──────────────────────────────────────────────────── */
+        p.clause {
+            margin-bottom: 9pt;
+            text-align: justify;
+            font-size: 10pt;
+            line-height: 1.7;
+        }
+
+        p.clause-indent {
+            margin-bottom: 9pt;
+            margin-left: 18pt;
+            text-align: justify;
+            font-size: 10pt;
+            line-height: 1.7;
+        }
+
+        .clause-label {
+            font-weight: bold;
+            color: #1B2A4A;
+        }
+
+        ul.clause-list {
+            margin: 6pt 0 10pt 24pt;
+            font-size: 10pt;
+            line-height: 1.65;
+        }
+
+        ul.clause-list li {
+            margin-bottom: 5pt;
+        }
+
+        .highlight-box {
+            border: 1px solid #2E5F8A;
+            background-color: #F4F6F9;
+            padding: 10pt 14pt;
+            margin: 14pt 0;
+            font-size: 10pt;
+            line-height: 1.65;
+        }
+
+        .highlight-box .highlight-label {
+            font-weight: bold;
+            color: #1B2A4A;
+            font-size: 9pt;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            display: block;
+            margin-bottom: 4pt;
+        }
+
+        .fee-display {
+            font-family: "Palatino Linotype", Palatino, Georgia, serif;
+            font-size: 20pt;
+            font-weight: bold;
+            color: #1B2A4A;
+            text-align: center;
+            margin: 10pt 0 4pt 0;
+        }
+
+        .fee-caption {
+            text-align: center;
+            font-size: 8.5pt;
+            color: #6B7C93;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        /* ── Acknowledgment Checkboxes ──────────────────────────────────── */
+        .ack-row {
+            display: table;
+            width: 100%;
+            margin-bottom: 8pt;
+        }
+
+        .ack-checkbox {
+            display: table-cell;
+            width: 18pt;
+            font-size: 13pt;
+            vertical-align: top;
+            padding-top: 1pt;
+            color: #1B2A4A;
+        }
+
+        .ack-text {
+            display: table-cell;
+            font-size: 9.5pt;
+            line-height: 1.6;
+            vertical-align: top;
+        }
+
+        /* ── Signature Block ────────────────────────────────────────────── */
+        .signature-section {
+            page-break-before: always;
+            padding-top: 10pt;
+        }
+
+        .sig-heading {
+            font-family: "Palatino Linotype", Palatino, Georgia, serif;
+            font-size: 13pt;
+            font-weight: bold;
+            color: #1B2A4A;
+            text-align: center;
+            margin-bottom: 6pt;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .sig-subheading {
+            text-align: center;
+            font-size: 9pt;
+            color: #6B7C93;
+            margin-bottom: 22pt;
+        }
+
+        .sig-block-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 16pt 0;
+            margin-top: 10pt;
+        }
+
+        .sig-block {
+            width: 48%;
+            vertical-align: top;
+            padding: 14pt;
+            border: 1px solid #C8D6E5;
+            background-color: #FAFBFC;
+        }
+
+        .sig-party-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #2E5F8A;
+            font-weight: bold;
+            margin-bottom: 12pt;
+            padding-bottom: 5pt;
+            border-bottom: 1px solid #E8EDF2;
+        }
+
+        .sig-image-container {
+            height: 52pt;
+            border-bottom: 1.5px solid #1B2A4A;
+            margin-bottom: 4pt;
+            position: relative;
+        }
+
+        .sig-image {
+            max-height: 48pt;
+            max-width: 100%;
+        }
+
+        .sig-line-label {
+            font-size: 7.5pt;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .sig-data-row {
+            display: table;
+            width: 100%;
+            margin-top: 10pt;
+        }
+
+        .sig-data-cell {
+            display: table-cell;
+            width: 50%;
+            font-size: 8.5pt;
+            vertical-align: top;
+        }
+
+        .sig-data-label {
+            color: #6B7C93;
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .sig-data-value {
+            font-weight: bold;
+            color: #1a1a1a;
+            margin-top: 1pt;
+        }
+
+        /* ── Status Banner ──────────────────────────────────────────────── */
+        .status-banner-signed {
+            background-color: #E8F5E9;
+            border: 1.5px solid #2E7D32;
+            padding: 8pt 14pt;
+            margin: 14pt 0;
+            text-align: center;
+            font-size: 9pt;
+            color: #1B5E20;
+            font-weight: bold;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .status-banner-pending {
+            background-color: #FFF8E1;
+            border: 1.5px solid #F9A825;
+            padding: 8pt 14pt;
+            margin: 14pt 0;
+            text-align: center;
+            font-size: 9pt;
+            color: #E65100;
+            font-weight: bold;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        /* ── Footer / Watermark ─────────────────────────────────────────── */
+        .doc-footer {
+            margin-top: 28pt;
+            padding-top: 10pt;
+            border-top: 1px solid #C8D6E5;
+            display: table;
+            width: 100%;
+        }
+
+        .footer-left {
+            display: table-cell;
+            font-size: 7.5pt;
+            color: #aaa;
+            vertical-align: bottom;
+        }
+
+        .footer-right {
+            display: table-cell;
+            text-align: right;
+            font-size: 7.5pt;
+            color: #aaa;
+            vertical-align: bottom;
+        }
+
+        .page-break { page-break-before: always; }
+
+        /* ── Print overrides ────────────────────────────────────────────── */
+        @media print {
+            body { font-size: 10pt; }
+            .no-print { display: none !important; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         COVER HEADER
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div class="cover-header">
+        <table style="width:100%; border-collapse:collapse;">
+            <tr>
+                <td style="vertical-align:top; width:65%;">
+                    <div class="firm-name-display">DeliPat Law Group, PLLC</div>
+                    <div class="firm-tagline">Personal Injury Attorneys</div>
+                    <div class="firm-contact-line">
+                        123 Main Street, Miami, FL 33101
+                    </div>
+                    <div class="firm-contact-line">
+                        Tel: (305) 555-1234 &nbsp;|&nbsp; intake@delipatlaw.com
+                    </div>
+                </td>
+                <td style="vertical-align:top; text-align:right; width:35%;">
+                    <div style="font-size:8pt; color:#6B7C93; text-transform:uppercase; letter-spacing:0.08em;">Bar No.</div>
+                    <div style="font-size:9.5pt; font-weight:bold; color:#1B2A4A;">FL-458921</div>
+                    <div style="margin-top:8pt; font-size:8pt; color:#6B7C93; text-transform:uppercase; letter-spacing:0.08em;">Ref. No.</div>
+                    <div style="font-size:9.5pt; font-weight:bold; color:#1B2A4A;">RET-2026-001</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Document Title -->
+    <div class="doc-title-block">
+        <div class="doc-title-main">Contingency Fee Retainer Agreement</div>
+        <div class="doc-title-sub">Personal Injury — Attorney-Client Representation</div>
+        <div class="doc-ref-row">
+            <span class="doc-ref-cell">Date: <b>June 4, 2026</b></span>
+            <span class="doc-ref-cell right">Agreement No.: <b>RET-2026-001</b></span>
+        </div>
+    </div>
+
+    <!-- Signed / Pending Banner -->
+        <div class="status-banner-pending">&#9888; Pending Signature — Please Review and Sign Below</div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         PARTIES
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div class="section-heading"><span class="section-number">I.</span> Parties to This Agreement</div>
+
+    <table class="parties-table">
+        <tr>
+            <th colspan="2">Law Firm — Attorney</th>
+        </tr>
+        <tr>
+            <td class="label-cell">Firm Name</td>
+            <td class="value-cell">DeliPat Law Group, PLLC</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Address</td>
+            <td class="value-cell">123 Main Street, Miami, FL 33101</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Phone / Email</td>
+            <td class="value-cell">(305) 555-1234 &nbsp;/&nbsp; intake@delipatlaw.com</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Supervising Attorney</td>
+            <td class="value-cell">Michael Anderson, Esq.</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Attorney Bar No.</td>
+            <td class="value-cell">FL-458921</td>
+        </tr>
+    </table>
+
+    <table class="parties-table" style="margin-top:12pt;">
+        <tr>
+            <th colspan="2">Client — Prospective Plaintiff</th>
+        </tr>
+        <tr>
+            <td class="label-cell">Full Legal Name</td>
+            <td class="value-cell">John Smith</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Date of Birth</td>
+            <td class="value-cell">January 15, 1988</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Address</td>
+            <td class="value-cell">456 Ocean Drive, Miami, FL 33139</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Phone</td>
+            <td class="value-cell">(305) 555-9876</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Email</td>
+            <td class="value-cell">john.smith@email.com</td>
+        </tr>
+    </table>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         MATTER / INCIDENT
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div class="section-heading"><span class="section-number">II.</span> Matter Description</div>
+
+    <table class="parties-table">
+        <tr>
+            <th colspan="2">Incident / Case Information</th>
+        </tr>
+        <tr>
+            <td class="label-cell">Type of Incident</td>
+            <td class="value-cell">Motor Vehicle Accident</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Date of Incident</td>
+            <td class="value-cell">May 20, 2026</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Location</td>
+            <td class="value-cell">Miami, Florida</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Opposing Party(ies)</td>
+            <td class="value-cell">ABC Trucking Company</td>
+        </tr>
+        <tr>
+            <td class="label-cell">Insurance Carrier(s)</td>
+            <td class="value-cell">Progressive Insurance</td>
+        </tr>
+    </table>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SCOPE OF REPRESENTATION
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div class="section-heading"><span class="section-number">III.</span> Scope of Representation</div>
+
+    <p class="clause">
+        The Client hereby retains and employs <span class="clause-label">DeliPat Law Group, PLLC</span>
+        (hereinafter "the Firm" or "Attorney") to represent Client in connection with a
+        personal injury claim arising from the above-described incident. The scope of this
+        representation includes, but is not limited to, the following:
+    </p>
+    <ul class="clause-list">
+        <li>Investigation of the facts and circumstances surrounding the incident;</li>
+        <li>Gathering and preservation of evidence, including medical records, police reports, photographs, and witness statements;</li>
+        <li>Negotiation with insurance companies, defendants, and their representatives on Client's behalf;</li>
+        <li>Filing a lawsuit and litigating the matter in the appropriate court, if necessary;</li>
+        <li>Representing Client at depositions, mediations, arbitrations, and trial proceedings;</li>
+        <li>Handling all appeals, if agreed upon in a separate writing.</li>
+    </ul>
+    <p class="clause">
+        This Agreement does <b>not</b> cover criminal matters, matters unrelated to the above incident,
+        or any separate claims not expressly identified herein. Any expansion of scope requires a
+        written amendment signed by both parties.
+    </p>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         CONTINGENCY FEE
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div class="section-heading"><span class="section-number">IV.</span> Attorney's Fees — Contingency</div>
+
+    <div class="highlight-box">
+        <span class="highlight-label">&#9888; Important Fee Notice — Please Read Carefully</span>
+        The Firm's fee is contingent upon recovery. <b>If there is no recovery, Client owes no attorney's fees.</b>
+        However, Client may still be responsible for certain costs and expenses as described in Section V below.
+    </div>
+
+    <p class="clause">
+        In consideration for legal services rendered, the Client agrees to pay the Firm a contingency fee
+        calculated as a percentage of the <b>gross recovery</b> (total amount recovered before deduction of
+        costs and expenses), as follows:
+    </p>
+
+    <div class="fee-display">33⅓%</div>
+    <div class="fee-caption">Pre-Litigation / Pre-Suit Settlement</div>
+
+    <div class="fee-display" style="font-size:18pt; margin-top:12pt;">40%</div>
+    <div class="fee-caption">If Lawsuit is Filed / Trial Proceeds</div>
+
+    <p class="clause" style="margin-top:12pt;">
+        The fee percentage shall be applied to the <b>gross recovery</b> before deducting costs.
+        If a lawsuit is filed, the applicable percentage increases to the trial rate as stated above.
+        In cases involving a minor or an incompetent, the fee is subject to court approval.
+        The Firm reserves the right to seek a higher fee upon court application if extraordinary
+        circumstances warrant.
+    </p>
+    <p class="clause">
+        "Recovery" includes all sums obtained for the Client by settlement, judgment, arbitration award,
+        or any other means, whether paid in a lump sum or in installments.
+    </p>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         COSTS & EXPENSES
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div class="section-heading"><span class="section-number">V.</span> Costs and Expenses</div>
+
+    <p class="clause">
+        In addition to attorney's fees, the Client is responsible for all costs and expenses incurred
+        in connection with the representation. These costs will be <b>advanced by the Firm</b> and
+        deducted from the Client's share of any recovery. If there is no recovery, the Client's
+        obligation for costs is governed by a separate written agreement and may be waived at the
+        Firm's sole discretion. Costs may include, but are not limited to:
+    </p>
+    <ul class="clause-list">
+        <li>Filing fees, court costs, and service of process fees;</li>
+        <li>Medical records retrieval and expert witness fees;</li>
+        <li>Deposition transcripts and court reporter charges;</li>
+        <li>Investigation costs, accident reconstruction, and demonstrative evidence;</li>
+        <li>Postage, copying, scanning, and reasonable administrative disbursements;</li>
+        <li>Travel expenses incurred in connection with the case;</li>
+        <li>Mediation and arbitration fees.</li>
+    </ul>
+    <p class="clause">
+        The Firm will provide Client with an itemized statement of costs at the conclusion of the
+        representation or upon written request. Client authorizes the Firm to incur reasonable and
+        necessary costs without prior approval for individual expenditures under <b>$500.00</b>.
+        Expenditures exceeding $500.00 will require Client's written or documented verbal consent.
+    </p>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         CLIENT DUTIES
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div class="page-break"></div>
+
+    <div class="section-heading"><span class="section-number">VI.</span> Client's Duties and Cooperation</div>
+
+    <p class="clause">
+        The Client agrees to fully cooperate with the Firm throughout the course of the representation,
+        including but not limited to the following obligations:
+    </p>
+    <ul class="clause-list">
+        <li><b>Communication:</b> Promptly respond to all communications from the Firm within three (3) business days;</li>
+        <li><b>Honesty:</b> Provide complete, truthful, and accurate information at all times;</li>
+        <li><b>Medical Treatment:</b> Follow through with all recommended medical treatment and provide the Firm with updated treating provider information;</li>
+        <li><b>Documentation:</b> Provide all documents, photographs, records, and evidence relevant to the case promptly upon request;</li>
+        <li><b>No Independent Contact:</b> Refrain from independently contacting opposing counsel, insurance adjusters, or any party adverse to Client's interests without prior written approval from the Firm;</li>
+        <li><b>No Social Media:</b> Refrain from posting any information about the incident, injuries, or case on any social media platform;</li>
+        <li><b>Address Changes:</b> Notify the Firm immediately of any change in address, phone number, or email address;</li>
+        <li><b>Court Appearances:</b> Appear at all depositions, hearings, mediations, and court proceedings as required;</li>
+        <li><b>Settlement Authority:</b> Client has the sole authority to accept or reject any settlement offer. The Firm will communicate all offers and provide recommendations, but the final decision rests with Client.</li>
+    </ul>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         ATTORNEY'S DUTIES
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div class="section-heading"><span class="section-number">VII.</span> Attorney's Duties</div>
+
+    <p class="clause">
+        The Firm agrees to perform the following in connection with Client's representation:
+    </p>
+    <ul class="clause-list">
+        <li>Diligently investigate, prepare, and pursue Client's claim;</li>
+        <li>Keep Client reasonably informed of all significant case developments;</li>
+        <li>Promptly respond to Client's communications within three (3) business days;</li>
+        <li>Exercise independent professional judgment in Client's best interest;</li>
+        <li>Maintain Client communications and case records in strict confidence;</li>
+        <li>Provide Client with a written accounting of all fees and costs upon request or at case conclusion;</li>
+        <li>Promptly disburse Client's share of any recovery after deducting fees and costs.</li>
+    </ul>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SETTLEMENT AUTHORITY & DISBURSEMENT
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div class="section-heading"><span class="section-number">VIII.</span> Settlement Authority and Disbursement of Funds</div>
+
+    <p class="clause">
+        <span class="clause-label">8.1 Settlement Authority.</span> No settlement shall be made without Client's prior written or
+        documented verbal approval. The Firm will present all settlement offers to Client with a recommendation
+        and will not accept or reject any offer without Client's express authorization.
+    </p>
+    <p class="clause">
+        <span class="clause-label">8.2 Trust Account.</span> All settlement proceeds or judgments received on Client's behalf will be
+        deposited into the Firm's client trust account (IOLTA) in accordance with applicable state bar rules.
+        Disbursement will occur within a reasonable time after funds clear, after deduction of the Firm's
+        contingency fee and all outstanding costs.
+    </p>
+    <p class="clause">
+        <span class="clause-label">8.3 Medical Lien Obligations.</span> Client acknowledges that medical providers, health insurers,
+        Medicare, Medicaid, or other lienholders may assert liens against any recovery. The Firm will
+        notify Client of all known liens and will use reasonable efforts to negotiate reductions on Client's
+        behalf. Client is ultimately responsible for all valid liens.
+    </p>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         WITHDRAWAL & TERMINATION
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div class="section-heading"><span class="section-number">IX.</span> Withdrawal and Termination</div>
+
+    <p class="clause">
+        <span class="clause-label">9.1 Termination by Client.</span> Client may discharge the Firm at any time upon written notice.
+        Upon discharge, Client shall be responsible for the reasonable value of services rendered (quantum meruit)
+        and all costs advanced to the date of discharge, regardless of whether a recovery is subsequently obtained.
+    </p>
+    <p class="clause">
+        <span class="clause-label">9.2 Withdrawal by Firm.</span> The Firm may withdraw from representation in accordance with the
+        applicable Rules of Professional Conduct, including, without limitation, situations where the Client
+        fails to cooperate, provides false information, or insists on pursuing a course of action the Firm
+        believes to be illegal, unethical, or without merit. Upon withdrawal, the Firm is entitled to
+        compensation for services rendered to date.
+    </p>
+    <p class="clause">
+        <span class="clause-label">9.3 File Transfer.</span> Upon termination, the Firm will promptly provide Client with a copy of
+        the file. The Firm may retain the original file in accordance with state bar rules.
+    </p>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         MISCELLANEOUS
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div class="section-heading"><span class="section-number">X.</span> Additional Provisions</div>
+
+    <p class="clause">
+        <span class="clause-label">10.1 No Guarantee of Outcome.</span> The Firm makes no warranty, express or implied,
+        regarding the outcome of Client's case. Prior results do not guarantee a similar outcome.
+    </p>
+    <p class="clause">
+        <span class="clause-label">10.2 Governing Law.</span> This Agreement shall be governed by the laws of the state in which
+        the Firm's principal office is located, and any disputes arising hereunder shall be subject to the
+        jurisdiction of the courts of that state.
+    </p>
+    <p class="clause">
+        <span class="clause-label">10.3 Entire Agreement.</span> This Agreement constitutes the entire agreement between the parties
+        with respect to the subject matter hereof and supersedes all prior discussions, representations,
+        and agreements. Any modification must be in writing and signed by both parties.
+    </p>
+    <p class="clause">
+        <span class="clause-label">10.4 Severability.</span> If any provision of this Agreement is found to be invalid or
+        unenforceable, the remaining provisions shall remain in full force and effect.
+    </p>
+    <p class="clause">
+        <span class="clause-label">10.5 Electronic Signatures.</span> The parties agree that electronic signatures obtained
+        through a lawful e-signature service shall be deemed original signatures and shall be fully binding
+        for all purposes under applicable law, including the Electronic Signatures in Global and National
+        Commerce Act (E-SIGN Act) and applicable state uniform electronic transactions laws.
+    </p>
+    <p class="clause">
+        <span class="clause-label">10.6 Dispute Resolution.</span> Any dispute arising under this Agreement that cannot be
+        resolved by mutual agreement shall first be submitted to non-binding mediation before a neutral
+        mediator agreed upon by the parties. If mediation is unsuccessful, either party may seek relief
+        in a court of competent jurisdiction.
+    </p>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         CLIENT ACKNOWLEDGMENT CHECKLIST
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div class="section-heading"><span class="section-number">XI.</span> Client Acknowledgments</div>
+
+    <p class="clause">By signing below, Client confirms each of the following:</p>
+
+    <div class="ack-row">
+        <div class="ack-checkbox">&#9745;</div>
+        <div class="ack-text">I have read and understand this entire Retainer Agreement, including the contingency fee structure in Section IV.</div>
+    </div>
+    <div class="ack-row">
+        <div class="ack-checkbox">&#9745;</div>
+        <div class="ack-text">I understand that attorney's fees are calculated on the <b>gross recovery</b> before costs are deducted, and that I may owe costs even if there is no recovery.</div>
+    </div>
+    <div class="ack-row">
+        <div class="ack-checkbox">&#9745;</div>
+        <div class="ack-text">I have been advised of my right to seek independent legal counsel before signing this Agreement and have had a reasonable opportunity to do so.</div>
+    </div>
+    <div class="ack-row">
+        <div class="ack-checkbox">&#9745;</div>
+        <div class="ack-text">I understand that the Firm cannot guarantee any particular outcome or recovery amount.</div>
+    </div>
+    <div class="ack-row">
+        <div class="ack-checkbox">&#9745;</div>
+        <div class="ack-text">I authorize the Firm to obtain my medical records, accident reports, employment records, and other documents reasonably necessary to pursue my claim.</div>
+    </div>
+    <div class="ack-row">
+        <div class="ack-checkbox">&#9745;</div>
+        <div class="ack-text">I understand that no attorney-client relationship existed prior to my signature below, and that this Agreement establishes such relationship as of the date signed.</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SIGNATURE PAGE
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div class="signature-section">
+
+        <div class="sig-heading">Signatures</div>
+        <div class="sig-subheading">
+            Both parties must sign below for this Agreement to become effective.
+            Electronic signatures are valid and binding under the E-SIGN Act.
+        </div>
+
+        <table class="sig-block-table">
+            <tr>
+
+                <!-- CLIENT SIGNATURE -->
+                <td class="sig-block">
+                    <div class="sig-party-label">Client / Prospective Plaintiff</div>
+
+                    <div class="sig-image-container">
+                            <div style="height:48pt;"></div>
+                    </div>
+                    <div class="sig-line-label">Signature</div>
+
+                    <div class="sig-data-row">
+                        <div class="sig-data-cell">
+                            <div class="sig-data-label">Printed Name</div>
+                            <div class="sig-data-value">John Smith</div>
+                        </div>
+                        <div class="sig-data-cell">
+                            <div class="sig-data-label">Date Signed</div>
+                            <div class="sig-data-value">
+                                <apex:outputText value="_______________"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sig-data-row" style="margin-top:8pt;">
+                        <div class="sig-data-cell">
+                            <div class="sig-data-label">Initials</div>
+                            <div class="sig-data-value">
+                                <apex:outputText value="_____"/>
+                            </div>
+                        </div>
+                        <div class="sig-data-cell">
+                            <div class="sig-data-label">Phone</div>
+                            <div class="sig-data-value">(305) 555-9876</div>
+                        </div>
+                    </div>
+                </td>
+
+                <!-- ATTORNEY SIGNATURE -->
+                <td class="sig-block">
+                    <div class="sig-party-label">Attorney — On Behalf of DeliPat Law Group, PLLC</div>
+
+                    <div class="sig-image-container">
+                            <div style="height:48pt;"></div>
+                    </div>
+                    <div class="sig-line-label">Signature</div>
+
+                    <div class="sig-data-row">
+                        <div class="sig-data-cell">
+                            <div class="sig-data-label">Attorney Name</div>
+                            <div class="sig-data-value">Michael Anderson, Esq.</div>
+                        </div>
+                        <div class="sig-data-cell">
+                            <div class="sig-data-label">Date</div>
+                            <div class="sig-data-value">
+                                <apex:outputText value="_______________"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sig-data-row" style="margin-top:8pt;">
+                        <div class="sig-data-cell">
+                            <div class="sig-data-label">Bar Number</div>
+                            <div class="sig-data-value">FL-458921</div>
+                        </div>
+                        <div class="sig-data-cell">
+                            <div class="sig-data-label">Firm</div>
+                            <div class="sig-data-value">DeliPat Law Group, PLLC</div>
+                        </div>
+                    </div>
+                </td>
+
+            </tr>
+        </table>
+
+        <!-- IP & Timestamp Audit Block (visible when signed) -->
+            <table style="width:100%; margin-top:16pt; border-collapse:collapse; border:1px solid #C8D6E5; background:#F9FAFB;">
+                <tr>
+                    <td style="padding:8pt 12pt; border-bottom:1px solid #E8EDF2;" colspan="4">
+                        <span style="font-size:7.5pt; text-transform:uppercase; letter-spacing:0.08em; color:#2E5F8A; font-weight:bold;">
+                            Electronic Signature Audit Record
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:6pt 12pt; font-size:8pt; color:#666; width:25%;">
+                        <div style="font-size:7pt; text-transform:uppercase; color:#999;">Signed By</div>
+                        <div style="font-weight:bold; color:#1a1a1a;">John Smith</div>
+                    </td>
+                    <td style="padding:6pt 12pt; font-size:8pt; color:#666; width:25%;">
+                        <div style="font-size:7pt; text-transform:uppercase; color:#999;">Timestamp</div>
+                    </td>
+                    <td style="padding:6pt 12pt; font-size:8pt; color:#666; width:25%;">
+                        <div style="font-size:7pt; text-transform:uppercase; color:#999;">IP Address</div>
+                        <div style="font-weight:bold; color:#1a1a1a;">192.168.1.100</div>
+                    </td>
+                    <td style="padding:6pt 12pt; font-size:8pt; color:#666; width:25%;">
+                        <div style="font-size:7pt; text-transform:uppercase; color:#999;">Document Hash</div>
+                        <div style="font-weight:bold; color:#1a1a1a; font-family:monospace; font-size:7.5pt;">4F7A92BC91D3EFA12245AA</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4" style="padding:4pt 12pt; font-size:7.5pt; color:#888; border-top:1px solid #E8EDF2;">
+                        This agreement was signed electronically via DocuSign. This audit record is legally binding under the
+                        Electronic Signatures in Global and National Commerce Act (E-SIGN Act), 15 U.S.C. § 7001 et seq.
+                    </td>
+                </tr>
+            </table>
+
+        <!-- Document Footer -->
+        <div class="doc-footer">
+            <div class="footer-left">
+                DeliPat Law Group, PLLC &nbsp;|&nbsp; 123 Main Street, Miami, FL 33101 &nbsp;|&nbsp; (305) 555-1234<br/>
+                Agreement No. RET-2026-001 &nbsp;|&nbsp; Generated June 4, 2026
+            </div>
+            <div class="footer-right">
+                This document is confidential and privileged.<br/>
+                Attorney-Client Communication — Do Not Distribute.
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
+</apex:page>

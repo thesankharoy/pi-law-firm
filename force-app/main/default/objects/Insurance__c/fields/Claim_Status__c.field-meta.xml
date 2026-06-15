@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Claim_Status__c</fullName>
+    <label>Claim Status</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Not Reported</fullName>
+                <default>false</default>
+                <label>Not Reported</label>
+            </value>
+            <value>
+                <fullName>Reported</fullName>
+                <default>false</default>
+                <label>Reported</label>
+            </value>
+            <value>
+                <fullName>Under Investigation</fullName>
+                <default>false</default>
+                <label>Under Investigation</label>
+            </value>
+            <value>
+                <fullName>Active</fullName>
+                <default>false</default>
+                <label>Active</label>
+            </value>
+            <value>
+                <fullName>Closed — Paid</fullName>
+                <default>false</default>
+                <label>Closed — Paid</label>
+            </value>
+            <value>
+                <fullName>Closed — Denied</fullName>
+                <default>false</default>
+                <label>Closed — Denied</label>
+            </value>
+            <value>
+                <fullName>Closed — Withdrawn</fullName>
+                <default>false</default>
+                <label>Closed — Withdrawn</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

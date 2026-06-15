@@ -1,0 +1,264 @@
+<template>
+    <lightning-card title="Intake Assignment Rules" icon-name="standard:case_wrap_up">
+        <div slot="actions">
+            <lightning-button variant="brand" icon-name="utility:add" label="Add Rule" onclick={handleAddRule}>
+            </lightning-button>
+        </div>
+
+        <template if:true={isLoading}>
+            <div class="center-spinner">
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <div class="builder-layout">
+                <!-- ── Left: rules list ── -->
+                <div class="panel-left">
+                    <template if:true={hasRules}>
+                        <template for:each={displayRules} for:item="rule">
+                            <div
+                                key={rule.developerName}
+                                class={rule.cardClass}
+                                data-devname={rule.developerName}
+                                onclick={handleSelectRule}
+                            >
+                                <div class="rc-main">
+                                    <span class="rc-order">{rule.order}</span>
+                                    <div class="rc-info">
+                                        <div class="rc-name">{rule.label}</div>
+                                        <div class="rc-target">→ {rule.assignToName}</div>
+                                        <div class="rc-summary">{rule.conditionSummary}</div>
+                                    </div>
+                                    <span class={rule.activeBadgeClass}>{rule.activeLabel}</span>
+                                </div>
+                                <div class="rc-actions" onclick={stopProp}>
+                                    <lightning-button-icon
+                                        icon-name="utility:up"
+                                        variant="bare"
+                                        size="x-small"
+                                        title="Move up"
+                                        data-devname={rule.developerName}
+                                        data-dir="up"
+                                        onclick={handleReorder}
+                                    >
+                                    </lightning-button-icon>
+                                    <lightning-button-icon
+                                        icon-name="utility:down"
+                                        variant="bare"
+                                        size="x-small"
+                                        title="Move down"
+                                        data-devname={rule.developerName}
+                                        data-dir="down"
+                                        onclick={handleReorder}
+                                    >
+                                    </lightning-button-icon>
+                                    <lightning-button-icon
+                                        icon-name="utility:toggle_panel_closed"
+                                        variant="bare"
+                                        size="x-small"
+                                        title="Toggle active"
+                                        data-devname={rule.developerName}
+                                        onclick={handleToggleRule}
+                                    >
+                                    </lightning-button-icon>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                    <template if:false={hasRules}>
+                        <div class="panel-empty">No rules yet.<br />Click "Add Rule" to start.</div>
+                    </template>
+                </div>
+
+                <!-- ── Right: editor ── -->
+                <div class="panel-right">
+                    <template if:false={showEditor}>
+                        <div class="editor-empty">
+                            <lightning-icon icon-name="utility:assignment" size="large"></lightning-icon>
+                            <p>Select a rule to edit, or click "Add Rule" to create one.</p>
+                        </div>
+                    </template>
+
+                    <template if:true={showEditor}>
+                        <div class="editor-wrap">
+                            <div class="editor-topbar">
+                                <h2 class="editor-title">{editorTitle}</h2>
+                                <lightning-button-icon
+                                    icon-name="utility:close"
+                                    variant="bare"
+                                    alternative-text="Close"
+                                    onclick={handleCancelEdit}
+                                >
+                                </lightning-button-icon>
+                            </div>
+
+                            <!-- Rule name & toggles -->
+                            <div class="editor-section">
+                                <div class="section-label">Rule Settings</div>
+                                <lightning-input
+                                    label="Rule Name"
+                                    placeholder="e.g. Truck Accident → MVA Priority Queue"
+                                    value={editingRule.label}
+                                    data-fld="label"
+                                    onchange={handleRuleFieldChange}
+                                >
+                                </lightning-input>
+                                <div class="toggles-row">
+                                    <lightning-input
+                                        type="toggle"
+                                        label="Active"
+                                        message-toggle-active="On"
+                                        message-toggle-inactive="Off"
+                                        checked={editingRule.isActive}
+                                        data-fld="isActive"
+                                        onchange={handleRuleFieldChange}
+                                    >
+                                    </lightning-input>
+                                    <lightning-input
+                                        type="checkbox"
+                                        label="Stop on match"
+                                        checked={editingRule.stopOnMatch}
+                                        data-fld="stopOnMatch"
+                                        onchange={handleRuleFieldChange}
+                                    >
+                                    </lightning-input>
+                                </div>
+                            </div>
+
+                            <!-- Assign To -->
+                            <div class="editor-section">
+                                <div class="section-label">Assign To</div>
+                                <lightning-radio-group
+                                    label="Type"
+                                    options={assignTypeOptions}
+                                    value={editingRule.assignToType}
+                                    type="radio"
+                                    data-fld="assignToType"
+                                    onchange={handleRuleFieldChange}
+                                >
+                                </lightning-radio-group>
+                                <div class="slds-m-top_small">
+                                    <lightning-combobox
+                                        label="Target"
+                                        placeholder="Select a queue or user…"
+                                        value={editingRule.assignToId}
+                                        options={editingRule.targetOptions}
+                                        data-fld="assignToId"
+                                        onchange={handleRuleFieldChange}
+                                    >
+                                    </lightning-combobox>
+                                </div>
+                            </div>
+
+                            <!-- Conditions -->
+                            <div class="editor-section">
+                                <div class="section-label-row">
+                                    <span class="section-label">Conditions</span>
+                                    <lightning-combobox
+                                        label="Logic"
+                                        variant="label-hidden"
+                                        value={editingRule.conditionLogic}
+                                        options={logicOptions}
+                                        data-fld="conditionLogic"
+                                        class="logic-combo"
+                                        onchange={handleRuleFieldChange}
+                                    >
+                                    </lightning-combobox>
+                                </div>
+
+                                <template for:each={editingRule.conditions} for:item="cond">
+                                    <div key={cond.tempId} class="cond-row">
+                                        <span class="cond-num">{cond.displayIndex}</span>
+
+                                        <lightning-combobox
+                                            variant="label-hidden"
+                                            placeholder="Field"
+                                            value={cond.fieldApiName}
+                                            options={fieldOptions}
+                                            data-tempid={cond.tempId}
+                                            data-fld="fieldApiName"
+                                            onchange={handleCondChange}
+                                        >
+                                        </lightning-combobox>
+
+                                        <lightning-combobox
+                                            variant="label-hidden"
+                                            placeholder="Operator"
+                                            value={cond.operator}
+                                            options={cond.operatorOptions}
+                                            data-tempid={cond.tempId}
+                                            data-fld="operator"
+                                            onchange={handleCondChange}
+                                        >
+                                        </lightning-combobox>
+
+                                        <template if:true={cond.showValue}>
+                                            <template if:true={cond.isPicklist}>
+                                                <lightning-combobox
+                                                    variant="label-hidden"
+                                                    placeholder="Value"
+                                                    value={cond.value}
+                                                    options={cond.valueOptions}
+                                                    data-tempid={cond.tempId}
+                                                    data-fld="value"
+                                                    onchange={handleCondChange}
+                                                >
+                                                </lightning-combobox>
+                                            </template>
+                                            <template if:false={cond.isPicklist}>
+                                                <lightning-input
+                                                    variant="label-hidden"
+                                                    placeholder="Value"
+                                                    value={cond.value}
+                                                    data-tempid={cond.tempId}
+                                                    data-fld="value"
+                                                    onchange={handleCondChange}
+                                                >
+                                                </lightning-input>
+                                            </template>
+                                        </template>
+                                        <template if:false={cond.showValue}>
+                                            <span class="cond-blank"></span>
+                                        </template>
+
+                                        <lightning-button-icon
+                                            icon-name="utility:close"
+                                            variant="bare"
+                                            size="small"
+                                            alternative-text="Remove"
+                                            data-tempid={cond.tempId}
+                                            onclick={handleRemoveCondition}
+                                        >
+                                        </lightning-button-icon>
+                                    </div>
+                                </template>
+
+                                <lightning-button
+                                    label="Add Condition"
+                                    icon-name="utility:add"
+                                    variant="neutral"
+                                    onclick={handleAddCondition}
+                                    class="slds-m-top_x-small"
+                                >
+                                </lightning-button>
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="editor-footer">
+                                <lightning-button label="Cancel" onclick={handleCancelEdit}> </lightning-button>
+                                <lightning-button
+                                    variant="brand"
+                                    label={saveLabel}
+                                    onclick={handleSaveRule}
+                                    disabled={isSaving}
+                                >
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </lightning-card>
+</template>

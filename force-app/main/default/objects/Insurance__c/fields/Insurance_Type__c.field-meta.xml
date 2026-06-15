@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Insurance_Type__c</fullName>
+    <label>Insurance Type</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Liability — Auto</fullName>
+                <default>false</default>
+                <label>Liability — Auto</label>
+            </value>
+            <value>
+                <fullName>Liability — General</fullName>
+                <default>false</default>
+                <label>Liability — General</label>
+            </value>
+            <value>
+                <fullName>UM/UIM</fullName>
+                <default>false</default>
+                <label>UM/UIM</label>
+            </value>
+            <value>
+                <fullName>Med Pay</fullName>
+                <default>false</default>
+                <label>Med Pay</label>
+            </value>
+            <value>
+                <fullName>Health Insurance</fullName>
+                <default>false</default>
+                <label>Health Insurance</label>
+            </value>
+            <value>
+                <fullName>Workers Compensation</fullName>
+                <default>false</default>
+                <label>Workers Compensation</label>
+            </value>
+            <value>
+                <fullName>Homeowners</fullName>
+                <default>false</default>
+                <label>Homeowners</label>
+            </value>
+            <value>
+                <fullName>Commercial Auto</fullName>
+                <default>false</default>
+                <label>Commercial Auto</label>
+            </value>
+            <value>
+                <fullName>Umbrella</fullName>
+                <default>false</default>
+                <label>Umbrella</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

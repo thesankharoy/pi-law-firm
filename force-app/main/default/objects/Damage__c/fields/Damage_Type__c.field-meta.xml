@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Damage_Type__c</fullName>
+    <label>Damage Type</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Medical Bills — Past</fullName>
+                <default>false</default>
+                <label>Medical Bills — Past</label>
+            </value>
+            <value>
+                <fullName>Medical Bills — Future</fullName>
+                <default>false</default>
+                <label>Medical Bills — Future</label>
+            </value>
+            <value>
+                <fullName>Lost Wages — Past</fullName>
+                <default>false</default>
+                <label>Lost Wages — Past</label>
+            </value>
+            <value>
+                <fullName>Lost Wages — Future</fullName>
+                <default>false</default>
+                <label>Lost Wages — Future</label>
+            </value>
+            <value>
+                <fullName>Loss of Earning Capacity</fullName>
+                <default>false</default>
+                <label>Loss of Earning Capacity</label>
+            </value>
+            <value>
+                <fullName>Pain &amp; Suffering</fullName>
+                <default>false</default>
+                <label>Pain &amp; Suffering</label>
+            </value>
+            <value>
+                <fullName>Emotional Distress</fullName>
+                <default>false</default>
+                <label>Emotional Distress</label>
+            </value>
+            <value>
+                <fullName>Loss of Consortium</fullName>
+                <default>false</default>
+                <label>Loss of Consortium</label>
+            </value>
+            <value>
+                <fullName>Property Damage — Vehicle</fullName>
+                <default>false</default>
+                <label>Property Damage — Vehicle</label>
+            </value>
+            <value>
+                <fullName>Property Damage — Other</fullName>
+                <default>false</default>
+                <label>Property Damage — Other</label>
+            </value>
+            <value>
+                <fullName>Disability</fullName>
+                <default>false</default>
+                <label>Disability</label>
+            </value>
+            <value>
+                <fullName>Disfigurement</fullName>
+                <default>false</default>
+                <label>Disfigurement</label>
+            </value>
+            <value>
+                <fullName>Punitive</fullName>
+                <default>false</default>
+                <label>Punitive</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

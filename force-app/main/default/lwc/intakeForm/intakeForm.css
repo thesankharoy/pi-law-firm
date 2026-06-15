@@ -1,0 +1,184 @@
+:host {
+    display: block;
+    font-family: "Inter", sans-serif;
+}
+
+.form-page {
+    min-height: 100vh;
+    background: #f8f8f6;
+    padding: 80px 20px;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    background: white;
+    padding: 40px;
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+
+h1 {
+    text-align: center;
+    color: #06142d;
+    font-size: 42px;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 40px;
+}
+
+.form-group {
+    margin-bottom: 22px;
+}
+
+.check-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+    padding: 14px 16px;
+    background: #f8f8f6;
+    border-radius: 14px;
+}
+
+.check-group input {
+    width: auto;
+    padding: 0;
+}
+
+.check-label {
+    margin: 0;
+    font-weight: 600;
+    color: #06142d;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #06142d;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 16px;
+    border: 1px solid #dcdcdc;
+    border-radius: 14px;
+    font-size: 16px;
+    box-sizing: border-box;
+    background: white;
+    font-family: inherit;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #0176d3;
+    box-shadow: 0 0 0 3px rgba(1, 118, 211, 0.15);
+}
+
+button {
+    width: 100%;
+    padding: 18px;
+    border: none;
+    border-radius: 16px;
+    background: #04152f;
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background: #0a2347;
+    transform: translateY(-2px);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* two-column rows */
+.form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+/* required-field asterisk */
+.req::after {
+    content: " *";
+    color: #e0245e;
+}
+
+/* consent row */
+.consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 6px 0 4px;
+}
+
+.consent input {
+    width: auto;
+    padding: 0;
+    margin-top: 4px;
+}
+
+.consent-label {
+    font-weight: 400;
+    font-size: 14px;
+    color: #555;
+    margin: 0;
+}
+
+/* status messages */
+.msg {
+    padding: 14px 16px;
+    border-radius: 14px;
+    margin-bottom: 24px;
+    font-size: 15px;
+}
+
+.msg.error {
+    background: #fde8ec;
+    color: #b3123c;
+}
+
+.msg.success {
+    background: #e7f6ec;
+    color: #1b7a3d;
+}
+
+/* stack columns on small screens */
+@media (max-width: 520px) {
+    .container {
+        padding: 28px;
+    }
+    h1 {
+        font-size: 32px;
+    }
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+}

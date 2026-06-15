@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Offered_By__c</fullName>
+    <label>Offered By</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Insurance Company</fullName>
+                <default>false</default>
+                <label>Insurance Company</label>
+            </value>
+            <value>
+                <fullName>Defense Counsel</fullName>
+                <default>false</default>
+                <label>Defense Counsel</label>
+            </value>
+            <value>
+                <fullName>Plaintiff (Counter)</fullName>
+                <default>false</default>
+                <label>Plaintiff (Counter)</label>
+            </value>
+            <value>
+                <fullName>Mediator</fullName>
+                <default>false</default>
+                <label>Mediator</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

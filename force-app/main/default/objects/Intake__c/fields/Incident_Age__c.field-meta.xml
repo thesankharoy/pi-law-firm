@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Incident_Age__c</fullName>
+    <label>Incident Age</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Within 7 Days</fullName>
+                <default>false</default>
+                <label>Within 7 Days</label>
+            </value>
+            <value>
+                <fullName>8–30 Days</fullName>
+                <default>false</default>
+                <label>8–30 Days</label>
+            </value>
+            <value>
+                <fullName>31–90 Days</fullName>
+                <default>false</default>
+                <label>31–90 Days</label>
+            </value>
+            <value>
+                <fullName>90+ Days</fullName>
+                <default>false</default>
+                <label>90+ Days</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Status__c</fullName>
+    <label>Status</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Potential — Unasserted</fullName>
+                <default>false</default>
+                <label>Potential — Unasserted</label>
+            </value>
+            <value>
+                <fullName>Asserted</fullName>
+                <default>false</default>
+                <label>Asserted</label>
+            </value>
+            <value>
+                <fullName>Under Negotiation</fullName>
+                <default>false</default>
+                <label>Under Negotiation</label>
+            </value>
+            <value>
+                <fullName>Resolved</fullName>
+                <default>false</default>
+                <label>Resolved</label>
+            </value>
+            <value>
+                <fullName>Waived</fullName>
+                <default>false</default>
+                <label>Waived</label>
+            </value>
+            <value>
+                <fullName>Paid</fullName>
+                <default>false</default>
+                <label>Paid</label>
+            </value>
+            <value>
+                <fullName>Disputed</fullName>
+                <default>false</default>
+                <label>Disputed</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

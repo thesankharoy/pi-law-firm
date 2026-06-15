@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Document_Type__c</fullName>
+    <label>Document Type</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Police Report</fullName>
+                <default>false</default>
+                <label>Police Report</label>
+            </value>
+            <value>
+                <fullName>Medical Records</fullName>
+                <default>false</default>
+                <label>Medical Records</label>
+            </value>
+            <value>
+                <fullName>Medical Bills</fullName>
+                <default>false</default>
+                <label>Medical Bills</label>
+            </value>
+            <value>
+                <fullName>Photos — Scene</fullName>
+                <default>false</default>
+                <label>Photos — Scene</label>
+            </value>
+            <value>
+                <fullName>Photos — Injury</fullName>
+                <default>false</default>
+                <label>Photos — Injury</label>
+            </value>
+            <value>
+                <fullName>Retainer Agreement</fullName>
+                <default>false</default>
+                <label>Retainer Agreement</label>
+            </value>
+            <value>
+                <fullName>Demand Letter</fullName>
+                <default>false</default>
+                <label>Demand Letter</label>
+            </value>
+            <value>
+                <fullName>Insurance Correspondence</fullName>
+                <default>false</default>
+                <label>Insurance Correspondence</label>
+            </value>
+            <value>
+                <fullName>Expert Report</fullName>
+                <default>false</default>
+                <label>Expert Report</label>
+            </value>
+            <value>
+                <fullName>Court Filing — Complaint</fullName>
+                <default>false</default>
+                <label>Court Filing — Complaint</label>
+            </value>
+            <value>
+                <fullName>Court Filing — Answer</fullName>
+                <default>false</default>
+                <label>Court Filing — Answer</label>
+            </value>
+            <value>
+                <fullName>Discovery — Interrogatories</fullName>
+                <default>false</default>
+                <label>Discovery — Interrogatories</label>
+            </value>
+            <value>
+                <fullName>Discovery — Deposition</fullName>
+                <default>false</default>
+                <label>Discovery — Deposition</label>
+            </value>
+            <value>
+                <fullName>Settlement Agreement</fullName>
+                <default>false</default>
+                <label>Settlement Agreement</label>
+            </value>
+            <value>
+                <fullName>Authorization Form</fullName>
+                <default>false</default>
+                <label>Authorization Form</label>
+            </value>
+            <value>
+                <fullName>Lien Documentation</fullName>
+                <default>false</default>
+                <label>Lien Documentation</label>
+            </value>
+            <value>
+                <fullName>Employment Records</fullName>
+                <default>false</default>
+                <label>Employment Records</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

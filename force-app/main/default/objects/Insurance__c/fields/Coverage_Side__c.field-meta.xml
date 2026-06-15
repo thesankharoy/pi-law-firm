@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Coverage_Side__c</fullName>
+    <label>Coverage Side</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Client&apos;s Policy</fullName>
+                <default>false</default>
+                <label>Client&apos;s Policy</label>
+            </value>
+            <value>
+                <fullName>Opposing Party Policy</fullName>
+                <default>false</default>
+                <label>Opposing Party Policy</label>
+            </value>
+            <value>
+                <fullName>Third-Party Policy</fullName>
+                <default>false</default>
+                <label>Third-Party Policy</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

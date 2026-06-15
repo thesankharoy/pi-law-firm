@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Incident_Type__c</fullName>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Incident Type</label>
+    <required>false</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Truck Accident</fullName>
+                <default>true</default>
+                <label>Truck Accident</label>
+            </value>
+            <value>
+                <fullName>Medical Malpractice</fullName>
+                <default>false</default>
+                <label>Medical Malpractice</label>
+            </value>
+            <value>
+                <fullName>Motorcycle Accident</fullName>
+                <default>false</default>
+                <label>Motorcycle Accident</label>
+            </value>
+            <value>
+                <fullName>Car Accident</fullName>
+                <default>false</default>
+                <label>Car Accident</label>
+            </value>
+            <value>
+                <fullName>Slip &amp; Fall</fullName>
+                <default>false</default>
+                <label>Slip &amp; Fall</label>
+            </value>
+            <value>
+                <fullName>Dog Bite</fullName>
+                <default>false</default>
+                <label>Dog Bite</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

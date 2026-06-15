@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Incident_Type__c</fullName>
+    <label>Incident Type</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Car Accident</fullName>
+                <default>false</default>
+                <label>Car Accident</label>
+            </value>
+            <value>
+                <fullName>Truck Accident</fullName>
+                <default>false</default>
+                <label>Truck Accident</label>
+            </value>
+            <value>
+                <fullName>Slip &amp; Fall</fullName>
+                <default>false</default>
+                <label>Slip &amp; Fall</label>
+            </value>
+            <value>
+                <fullName>Motorcycle Accident</fullName>
+                <default>false</default>
+                <label>Motorcycle Accident</label>
+            </value>
+            <value>
+                <fullName>Dog Bite</fullName>
+                <default>false</default>
+                <label>Dog Bite</label>
+            </value>
+            <value>
+                <fullName>Medical Malpractice</fullName>
+                <default>false</default>
+                <label>Medical Malpractice</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Other</label>
+            </value>
+            <value>
+                <fullName>Pedestrian</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Pedestrian</label>
+            </value>
+            <value>
+                <fullName>Premises Liability</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Premises Liability</label>
+            </value>
+            <value>
+                <fullName>Product Liability</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Product Liability</label>
+            </value>
+            <value>
+                <fullName>Trip &amp; Fall</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Trip &amp; Fall</label>
+            </value>
+            <value>
+                <fullName>Workplace Injury</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Workplace Injury</label>
+            </value>
+            <value>
+                <fullName>Wrongful Death</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Wrongful Death</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

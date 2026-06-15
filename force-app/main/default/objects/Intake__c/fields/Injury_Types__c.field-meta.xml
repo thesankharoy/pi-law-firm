@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Injury_Types__c</fullName>
+    <label>Injury Types</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>MultiselectPicklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Whiplash</fullName>
+                <default>false</default>
+                <label>Whiplash</label>
+            </value>
+            <value>
+                <fullName>Back Injury</fullName>
+                <default>false</default>
+                <label>Back Injury</label>
+            </value>
+            <value>
+                <fullName>Head Injury (TBI)</fullName>
+                <default>false</default>
+                <label>Head Injury (TBI)</label>
+            </value>
+            <value>
+                <fullName>Broken Bones</fullName>
+                <default>false</default>
+                <label>Broken Bones</label>
+            </value>
+            <value>
+                <fullName>Lacerations</fullName>
+                <default>false</default>
+                <label>Lacerations</label>
+            </value>
+            <value>
+                <fullName>Soft Tissue</fullName>
+                <default>false</default>
+                <label>Soft Tissue</label>
+            </value>
+            <value>
+                <fullName>Nerve Damage</fullName>
+                <default>false</default>
+                <label>Nerve Damage</label>
+            </value>
+            <value>
+                <fullName>Spinal</fullName>
+                <default>false</default>
+                <label>Spinal</label>
+            </value>
+            <value>
+                <fullName>Internal</fullName>
+                <default>false</default>
+                <label>Internal</label>
+            </value>
+            <value>
+                <fullName>Psychological</fullName>
+                <default>false</default>
+                <label>Psychological</label>
+            </value>
+            <value>
+                <fullName>Burns</fullName>
+                <default>false</default>
+                <label>Burns</label>
+            </value>
+            <value>
+                <fullName>Amputation</fullName>
+                <default>false</default>
+                <label>Amputation</label>
+            </value>
+            <value>
+                <fullName>Fatality</fullName>
+                <default>false</default>
+                <label>Fatality</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+    <visibleLines>4</visibleLines>
+</CustomField>

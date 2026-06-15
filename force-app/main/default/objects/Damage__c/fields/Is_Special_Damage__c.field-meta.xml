@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Is_Special_Damage__c</fullName>
+    <formula>OR(
+    ISPICKVAL(Damage_Type__c, &quot;Medical Bills — Past&quot;),
+    ISPICKVAL(Damage_Type__c, &quot;Medical Bills — Future&quot;),
+    ISPICKVAL(Damage_Type__c, &quot;Lost Wages — Past&quot;),
+    ISPICKVAL(Damage_Type__c, &quot;Lost Wages — Future&quot;),
+    ISPICKVAL(Damage_Type__c, &quot;Loss of Earning Capacity&quot;),
+    ISPICKVAL(Damage_Type__c, &quot;Property Damage — Vehicle&quot;),
+    ISPICKVAL(Damage_Type__c, &quot;Property Damage — Other&quot;)
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Is Special Damage</label>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

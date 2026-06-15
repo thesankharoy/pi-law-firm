@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Liability_Clarity__c</fullName>
+    <label>Liability Clarity</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Other_Party_Fault</fullName>
+                <default>false</default>
+                <label>Other Party Fault</label>
+            </value>
+            <value>
+                <fullName>Shared_Fault</fullName>
+                <default>false</default>
+                <label>Shared Fault</label>
+            </value>
+            <value>
+                <fullName>Unclear</fullName>
+                <default>false</default>
+                <label>Unclear</label>
+            </value>
+            <value>
+                <fullName>Unknown</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Unknown</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

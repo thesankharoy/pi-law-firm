@@ -1,0 +1,87 @@
+<template>
+    <div class="availability-widget">
+        <!-- Header -->
+        <div class="widget-header">
+            <span class="widget-title">My Availability</span>
+            <span class={statusBadgeClass}>{currentStatus}</span>
+        </div>
+
+        <!-- Stats row -->
+        <template if:true={specialistData}>
+            <div class="stats-row">
+                <div class="stat-cell">
+                    <div class="stat-value">{specialistData.activeCount}</div>
+                    <div class="stat-label">Active</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-cell">
+                    <div class="stat-value">{specialistData.maxCapacity}</div>
+                    <div class="stat-label">Capacity</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-cell">
+                    <div class="stat-value">{specialistData.assignedToday}</div>
+                    <div class="stat-label">Today</div>
+                </div>
+            </div>
+
+            <!-- Capacity progress bar -->
+            <div class="cap-bar-wrap">
+                <div class="cap-bar-track">
+                    <div class="cap-bar-fill" style={capacityBarStyle}></div>
+                </div>
+                <span class="cap-pct">{capacityPercent}%</span>
+            </div>
+        </template>
+
+        <!-- Action buttons -->
+        <div class="action-row">
+            <template if:false={isActive}>
+                <button class="btn btn-active" onclick={handleGoActive} disabled={isLoading}>
+                    <template if:false={isLoading}>⚡ Go Active</template>
+                    <template if:true={isLoading}>Updating...</template>
+                </button>
+            </template>
+            <template if:true={isActive}>
+                <button class="btn btn-inactive" onclick={handleGoInactive} disabled={isLoading}>Go Inactive</button>
+                <button class="btn btn-break" onclick={handleOnBreak} disabled={isLoading}>On Break</button>
+            </template>
+        </div>
+
+        <!-- Error -->
+        <template if:true={errorMessage}>
+            <div class="error-msg">{errorMessage}</div>
+        </template>
+
+        <!-- Open Intakes -->
+        <div class="intakes-section">
+            <div class="intakes-header">
+                <span>Open Intakes</span>
+                <span class="intakes-badge">{openIntakesCount}</span>
+            </div>
+
+            <template if:true={hasOpenIntakes}>
+                <div class="intakes-list">
+                    <template for:each={openIntakes} for:item="intake">
+                        <div key={intake.id} class="intake-row" data-id={intake.id} onclick={handleIntakeClick}>
+                            <div class="intake-row-top">
+                                <span class="intake-name">{intake.name}</span>
+                                <span class={intake.statusClass}>{intake.status}</span>
+                            </div>
+                            <div class="intake-row-bottom">
+                                <span class="intake-type">{intake.incidentType}</span>
+                                <span class="intake-client">{intake.clientName}</span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <template if:false={hasOpenIntakes}>
+                <div class="intakes-empty">No open intakes assigned.</div>
+            </template>
+
+            <div class="last-refreshed">Refreshed {lastRefreshed}</div>
+        </div>
+    </div>
+</template>

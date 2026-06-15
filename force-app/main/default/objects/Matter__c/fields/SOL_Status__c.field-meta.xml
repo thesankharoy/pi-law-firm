@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SOL_Status__c</fullName>
+    <externalId>false</externalId>
+    <formula>IF(
+    SOL_Days_Remaining__c &lt; 0,
+    &quot;EXPIRED&quot;,
+    IF(
+        SOL_Days_Remaining__c &lt; 30,
+        &quot;CRITICAL&quot;,
+        IF(
+            SOL_Days_Remaining__c &lt; 90,
+            &quot;WARNING&quot;,
+            &quot;OK&quot;
+        )
+    )
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>SOL Status</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

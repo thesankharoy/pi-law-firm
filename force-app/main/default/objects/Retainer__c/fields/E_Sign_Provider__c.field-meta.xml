@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>E_Sign_Provider__c</fullName>
+    <label>E-Sign Provider</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>DocuSign</fullName>
+                <default>false</default>
+                <label>DocuSign</label>
+            </value>
+            <value>
+                <fullName>HelloSign</fullName>
+                <default>false</default>
+                <label>HelloSign</label>
+            </value>
+            <value>
+                <fullName>Adobe Sign</fullName>
+                <default>false</default>
+                <label>Adobe Sign</label>
+            </value>
+            <value>
+                <fullName>Manual</fullName>
+                <default>false</default>
+                <label>Manual</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+            <value>
+                <fullName>PandaDoc</fullName>
+                <default>false</default>
+                <label>PandaDoc</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
