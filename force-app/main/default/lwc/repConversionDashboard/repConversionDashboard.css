@@ -1,0 +1,269 @@
+.table-container {
+
+    padding: 20px;
+
+    overflow-x: auto;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f8fafc,
+            #eef2ff
+        );
+}
+
+.modern-table {
+
+    width: 100%;
+
+    border-collapse: separate;
+
+    border-spacing: 0 12px;
+}
+
+/* Header */
+
+thead th {
+
+    background:
+        linear-gradient(
+            90deg,
+            #1e40af,
+            #2563eb
+        );
+
+    color: white;
+
+    padding: 14px;
+
+    text-align: left;
+
+    font-size: 13px;
+
+    font-weight: 700;
+}
+
+/* Rows */
+
+tbody tr {
+
+    background: white;
+
+    box-shadow:
+        0 5px 18px
+        rgba(15,23,42,.08);
+
+    transition: all .3s ease;
+
+    animation:
+        slideUp .5s ease;
+}
+
+tbody tr:hover {
+
+    transform:
+        translateY(-4px);
+
+    box-shadow:
+        0 12px 30px
+        rgba(15,23,42,.15);
+}
+
+tbody td {
+
+    padding: 16px;
+
+    color: #334155;
+
+    font-weight: 500;
+}
+
+/* Rep */
+
+.rep-info {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    font-weight: 600;
+}
+
+/* Rank */
+
+.rank {
+
+    font-size: 20px;
+}
+
+/* Progress */
+
+.progress-wrapper {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+}
+
+.progress-track {
+
+    width: 140px;
+
+    height: 12px;
+
+    background: #e2e8f0;
+
+    border-radius: 999px;
+
+    overflow: hidden;
+}
+
+.progress-bar {
+
+    height: 100%;
+
+    border-radius: 999px;
+
+    animation:
+        growBar 1s ease;
+}
+
+/* Colors */
+
+.green-bar {
+
+    background:
+        linear-gradient(
+            90deg,
+            #22c55e,
+            #16a34a
+        );
+}
+
+.blue-bar {
+
+    background:
+        linear-gradient(
+            90deg,
+            #3b82f6,
+            #2563eb
+        );
+}
+
+.orange-bar {
+
+    background:
+        linear-gradient(
+            90deg,
+            #fb923c,
+            #ea580c
+        );
+}
+
+.red-bar {
+
+    background:
+        linear-gradient(
+            90deg,
+            #ef4444,
+            #dc2626
+        );
+}
+
+/* Percentage */
+
+.percent {
+
+    font-weight: 700;
+
+    min-width: 45px;
+}
+
+/* Status Badge */
+
+.badge {
+
+    padding: 6px 12px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+
+    font-weight: 700;
+}
+
+.green {
+
+    background: #dcfce7;
+
+    color: #15803d;
+}
+
+.blue {
+
+    background: #dbeafe;
+
+    color: #1d4ed8;
+}
+
+.orange {
+
+    background: #ffedd5;
+
+    color: #ea580c;
+}
+
+.red {
+
+    background: #fee2e2;
+
+    color: #dc2626;
+}
+
+/* Animation */
+
+@keyframes growBar {
+
+    from {
+
+        width: 0;
+    }
+}
+
+@keyframes slideUp {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translateY(15px);
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0);
+    }
+}
+
+/* Mobile */
+
+@media(max-width:768px){
+
+    .modern-table {
+
+        font-size: 12px;
+    }
+
+    .progress-track {
+
+        width: 80px;
+    }
+}

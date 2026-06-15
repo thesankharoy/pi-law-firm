@@ -1,0 +1,71 @@
+<template>
+    <div class="dashboard-wrapper">
+
+        <!-- HEADER -->
+        <div class="header">
+            <h1>⚡ Intake Time Tracker</h1>
+            <p>Real-time performance & lifecycle tracking</p>
+        </div>
+
+        <!-- SEARCH -->
+        <div class="search-box">
+            <lightning-input 
+                type="search"
+                placeholder="Search Intake..."
+                onchange={handleSearch}>
+            </lightning-input>
+        </div>
+
+        <!-- KPI SECTION -->
+        <div class="kpi-container">
+
+            <div class="kpi-card blue">
+                <h2>Average Time</h2>
+                <p class="value">{formattedAverageTime}</p>
+            </div>
+
+        </div>
+
+       <!-- TABLE -->
+<div class="table-container">
+    <template if:true={intakes}>
+        <table class="custom-table">
+
+            <thead>
+                <tr>
+                    <th>Intake Name</th>
+                    <th>Status</th>
+                    <th>How Long It Took</th> <!-- NEW COLUMN -->
+                </tr>
+            </thead>
+
+            <tbody>
+                <template for:each={intakes} for:item="item">
+                    <tr key={item.id} class="row-hover">
+
+                        <td>
+                            <span class="link" data-id={item.id} onclick={openRecord}>
+                                {item.name}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="status">{item.status}</span>
+                        </td>
+
+                        <td>
+                            <span class="time">
+                                {item.formattedTime}
+                            </span>
+                        </td>
+
+                    </tr>
+                </template>
+            </tbody>
+
+        </table>
+    </template>
+</div>
+         
+    </div>
+</template>

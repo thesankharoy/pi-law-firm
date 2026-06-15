@@ -1,0 +1,90 @@
+.table-container {
+    padding: 15px;
+    background: #f7f9fc;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.custom-table th {
+    background: #4facfe;
+    color: white;
+    padding: 12px;
+    text-align: left;
+}
+
+.custom-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Row hover */
+.flash-row {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.flash-row:hover {
+    transform: scale(1.01);
+}
+
+/* 🔴 No follow-up (FLASH RED) */
+.flash-row.danger {
+    background: #ffe5e5;
+    animation: flashRed 1.5s infinite;
+}
+
+/* 🟢 Follow-up done */
+.flash-row.success {
+    background: #e8fff1;
+}
+
+/* Badge */
+.badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: white;
+}
+
+.badge.danger {
+    background: #ff4d4d;
+}
+
+.badge.success {
+    background: #38c172;
+}
+
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.pagination button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 8px;
+    background: #4facfe;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.pagination button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.pagination button:hover:not(:disabled) {
+    transform: scale(1.05);
+}

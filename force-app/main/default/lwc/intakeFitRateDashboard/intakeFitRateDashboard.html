@@ -1,0 +1,106 @@
+<template>
+
+    <div class="dashboard-grid">
+
+        <!-- Intake Fit Rate -->
+        <lightning-card title="Intake Case Quality Rate by Source">
+
+            <div class="fit-container">
+
+                <template for:each={fitRateData} for:item="item">
+
+                    <div key={item.source} class="fit-row">
+
+                        <div class="fit-header">
+
+                            <span class="source">
+                                {item.source}
+                            </span>
+
+                            <span class="fit-rate">
+                                {item.fitRate}%
+                            </span>
+
+                        </div>
+
+                        <div class="progress-container">
+
+                            <div
+                                class="fit-progress-bar"
+                                style={item.widthStyle}>
+                            </div>
+
+                        </div>
+
+                        <div class="fit-detail">
+
+                            {item.qualifiedIntakes}
+                            Qualified of
+                            {item.totalIntakes}
+                            Intakes
+
+                        </div>
+
+                    </div>
+
+                </template>
+
+            </div>
+
+        </lightning-card>
+
+        <!-- Signed Conversion -->
+        <lightning-card
+            title="Intake-to-Signed Conversion by Source">
+
+            <div class="conversion-container">
+
+                <template
+                    for:each={conversionData}
+                    for:item="item">
+
+                    <div
+                        key={item.source}
+                        class="fit-row">
+
+                        <div class="fit-header">
+
+                            <span class="source">
+                                {item.source}
+                            </span>
+
+                            <span class="conversion-rate">
+                                {item.conversionRate}%
+                            </span>
+
+                        </div>
+
+                        <div class="progress-container">
+
+                            <div
+                                class="conversion-progress-bar"
+                                style={item.widthStyle}>
+                            </div>
+
+                        </div>
+
+                        <div class="fit-detail">
+
+                            {item.signedClients}
+                            Signed of
+                            {item.totalIntakes}
+                            Intakes
+
+                        </div>
+
+                    </div>
+
+                </template>
+
+            </div>
+
+        </lightning-card>
+
+    </div>
+
+</template>

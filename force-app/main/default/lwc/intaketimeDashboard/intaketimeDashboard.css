@@ -1,0 +1,276 @@
+.dashboard-wrapper {
+    padding: 24px;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top left, rgba(59,130,246,.18), transparent 40%),
+        radial-gradient(circle at top right, rgba(168,85,247,.18), transparent 40%),
+        linear-gradient(135deg, #020617, #0f172a, #111827);
+    color: #f8fafc;
+    font-family: "Segoe UI", Inter, sans-serif;
+}
+
+/* ================= HEADER ================= */
+
+.header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.header h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: linear-gradient(
+        90deg,
+        #38bdf8,
+        #8b5cf6,
+        #ec4899,
+        #38bdf8
+    );
+    background-size: 300% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientFlow 6s linear infinite;
+}
+
+.header p {
+    color: #94a3b8;
+    margin-top: 8px;
+    font-size: 0.95rem;
+}
+
+@keyframes gradientFlow {
+    to {
+        background-position: 300% center;
+    }
+}
+
+/* ================= SEARCH ================= */
+
+.search-box {
+    width: 50%;
+    margin: auto;
+    padding: 10px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 8px 24px rgba(0,0,0,.3);
+}
+
+/* ================= KPI SECTION ================= */
+
+.kpi-container {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+.kpi-card {
+    width: 260px;
+    padding: 24px;
+    border-radius: 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(18px);
+
+    border: 1px solid rgba(255,255,255,0.08);
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.35),
+        inset 0 1px 0 rgba(255,255,255,.08);
+
+    transition: all .4s ease;
+    animation: floatCard 4s ease-in-out infinite;
+}
+
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    left: -60%;
+    width: 220%;
+    height: 220%;
+    background: linear-gradient(
+        45deg,
+        transparent,
+        rgba(255,255,255,.08),
+        transparent
+    );
+    transform: rotate(25deg);
+    transition: .6s;
+}
+
+.kpi-card:hover::before {
+    left: 100%;
+}
+
+.kpi-card:hover {
+    transform: translateY(-8px) scale(1.03);
+}
+
+/* KPI COLOR VARIANTS */
+
+.blue {
+    background: linear-gradient(
+        135deg,
+        rgba(59,130,246,.25),
+        rgba(14,165,233,.18)
+    );
+    border-left: 5px solid #38bdf8;
+}
+
+.purple {
+    background: linear-gradient(
+        135deg,
+        rgba(139,92,246,.25),
+        rgba(168,85,247,.18)
+    );
+    border-left: 5px solid #8b5cf6;
+}
+
+.green {
+    background: linear-gradient(
+        135deg,
+        rgba(16,185,129,.25),
+        rgba(34,197,94,.18)
+    );
+    border-left: 5px solid #22c55e;
+}
+
+.orange {
+    background: linear-gradient(
+        135deg,
+        rgba(249,115,22,.25),
+        rgba(251,146,60,.18)
+    );
+    border-left: 5px solid #f97316;
+}
+
+.kpi-card h2 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    font-weight: 800;
+}
+
+.kpi-card p {
+    color: #cbd5e1;
+    font-size: .95rem;
+}
+
+/* FLOAT EFFECT */
+
+@keyframes floatCard {
+    0%,100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+/* ================= TABLE ================= */
+
+.table-container {
+    margin-top: 35px;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    background: rgba(255,255,255,.04);
+    backdrop-filter: blur(18px);
+
+    border-radius: 18px;
+    overflow: hidden;
+
+    border: 1px solid rgba(255,255,255,.08);
+
+    box-shadow:
+        0 10px 35px rgba(0,0,0,.35);
+}
+
+.custom-table th {
+    padding: 16px;
+    text-align: left;
+
+    background: rgba(255,255,255,.08);
+
+    color: #38bdf8;
+    font-size: .85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+}
+
+.custom-table td {
+    padding: 15px;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    color: #e2e8f0;
+}
+
+.custom-table tbody tr {
+    transition: .3s ease;
+}
+
+.custom-table tbody tr:hover {
+    background: rgba(56,189,248,.08);
+    transform: scale(1.002);
+}
+
+/* ================= LINKS ================= */
+
+.link {
+    color: #38bdf8;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all .3s ease;
+}
+
+.link:hover {
+    color: #ec4899;
+    text-shadow:
+        0 0 8px rgba(236,72,153,.8),
+        0 0 18px rgba(236,72,153,.4);
+}
+
+/* ================= SCROLLBAR ================= */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+        #38bdf8,
+        #8b5cf6
+    );
+    border-radius: 20px;
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 768px) {
+
+    .search-box {
+        width: 100%;
+    }
+
+    .header h1 {
+        font-size: 1.8rem;
+    }
+
+    .kpi-card {
+        width: 100%;
+    }
+}

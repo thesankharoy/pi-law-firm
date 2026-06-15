@@ -1,0 +1,55 @@
+<template>
+
+    <lightning-card
+        title="Response Time vs Conversion Analysis"
+        icon-name="utility:trend">
+
+        <div class="container">
+
+            <template
+                for:each={analysisData}
+                for:item="item">
+
+                <div
+                    key={item.bucket}
+                    class="row">
+
+                    <div class="header">
+
+                        <span class="bucket">
+                            {item.bucket}
+                        </span>
+
+                        <span class="rate">
+                            {item.conversionRate}%
+                        </span>
+
+                    </div>
+
+                    <div class="progress-container">
+
+                        <div
+                            class="progress-bar"
+                            style={item.widthStyle}>
+                        </div>
+
+                    </div>
+
+                    <div class="detail">
+
+                        {item.convertedIntakes}
+                        Converted of
+                        {item.totalIntakes}
+                        Intakes
+
+                    </div>
+
+                </div>
+
+            </template>
+
+        </div>
+
+    </lightning-card>
+
+</template>

@@ -1,0 +1,345 @@
+<template>
+
+    <lightning-card>
+
+    <!-- Search -->
+
+    <div class="toolbar">
+
+    <div class="search-filter">
+
+        <lightning-input
+            type="search"
+            placeholder="Search Timeline"
+            onchange={handleSearch}>
+        </lightning-input>
+
+        <lightning-button-icon
+            icon-name="utility:filterList"
+            alternative-text="Filter"
+            title="Filter"
+            onclick={toggleFilter}
+            class="filter-btn">
+        </lightning-button-icon>
+
+    </div>
+
+    </div>
+    <template if:true={showFilter}>
+
+    <div class="filter-panel">
+
+    <div class="filter-header">
+
+        <span>Filter Activities</span>
+
+        <lightning-button-icon
+            icon-name="utility:close"
+            size="x-small"
+            onclick={toggleFilter}>
+        </lightning-button-icon>
+
+    </div>
+
+    <div class="filter-body">
+
+    <div class="filter-section">
+
+    <div class="section-title">
+    FILTER BY DATE
+    </div>
+
+    <div class="date-filter-buttons">
+
+    <button
+        class={allTimeClass}
+        data-value="all"
+        onclick={handleDateFilter}>
+        All Time
+    </button>
+
+    <button
+        class={pastClass}
+        data-value="past"
+        onclick={handleDateFilter}>
+        Past
+    </button>
+
+    <button
+        class={futureClass}
+        data-value="future"
+        onclick={handleDateFilter}>
+        Future
+    </button>
+
+    </div>
+
+    </div>
+    <div class="no-date-option">
+
+    <input
+    type="checkbox"
+    id="noDate"
+    checked={showNoDate}
+    onchange={handleNoDateChange} />
+
+    <label for="noDate">
+    Show Records with No Date
+    </label>
+
+    </div>
+
+        <div class="filter-section">
+
+        <label class="section-title">
+            FILTER BY USER
+        </label>
+
+        <lightning-radio-group
+            options={userOptions}
+            value={selectedUser}
+            type="radio"
+            onchange={handleUserFilter}>
+        </lightning-radio-group>
+
+    </div>
+
+        <lightning-checkbox-group
+            label="Activity Type"
+            options={activityOptions}
+            value={selectedTypes}
+            onchange={handleTypeFilter}>
+        </lightning-checkbox-group>
+
+        <div class="filter-footer">
+
+            <lightning-button
+                label="Apply"
+                variant="brand"
+                onclick={applyFilter}>
+            </lightning-button>
+
+        </div>
+
+    </div>
+
+    </div>
+
+    </template>
+    <br><br>
+
+    <div class="layout">
+
+        <!-- LEFT MONTH NAVIGATION -->
+
+        <div class="month-nav">
+
+            <template for:each={monthList} for:item="month">
+
+                <div
+                    key={month}
+                    class="month-item">
+
+                    {month}
+
+                </div>
+
+            </template>
+
+        </div>
+
+    <!-- TIMELINE -->
+
+    <div class="timeline">
+               <!-- Refresh Button -->
+       <div class="timeline-header">
+
+    <!-- LEFT SIDE -->
+    <div class="header-left">
+        <span class="title-text">
+        </span>
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="header-right">
+        <lightning-button-icon
+            icon-name="utility:refresh"
+            alternative-text="Refresh"
+            size="small"
+            variant="bare"
+            onclick={handleRefresh}
+            title="Refresh">
+        </lightning-button-icon>
+    </div>
+
+</div>
+
+    <template
+        for:each={filteredData}
+        for:item="group">
+
+        <div
+            key={group.monthYear}
+            class="month-section">
+
+            <div class="month-header">
+
+                <span
+                    class="month-expand"
+                    data-month={group.monthYear}
+                    onclick={toggleSection}>
+
+                    <lightning-icon
+                        icon-name={group.iconName}
+                        size="xx-small">
+                    </lightning-icon>
+
+                </span>
+
+                <span class="month-title">
+                    {group.monthYear}
+                </span>
+
+                <span class="activity-count">
+                    ({group.activities.length})
+                </span>
+
+            </div>
+
+            <!-- ACTIVITIES -->
+
+            <template if:true={group.expanded}>
+
+                <div class="activity-container">
+
+                    <template
+                        for:each={group.activities}
+                        for:item="item">
+
+                        <div
+                            key={item.recordId}
+                            class="activity-wrapper">
+
+                            <div class="timeline-row">
+
+                                <!-- Expand -->
+
+                                <div
+                                    class="expand-cell"
+                                    data-id={item.recordId}
+                                    onclick={toggleActivity}>
+
+                                    <lightning-icon
+                                        icon-name={item.detailIcon}
+                                        size="xx-small">
+                                    </lightning-icon>
+
+                                </div>
+
+                                <!-- Activity Icon -->
+
+                                <div class="icon-cell">
+
+                                    <lightning-icon
+                                        icon-name={item.iconName}
+                                        size="x-small">
+                                    </lightning-icon>
+
+                                </div>
+
+                                <!-- Subject -->
+
+                                <div class="subject-cell">
+                                    {item.subject}
+                                </div>
+
+                                <!-- Status -->
+
+                                <div class="status-cell">
+                                    {item.status}
+                                </div>
+
+                                <!-- Owner -->
+
+                                <div class="avatar-cell">
+                                    {item.ownerInitials}
+                                </div>
+
+                                <!-- Date -->
+
+                                <div class="date-cell">
+                                    {item.displayDate}
+                                </div>
+
+                                <!-- Open -->
+
+                                <div class="action-cell">
+
+                                    <lightning-button-icon
+                                        icon-name="utility:new_window"
+                                        size="x-small"
+                                        data-id={item.recordId}
+                                        onclick={handleOpenRecord}>
+                                    </lightning-button-icon>
+
+                                </div>
+
+                            </div>
+
+                            <!-- Details -->
+
+                            <template if:true={item.expanded}>
+
+                                <div class="activity-details">
+
+                                    <div class="detail-section">
+
+                                        <strong>
+                                            Description
+                                        </strong>
+
+                                    </div>
+
+                                    <div class="detail-text">
+                                        {item.description}
+                                    </div>
+
+                                    <div class="detail-footer">
+
+                                        <span>
+                                            Status:
+                                            {item.status}
+                                        </span>
+
+                                        <span>
+                                            Date:
+                                            {item.displayDate}
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </template>
+
+                        </div>
+
+                    </template>
+
+                </div>
+
+            </template>
+
+        </div>
+
+    </template>
+
+    </div>
+
+        </div>
+
+    </div>
+
+    </lightning-card>
+
+    </template>

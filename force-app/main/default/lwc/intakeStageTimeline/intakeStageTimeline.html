@@ -1,0 +1,116 @@
+<!-- <template>
+  <lightning-card title="Stage Time Tracker" icon-name="standard:lead">
+    <div class="slds-p-around_medium">
+      <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading..."></lightning-spinner>
+      </template>
+
+      <template if:false={isLoading}>
+        <template if:true={stageData.length}>
+          <div class="slds-timeline">
+            <template for:each={stageData} for:item="stage">
+              <div key={stage.name} class="stage-row slds-grid slds-gutters slds-m-bottom_small">
+                
+                <div class="slds-col slds-size_3-of-12">
+                  <span class={stage.badgeClass}>
+                    {stage.name}
+                  </span>
+                </div>
+
+                <div class="slds-col slds-size_4-of-12 slds-text-body_small slds-text-color_weak">
+                  <template if:true={stage.enteredAt}>
+                    📅 {stage.enteredAt}
+                  </template>
+                  <template if:false={stage.enteredAt}>
+                    <span class="slds-text-color_weak">— Not Reached —</span>
+                  </template>
+                </div>
+
+                <div class="slds-col slds-size_5-of-12">
+                  <template if:true={stage.timeSpent}>
+                    <div class="time-pill">
+                      ⏱ {stage.timeSpent}
+                    </div>
+                  </template>
+                  <template if:false={stage.timeSpent}>
+                    <template if:true={stage.isCurrent}>
+                      <div class="time-pill current">
+                        ⏳ In Progress...
+                      </div>
+                    </template>
+                  </template>
+                </div>
+
+              </div>
+            </template>
+          </div>
+
+          <div class="slds-m-top_medium slds-border_top slds-p-top_small">
+            <strong>Total Time (New → Current):</strong> {totalTime}
+          </div>
+        </template>
+      </template>
+    </div>
+  </lightning-card>
+</template> -->
+
+<template>
+  <lightning-card title="Stage Time Tracker" icon-name="standard:lead">
+    <div class="slds-p-around_medium">
+      <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading..."></lightning-spinner>
+      </template>
+
+      <template if:false={isLoading}>
+        <template if:true={stageData.length}>
+          <div class="slds-timeline">
+            <template for:each={stageData} for:item="stage">
+              <div key={stage.name} class="stage-row slds-grid slds-gutters slds-m-bottom_small">
+                
+                <div class="slds-col slds-size_3-of-12">
+                  <span class={stage.badgeClass}>
+                    {stage.name}
+                  </span>
+                </div>
+
+                <div class="slds-col slds-size_4-of-12 slds-text-body_small slds-text-color_weak">
+                  <template if:true={stage.enteredAt}>
+                    📅 {stage.enteredAt}
+                  </template>
+                  <template if:false={stage.enteredAt}>
+                    <span class="slds-text-color_weak">— Not Reached —</span>
+                  </template>
+                </div>
+
+                <div class="slds-col slds-size_5-of-12">
+                  <template if:false={stage.isConverted}>
+                    <template if:true={stage.timeSpent}>
+                      <div class="time-pill">
+                        ⏱ {stage.timeSpent}
+                      </div>
+                    </template>
+                    <template if:false={stage.timeSpent}>
+                      <template if:true={stage.isCurrent}>
+                        <div class="time-pill current">
+                          ⏳ In Progress...
+                        </div>
+                      </template>
+                    </template>
+                  </template>
+                </div>
+
+              </div>
+            </template>
+          </div>
+
+          <template if:true={isConverted}>
+            <div class="slds-m-top_medium slds-border_top slds-p-top_small">
+              <strong>Total Time:</strong> {totalTime}
+            </div>
+          </template>
+
+        </template>
+      </template>
+    </div>
+  </lightning-card>
+</template>

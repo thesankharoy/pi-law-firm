@@ -1,0 +1,73 @@
+<template>
+
+    <lightning-card
+        title="🏆 Intake Specialist Performance">
+
+        <div class="leaderboard-container">
+
+            <template
+                for:each={specialists}
+                for:item="item">
+
+                <div
+                    key={item.specialistName}
+                    class="leaderboard-row">
+
+                    <div class="rank-section">
+
+                        <div class={item.rankClass}>
+                            {item.rank}
+                        </div>
+
+                    </div>
+
+                    <div class="content-section">
+
+                        <div class="header">
+
+                            <div class="name">
+                                {item.specialistName}
+                            </div>
+
+                            <div class="conversion-badge">
+
+                                {item.conversionRate}%
+
+                            </div>
+
+                        </div>
+
+                        <div class="progress-container">
+
+                            <div
+                                class="progress-bar"
+                                style={item.widthStyle}>
+                            </div>
+
+                        </div>
+
+                        <div class="stats">
+
+                            <span>
+                                📂 {item.totalIntakes}
+                                Intakes
+                            </span>
+
+                            <span>
+                                ✍️ {item.signedClients}
+                                Signed
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </template>
+
+        </div>
+
+    </lightning-card>
+
+</template>

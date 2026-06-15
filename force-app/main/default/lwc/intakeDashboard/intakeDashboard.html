@@ -1,0 +1,58 @@
+<template>
+    <div class="dashboard-container">
+
+        <div class="dashboard-grid">
+
+            <!-- Intake Entered -->
+            <div class="metric-card">
+                <div class="icon-wrapper">
+                    <lightning-icon icon-name="standard:lead" size="large">
+                    </lightning-icon>
+                </div>
+
+                <div class="metric-content">
+                    <div class="metric-title">Intake Entered</div>
+                    <div class="metric-value">{totalLeads}</div>
+                    <div class="metric-subtitle">
+                        Total Intake entered into the firm
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signed Clients -->
+            <div class="metric-card">
+                <div class="icon-wrapper signed-icon">
+                    <lightning-icon icon-name="standard:people" size="large">
+                    </lightning-icon>
+                </div>
+
+                <div class="metric-content">
+                    <div class="metric-title">Signed Clients</div>
+                    <div class="metric-value">{signedClients}</div>
+                    <div class="metric-subtitle">
+                        Retainer Agreement Signed
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conversion Rate -->
+            <div class="metric-card">
+                <div class="icon-wrapper conversion-icon">
+                    <lightning-icon icon-name="utility:chart" size="large">
+                    </lightning-icon>
+                </div>
+
+                <div class="metric-content">
+                    <div class="metric-title">Overall Conversion Rate</div>
+                    <div class="metric-value">{conversionRate}%</div>
+                    <div class="metric-subtitle">
+                        Converted Intakes
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+      
+</template>

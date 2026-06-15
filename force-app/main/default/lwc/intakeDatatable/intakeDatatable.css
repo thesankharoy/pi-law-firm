@@ -1,0 +1,23 @@
+.hotClass {
+    background: #d4f7d4;
+    color: green;
+    font-weight: bold;
+    border-radius: 20px;
+    padding: 4px 10px;
+}
+
+.warmClass {
+    background: #fff3cd;
+    color: #d39e00;
+    font-weight: bold;
+    border-radius: 20px;
+    padding: 4px 10px;
+}
+
+.coldClass {
+    background: #f8d7da;
+    color: red;
+    font-weight: bold;
+    border-radius: 20px;
+    padding: 4px 10px;
+}

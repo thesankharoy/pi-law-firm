@@ -1,0 +1,193 @@
+.softphone-container {
+    padding: 6px;
+    background: #ffffff;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Header */
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.header h1 {
+    font-size: 12px;
+    font-weight: 700;
+    color: #16325c;
+    margin: 0;
+}
+
+/* Status */
+
+.status-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border: 1px solid #d8dde6;
+    border-radius: 8px;
+    background: #f7fff8;
+    margin-bottom: 6px;
+    font-size: 10px;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #2e844a;
+}
+
+.status-ready {
+    color: #2e844a;
+    font-weight: 700;
+}
+
+.separator {
+    color: #999;
+}
+
+/* Number Display */
+
+.phone-input-container {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.phone-display {
+    flex: 1;
+    height: 36px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 8px;
+
+    border: 1px solid #d8dde6;
+    border-radius: 8px;
+
+    background: #fff;
+
+    font-size: 12px;
+    font-weight: 600;
+    color: #16325c;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.clear-icon {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+
+    border-radius: 8px;
+    border: 1px solid #0176d3;
+
+    background: white;
+
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* Keypad */
+
+.keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    justify-items: center;
+    margin-bottom: 8px;
+}
+
+.key {
+    width: 48px;
+    height: 48px;
+
+    border-radius: 50%;
+    border: 1px solid #d8dde6;
+
+    background: white;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    cursor: pointer;
+}
+
+.key:hover {
+    border-color: #0176d3;
+    background: #f4f9ff;
+}
+
+.key span {
+    font-size: 12px;
+    font-weight: 700;
+    color: #16325c;
+    line-height: 1;
+}
+
+.key small {
+    font-size: 7px;
+    margin-top: 1px;
+    color: #706e6b;
+    line-height: 1;
+}
+
+/* Buttons */
+
+.action-buttons {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 0;
+}
+
+.call-btn,
+.hangup-btn {
+    flex: 1;
+    height: 32px;
+
+    border: none;
+    border-radius: 16px;
+
+    color: white;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.call-btn {
+    background: #2e844a;
+}
+
+.hangup-btn {
+    background: #ea001e;
+}
+
+/* Hide sections causing scrolling */
+
+.quick-actions,
+.footer-status,
+.call-history {
+    display: none;
+}
+
+/* Remove lightning card padding */
+
+lightning-card {
+    --slds-c-card-body-spacing-block-start: 0;
+    --slds-c-card-body-spacing-block-end: 0;
+    --slds-c-card-body-spacing-inline-start: 0;
+    --slds-c-card-body-spacing-inline-end: 0;
+}

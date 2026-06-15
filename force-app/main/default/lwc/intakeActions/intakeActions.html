@@ -1,0 +1,53 @@
+<!-- <template>
+    <lightning-card>
+
+        <div class="actions-container">
+
+            <div class="header">
+                Actions
+            </div>
+
+            <div class="button-section">
+
+                <lightning-button
+                    label="Open Matter"
+                    variant="brand"
+                    class="action-btn"
+                    onclick={handleOpenMatter}>
+                </lightning-button>
+
+                <lightning-button
+                    label="Turn Down"
+                    variant="neutral"
+                    class="action-btn"
+                    onclick={handleTurnDown}>
+                </lightning-button>
+
+                <lightning-button
+                    label="Refer Out"
+                    variant="neutral"
+                    class="action-btn"
+                    onclick={handleReferOut}>
+                </lightning-button>
+
+            </div>
+
+        </div>
+
+    </lightning-card>
+</template> -->
+
+<template>
+    <template if:true={isActiveIntake}>
+        <lightning-card>
+            <div class="actions-container">
+                <div class="header">Actions</div>
+                <div class="button-section">
+                    <lightning-button label="Open Matter" variant="brand" class="action-btn" onclick={handleOpenMatter}></lightning-button>
+                    <lightning-button label="Turn Down" variant="neutral" class="action-btn" onclick={handleTurnDown}></lightning-button>
+                    <lightning-button label="Refer Out" variant="neutral" class="action-btn" onclick={handleReferOut}></lightning-button>
+                </div>
+            </div>
+        </lightning-card>
+    </template>
+</template>

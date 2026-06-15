@@ -1,0 +1,207 @@
+<template>
+
+    <lightning-card
+        title="AI Case Handoff Assistant"
+        icon-name="utility:einstein">
+
+        <div class="ai-container">
+
+            <div class="hero-header">
+
+                <div class="hero-left">
+
+                    <lightning-icon
+                        icon-name="utility:einstein"
+                        size="small">
+                    </lightning-icon>
+
+                    <div>
+
+                        <div class="hero-title">
+                            AI Conversation Intelligence
+                        </div>
+
+                        <div class="hero-subtitle">
+                            Real-time case understanding
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="hero-actions">
+
+                    <div class="live-badge">
+
+                        <span class="live-dot"></span>
+
+                        READY
+
+                    </div>
+
+                    <lightning-button
+                        variant="brand"
+                        label="Refresh"
+                        icon-name="utility:refresh"
+                        onclick={generateSummary}>
+                    </lightning-button>
+
+                </div>
+
+            </div>
+
+            <template if:true={loading}>
+
+                <div class="spinner-container">
+
+                    <lightning-spinner
+                        alternative-text="Loading"
+                        size="medium">
+                    </lightning-spinner>
+
+                </div>
+
+            </template>
+
+            <template if:false={loading}>
+
+                <template if:true={hasSummary}>
+
+                    <div class="content">
+
+                        <!-- Sentiment -->
+
+                        <div class={sentimentBannerClass}>
+
+                            <div class="banner-label">
+                                Client Sentiment
+                            </div>
+
+                            <div class="banner-value">
+                                {sentiment}
+                            </div>
+
+                        </div>
+
+                        <!-- Summary -->
+
+                        <div class="insight-block">
+
+                            <div class="insight-header">
+
+                                <lightning-icon
+                                    icon-name="utility:summary"
+                                    size="x-small">
+                                </lightning-icon>
+
+                                <span>
+                                    Conversation Summary
+                                </span>
+
+                            </div>
+
+                            <div class="insight-body">
+
+                                <lightning-formatted-rich-text
+                                    value={summary}>
+                                </lightning-formatted-rich-text>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Recommended Action -->
+
+                        <div class="insight-block">
+
+                            <div class="insight-header">
+
+                                <lightning-icon
+                                    icon-name="utility:task"
+                                    size="x-small">
+                                </lightning-icon>
+
+                                <span>
+                                    Recommended Action
+                                </span>
+
+                            </div>
+
+                            <div class="insight-body">
+
+                                <lightning-formatted-rich-text
+                                    value={recommendedAction}>
+                                </lightning-formatted-rich-text>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Next Message -->
+
+                        <div class="insight-block">
+
+                            <div class="message-header">
+
+                                <div class="insight-header">
+
+                                    <lightning-icon
+                                        icon-name="utility:chat"
+                                        size="x-small">
+                                    </lightning-icon>
+
+                                    <span>
+                                        Suggested Next Message
+                                    </span>
+
+                                </div>
+
+                                <lightning-button-icon
+                                    icon-name="utility:copy"
+                                    alternative-text="Copy"
+                                    onclick={copyMessage}>
+                                </lightning-button-icon>
+
+                            </div>
+
+                            <div class="message-box">
+
+                                <lightning-formatted-rich-text
+                                    value={nextMessage}>
+                                </lightning-formatted-rich-text>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </template>
+
+                <template if:false={hasSummary}>
+
+                    <div class="empty-state">
+
+                        <lightning-icon
+                            icon-name="utility:einstein"
+                            size="large">
+                        </lightning-icon>
+
+                        <div class="empty-title">
+                            No AI Summary Available
+                        </div>
+
+                        <div class="empty-description">
+                            Generate an AI summary from the Twilio conversation history.
+                        </div>
+
+                    </div>
+
+                </template>
+
+            </template>
+
+        </div>
+    </lightning-card>
+
+</template>

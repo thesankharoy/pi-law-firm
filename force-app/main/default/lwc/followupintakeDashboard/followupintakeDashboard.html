@@ -1,0 +1,71 @@
+<template>
+    <lightning-card title="Intake Follow-up Dashboard">
+
+        <div class="table-container">
+
+            <table class="custom-table">
+
+                <thead>
+                    <tr>
+                        <th>Intake Name</th>
+                        <th>Created Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <template for:each={intakes} for:item="i">
+
+                        <tr key={i.id}
+                            class={i.rowClass}
+                            onclick={openRecord}
+                            data-id={i.id}>
+
+                            <td>{i.name}</td>
+
+                            <td>
+                                <lightning-formatted-date-time
+                                    value={i.createdDate}>
+                                </lightning-formatted-date-time>
+                            </td>
+
+                            <td>
+                                <span class={i.statusClass}>
+                                    {i.statusText}
+                                </span>
+                            </td>
+
+                        </tr>
+
+                    </template>
+
+                </tbody>
+
+            </table>
+
+            <!-- 🔥 PAGINATION SECTION -->
+            <div class="pagination">
+
+                <button class="page-btn"
+                        onclick={prevPage}
+                        disabled={disablePrev}>
+                    ⬅ Previous
+                </button>
+
+                <span class="page-info">
+                    Page {pageNumber} of {totalPages}
+                </span>
+
+                <button class="page-btn"
+                        onclick={nextPage}
+                        disabled={disableNext}>
+                    Next ➡
+                </button>
+
+            </div>
+
+        </div>
+
+    </lightning-card>
+</template>

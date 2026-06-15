@@ -1,0 +1,23 @@
+.section-title {
+    font-weight: 700;
+    color: #0176d3;
+    border-bottom: 2px solid #0176d3;
+    padding-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.questionnaire-header {
+    border-bottom: 1px solid #dddbda;
+    padding-bottom: 12px;
+}
+
+.output-label {
+    font-weight: 600;
+    color: #444;
+}
+
+.output-row {
+    border-bottom: 1px solid #f3f2f2;
+    padding: 4px 0;
+}

@@ -1,0 +1,871 @@
+<apex:page controller="TwilioTokenServiceVF"
+    showHeader="false" 
+    sidebar="false" 
+    standardStylesheets="false" 
+    applyBodyTag="false" 
+    docType="html-5.0">
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Twilio Softphone</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+        body { background: #fff; padding: 12px; }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .header-icon { font-size: 18px; }
+        .header-title { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f3fdf3;
+            border: 1px solid #d4edda;
+            border-radius: 6px;
+            padding: 6px 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #28a745;
+            flex-shrink: 0;
+        }
+
+        .status-dot.error { background: #dc3545; }
+        .status-dot.loading { background: #ffc107; }
+
+        .status-text { color: #1a1a1a; font-weight: 500; }
+        .status-sub { color: #666; margin-left: 2px; }
+
+        .mic-banner {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: #856404;
+        }
+
+        .mic-banner.visible { display: flex; }
+
+        .mic-btn {
+            background: #ffc107;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #000;
+            white-space: nowrap;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .phone-input {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 16px;
+            outline: none;
+            letter-spacing: 1px;
+        }
+
+        .phone-input:focus { border-color: #0070d2; }
+
+        .clear-btn {
+            width: 34px;
+            height: 34px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+
+        .clear-btn:hover { background: #f5f5f5; }
+
+        .dialpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .dial-btn {
+            border: 1px solid #e0e0e0;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.2;
+            transition: background 0.1s;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        .dial-btn:hover { background: #f0f0f0; }
+        .dial-btn:active { background: #e0e0e0; }
+
+        .dial-num { font-size: 18px; font-weight: 500; color: #1a1a1a; }
+        .dial-sub { font-size: 9px; color: #999; letter-spacing: 1px; }
+
+        .action-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .call-btn {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.15s;
+        }
+
+        .call-btn:hover { background: #256427; }
+        .call-btn:disabled { background: #a5d6a7; cursor: not-allowed; }
+
+        .hangup-btn {
+            background: #c62828;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.15s;
+        }
+
+        .hangup-btn:hover { background: #b71c1c; }
+        .hangup-btn:disabled { background: #ef9a9a; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <span class="header-icon">📞</span>
+        <span class="header-title">Twilio Softphone</span>
+    </div>
+
+    <div class="status-bar">
+        <div class="status-dot loading" id="statusDot"></div>
+        <span class="status-text" id="statusText">Initializing</span>
+        <span class="status-sub" id="statusSub"></span>
+    </div>
+
+    <div class="input-row">
+        <input type="tel" class="phone-input" id="phoneInput" value="+91" placeholder="+1234567890"/>
+        <button class="clear-btn" onclick="clearNumber()" title="Clear">✕</button>
+    </div>
+
+    <div class="dialpad">
+        <button class="dial-btn" onclick="pressKey('1')"><span class="dial-num">1</span><span class="dial-sub">&nbsp;</span></button>
+        <button class="dial-btn" onclick="pressKey('2')"><span class="dial-num">2</span><span class="dial-sub">ABC</span></button>
+        <button class="dial-btn" onclick="pressKey('3')"><span class="dial-num">3</span><span class="dial-sub">DEF</span></button>
+        <button class="dial-btn" onclick="pressKey('4')"><span class="dial-num">4</span><span class="dial-sub">GHI</span></button>
+        <button class="dial-btn" onclick="pressKey('5')"><span class="dial-num">5</span><span class="dial-sub">JKL</span></button>
+        <button class="dial-btn" onclick="pressKey('6')"><span class="dial-num">6</span><span class="dial-sub">MNO</span></button>
+        <button class="dial-btn" onclick="pressKey('7')"><span class="dial-num">7</span><span class="dial-sub">PQRS</span></button>
+        <button class="dial-btn" onclick="pressKey('8')"><span class="dial-num">8</span><span class="dial-sub">TUV</span></button>
+        <button class="dial-btn" onclick="pressKey('9')"><span class="dial-num">9</span><span class="dial-sub">WXYZ</span></button>
+        <button class="dial-btn" onclick="pressKey('*')"><span class="dial-num">*</span><span class="dial-sub">&nbsp;</span></button>
+        <button class="dial-btn"
+            onmousedown="startPress('0')"
+            onmouseup="endPress('0')"
+            onmouseleave="cancelPress()"
+            ontouchstart="startPress('0')"
+            ontouchend="endPress('0')"
+            ontouchcancel="cancelPress()">
+            <span class="dial-num">0</span><span class="dial-sub">+</span>
+        </button>
+        <button class="dial-btn" onclick="pressKey('#')"><span class="dial-num">#</span><span class="dial-sub">&nbsp;</span></button>
+    </div>
+
+    <div class="action-row">
+        <button class="call-btn" id="callBtn" onclick="makeCall()">📞 Call</button>
+        <button class="hangup-btn" id="hangupBtn" onclick="hangUp()">📵 Hang Up</button>
+    </div>
+
+    <script src="{!URLFOR($Resource.TwilioVoiceSDK)}"></script>
+
+    <script>
+        if (navigator.mediaDevices &&
+            navigator.mediaDevices.getUserMedia) {
+        
+            const originalGetUserMedia =
+                navigator.mediaDevices.getUserMedia.bind(
+                    navigator.mediaDevices
+                );
+        
+            navigator.mediaDevices.getUserMedia =
+                function(constraints) {
+        
+                    console.log(
+                        'TWILIO REQUESTED GUM:',
+                        JSON.stringify(constraints)
+                    );
+        
+                    return originalGetUserMedia(constraints)
+        
+                        .then(function(stream) {
+        
+                            console.log(
+                                'GUM SUCCESS'
+                            );
+        
+                            return stream;
+                        })
+        
+                        .catch(function(err) {
+        
+                            console.error(
+                                'GUM FAILURE'
+                            );
+        
+                            console.error(err);
+        
+                            throw err;
+                        });
+                };
+        }
+        var device = null;
+        var activeCall = null;
+        var token = null;
+        var tokenExpiry = null;
+        var isRegistered = false;
+
+        // ── Status helpers ───────────────────────────────────────────
+        function setStatus(text, sub, state) {
+            document.getElementById('statusText').textContent = text;
+            document.getElementById('statusSub').textContent = sub ? '| ' + sub : '';
+            var dot = document.getElementById('statusDot');
+            dot.className = 'status-dot' +
+                (state === 'error' ? ' error' : state === 'loading' ? ' loading' : '');
+        }
+
+        // ── postMessage to opener window ─────────────────────────────
+        function notifyParent(type, payload) {
+            if (window.opener && !window.opener.closed) {
+                window.opener.postMessage(
+                    { source: 'twilio-softphone', type: type, payload: payload || {} },
+                    '*'
+                );
+            }
+        }
+
+        // ── Dialpad ──────────────────────────────────────────────────
+        function pressKey(val) {
+            var input = document.getElementById('phoneInput');
+            if (input.value.replace('+', '').length < 15) {
+                input.value += val;
+            }
+        }
+
+        // ── Long-press "0" for "+" support ────────────────────────────
+        var longPressTimer = null;
+        var longPressTriggered = false;
+        var LONG_PRESS_MS = 500;
+
+        function startPress(val) {
+            longPressTriggered = false;
+            longPressTimer = setTimeout(function() {
+                longPressTriggered = true;
+                var input = document.getElementById('phoneInput');
+                if (input.value.indexOf('+') === -1) {
+                    input.value = '+' + input.value;
+                } else if (input.value.replace('+', '').length < 15) {
+                    // already has a +, fall back to inserting the digit
+                    input.value += val;
+                }
+            }, LONG_PRESS_MS);
+        }
+
+        function endPress(val) {
+            clearTimeout(longPressTimer);
+            if (!longPressTriggered) {
+                pressKey(val);
+            }
+            longPressTriggered = false;
+        }
+
+        function cancelPress() {
+            clearTimeout(longPressTimer);
+            longPressTriggered = false;
+        }
+
+        function clearNumber() {
+            document.getElementById('phoneInput').value = '+';
+        }
+
+        // ── HTML entity decoder ──────────────────────────────────────
+        function decodeHtmlEntities(str) {
+            var txt = document.createElement('textarea');
+            txt.innerHTML = str;
+            return txt.value;
+        }
+
+        
+
+        // ── Token fetch via VF Remote Action ─────────────────────────
+        function fetchToken() {
+            return new Promise(function(resolve, reject) {
+                Visualforce.remoting.Manager.invokeAction(
+                    'TwilioTokenServiceVF.getToken',
+                    function(result, event) {
+
+                        if (!event.status) {
+                            reject(new Error(event.message || 'Remote action failed'));
+                            return;
+                        }
+
+                        try {
+                            var rawToken;
+                            var resultStr = result;
+
+                            if (typeof resultStr === 'string') {
+                                resultStr = decodeHtmlEntities(resultStr);
+                            }
+
+                            if (typeof resultStr === 'string' && resultStr.trim().startsWith('eyJ')) {
+                                rawToken = resultStr.trim();
+                            } else if (typeof resultStr === 'string') {
+                                var parsed = JSON.parse(resultStr);
+                                rawToken = parsed.token || parsed;
+                            } else if (resultStr && typeof resultStr === 'object' && resultStr.token) {
+                                rawToken = resultStr.token;
+                            } else {
+                                reject(new Error('Unrecognized token format: ' + JSON.stringify(resultStr)));
+                                return;
+                            }
+
+                            token = rawToken;
+
+                            try {
+                                var parts = token.split('.');
+                                var jwtPayload = JSON.parse(atob(parts[1]));
+                                tokenExpiry = jwtPayload.exp * 1000;
+                            } catch(e) {
+                                tokenExpiry = Date.now() + (50 * 60 * 1000);
+                            }
+
+                            resolve(token);
+
+                        } catch(e) {
+                            reject(new Error('Token parse failed: ' + e.message + ' | raw: ' + JSON.stringify(result)));
+                        }
+                    }
+                );
+            });
+        }
+
+        function getToken() {
+            var buffer = 30 * 1000; // 30s safety buffer before expiry
+            if (token && tokenExpiry && Date.now() < (tokenExpiry - buffer)) {
+                return Promise.resolve(token);
+            }
+            return fetchToken();
+        }
+
+        // ── Device init ───────────────────────────────────────────────
+        function initDevice() {
+
+            console.log('====================================');
+            console.log('INIT DEVICE START');
+            console.log('====================================');
+        
+            setStatus('Initializing', '', 'loading');
+        
+            return getToken()
+        
+                .then(function(t) {
+        
+                    console.log('TOKEN RECEIVED');
+                    console.log('Token Length:', t ? t.length : 0);
+                    console.log('Token Preview:', t ? t.substring(0, 30) + '...' : 'NULL');
+        
+                    if (!window.Twilio) {
+                        throw new Error('Twilio SDK not loaded');
+                    }
+        
+                    console.log('Twilio SDK Loaded');
+                    console.log(window.Twilio);
+        
+                    device = new Twilio.Device(t, {
+                        logLevel: 5,
+                        edge: 'ashburn'
+                    });
+                    
+                    console.log('====================================');
+                    console.log('TWILIO VERSION');
+                    console.log('====================================');
+                    
+                    try {
+                        console.log(Twilio.Device.version);
+                    } catch(e) {
+                        console.log('VERSION NOT AVAILABLE');
+                    }
+        
+                    console.log('DEVICE CREATED');
+                    console.log(device);
+        
+                    device.on('registering', function() {
+                        console.log('DEVICE REGISTERING...');
+                        setStatus('Registering', '', 'loading');
+                    });
+        
+                    device.on('registered', function() {
+        
+                        console.log('====================================');
+                        console.log('DEVICE REGISTERED SUCCESSFULLY');
+                        console.log('====================================');
+        
+                        isRegistered = true;
+        
+                        setStatus(
+                            'Ready',
+                            'Registered',
+                            'ready'
+                        );
+        
+                        notifyParent('registered');
+                    });
+        
+                    device.on('unregistered', function() {
+        
+                        console.log('DEVICE UNREGISTERED');
+        
+                        isRegistered = false;
+        
+                        setStatus(
+                            'Unregistered',
+                            '',
+                            'error'
+                        );
+                    });
+        
+                    device.on('error', function(err) {
+        
+                        console.log('====================================');
+                        console.log('TWILIO DEVICE ERROR');
+                        console.log('====================================');
+        
+                        console.error(err);
+        
+                        if (err) {
+                            console.log('Code:', err.code);
+                            console.log('Message:', err.message);
+                            console.log('Explanation:', err.explanation);
+                            console.log('Original Error:', err.originalError);
+                        }
+        
+                        setStatus(
+                            'Error',
+                            err && err.message ? err.message : 'Unknown Error',
+                            'error'
+                        );
+        
+                        notifyParent('error', {
+                            code: err ? err.code : null,
+                            message: err ? err.message : 'Unknown Error'
+                        });
+                    });
+        
+                    console.log('CALLING DEVICE.REGISTER()');
+        
+                    return device.register();
+                })
+        
+                .then(function() {
+        
+                    console.log('DEVICE.REGISTER() PROMISE RESOLVED');
+        
+                })
+        
+                .catch(function(err) {
+        
+                    console.log('====================================');
+                    console.log('INIT DEVICE FAILED');
+                    console.log('====================================');
+        
+                    console.error(err);
+        
+                    setStatus(
+                        'Failed to initialize',
+                        err.message || 'Unknown Error',
+                        'error'
+                    );
+        
+                    notifyParent('error', {
+                        message: err.message || 'Unknown Error'
+                    });
+        
+                    throw err;
+                });
+        }
+
+        // ── Make Call ─────────────────────────────────────────────────
+        function makeCall() {
+
+            var phoneNumber =
+                document.getElementById(
+                    'phoneInput'
+                ).value.trim();
+        
+            if (!phoneNumber) {
+                return;
+            }
+        
+            document.getElementById(
+                'callBtn'
+            ).disabled = true;
+        
+            setStatus(
+                'Calling',
+                phoneNumber,
+                'loading'
+            );
+        
+            notifyParent(
+                'calling',
+                { to: phoneNumber }
+            );
+        
+            var setupPromise =
+                (device && isRegistered)
+                    ? Promise.resolve()
+                    : initDevice();
+        
+            setupPromise
+        
+                .then(function() {
+        
+                    console.log(
+                        '===================================='
+                    );
+                    console.log(
+                        'MANUAL MIC TEST BEFORE CALL'
+                    );
+                    console.log(
+                        '===================================='
+                    );
+        
+                    return navigator.mediaDevices
+                        .getUserMedia({
+                            audio: true
+                        });
+                })
+        
+                .then(function(stream) {
+        
+                    console.log(
+                        'PRE-CALL MIC TEST PASSED'
+                    );
+        
+                    stream.getTracks()
+                        .forEach(function(track) {
+                            track.stop();
+                        });
+        
+                    return getToken();
+                })
+        
+                .then(function(t) {
+        
+                    if (
+                        device &&
+                        isRegistered
+                    ) {
+                        device.updateToken(t);
+                    }
+
+                    if (!device || !isRegistered) {
+                        throw new Error('Device not registered');
+                    }
+        
+                    console.log(
+                        '===================================='
+                    );
+                    console.log(
+                        'ABOUT TO CALL DEVICE.CONNECT'
+                    );
+                    console.log(
+                        '===================================='
+                    );
+        
+                    console.log(
+                        'PHONE:',
+                        phoneNumber
+                    );
+        
+                    console.log(
+                        'REGISTERED:',
+                        isRegistered
+                    );
+        
+                    console.log(
+                        'DEVICE:',
+                        device
+                    );
+        
+                    return device.connect({
+                        params: {
+                            To: phoneNumber
+                        }
+                    });
+                })
+        
+                .then(function(call) {
+        
+                    console.log(
+                        'DEVICE.CONNECT SUCCESS'
+                    );
+        
+                    activeCall = call;
+        
+                    call.on(
+                        'accept',
+                        function() {
+        
+                            console.log(
+                                'CALL ACCEPTED'
+                            );
+        
+                            setStatus(
+                                'Connected',
+                                phoneNumber,
+                                'ready'
+                            );
+        
+                            notifyParent(
+                                'connected',
+                                {
+                                    to: phoneNumber
+                                }
+                            );
+                        }
+                    );
+        
+                    call.on(
+                        'disconnect',
+                        function() {
+        
+                            console.log(
+                                'CALL DISCONNECTED'
+                            );
+        
+                            setStatus(
+                                'Ready',
+                                'Registered',
+                                'ready'
+                            );
+        
+                            document
+                                .getElementById(
+                                    'callBtn'
+                                )
+                                .disabled = false;
+        
+                            activeCall = null;
+        
+                            notifyParent(
+                                'disconnected'
+                            );
+                        }
+                    );
+        
+                    call.on(
+                        'cancel',
+                        function() {
+        
+                            console.log(
+                                'CALL CANCELLED'
+                            );
+        
+                            setStatus(
+                                'Ready',
+                                'Registered',
+                                'ready'
+                            );
+        
+                            document
+                                .getElementById(
+                                    'callBtn'
+                                )
+                                .disabled = false;
+        
+                            activeCall = null;
+        
+                            notifyParent(
+                                'cancelled'
+                            );
+                        }
+                    );
+        
+                    call.on(
+                        'error',
+                        function(err) {
+        
+                            console.log(
+                                'CALL ERROR'
+                            );
+        
+                            console.error(
+                                err
+                            );
+                        }
+                    );
+                })
+        
+                .catch(function(err) {
+        
+                    console.log(
+                        '===================================='
+                    );
+                    console.log(
+                        'CALL FAILED'
+                    );
+                    console.log(
+                        '===================================='
+                    );
+        
+                    console.error(
+                        err
+                    );
+        
+                    setStatus(
+                        'Call Failed',
+                        err.message ||
+                        'Unknown Error',
+                        'error'
+                    );
+        
+                    document
+                        .getElementById(
+                            'callBtn'
+                        )
+                        .disabled = false;
+        
+                    notifyParent(
+                        'error',
+                        {
+                            message:
+                                err.message
+                        }
+                    );
+                });
+        }
+
+        // ── Hang Up ───────────────────────────────────────────────────
+        function hangUp() {
+            if (activeCall) {
+                activeCall.disconnect();
+            } else if (device) {
+                device.disconnectAll();
+            }
+
+            document.getElementById('callBtn').disabled = false;
+            activeCall = null;
+
+            if (device && isRegistered) {
+                setStatus('Ready', 'Registered', 'ready');
+            } else {
+                setStatus('Not Registered', '', 'error');
+            }
+
+            notifyParent('disconnected');
+        }
+
+        // ── Listen for commands from opener ────────────────────────────
+        window.addEventListener('message', function(event) {
+            if (!event.data || event.data.target !== 'twilio-softphone') return;
+            var cmd = event.data.command;
+            if (cmd === 'call' && event.data.number) {
+                document.getElementById('phoneInput').value = event.data.number;
+                makeCall();
+            } else if (cmd === 'hangup') {
+                hangUp();
+            }
+        });
+
+        // ── Auto-init on load ─────────────────────────────────────────
+        window.addEventListener('load', function() {
+
+            console.log('VF PAGE LOADED');
+        
+            if (typeof Twilio === 'undefined') {
+                setStatus('SDK Load Failed', '', 'error');
+                return;
+            }
+        
+            console.log('TWILIO SDK FOUND');
+        
+            console.log('========== WEBRTC TEST ==========');
+            console.log('MediaStream:', !!window.MediaStream);
+            console.log('RTCPeerConnection:', !!window.RTCPeerConnection);
+            console.log('mediaDevices:', !!navigator.mediaDevices);
+            console.log(
+                'getUserMedia:',
+                !!(navigator.mediaDevices &&
+                   navigator.mediaDevices.getUserMedia)
+            );
+            console.log(
+                'enumerateDevices:',
+                !!(navigator.mediaDevices &&
+                   navigator.mediaDevices.enumerateDevices)
+            );
+            console.log('=================================');
+        
+            initDevice();
+        });
+    </script>
+
+</body>
+</html>
+</apex:page>

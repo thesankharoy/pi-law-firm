@@ -1,5 +1,4 @@
-<apex:page
-    applyBodyTag="false"
+<apex:page applyBodyTag="false"
     applyHtmlTag="false"
     showHeader="false"
     sidebar="false"

@@ -1,0 +1,268 @@
+<apex:page renderAs="pdf" standardController="Intake__c" extensions="IntakePDFExtension" action="{!initPublicFiles}" showHeader="false" sidebar="false" applyBodyTag="false" applyHtmlTag="false" docType="html-5.0">
+<html>
+<head>
+    <style type="text/css" media="print">
+        @page {
+            margin-top: 90px;
+            margin-bottom: 50px;
+            margin-left: 1cm;
+            margin-right: 1cm;
+            @top-left  { content: element(header); }
+            @bottom-right { content: element(footer); }
+        }
+        div.header {
+            padding: 10px;
+            position: running(header);
+            width: 100%;
+        }
+        div.footer {
+            display: block;
+            padding: 5px;
+            position: running(footer);
+        }
+        .pagenumber:before { content: counter(page); }
+        .pagecount:before  { content: counter(pages); }
+        .page-break        { page-break-before: always; }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            color: #444444;
+            padding-left: 10px;
+        }
+
+        /* ── Layout ── */
+        .flex-table  { width: 100%; border-collapse: collapse; }
+        .w-half      { width: 50%; }
+        th, td       { vertical-align: top; }
+
+        /* ── Section heading ── */
+        .section-heading {
+            font-size: 12px;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: #2d6a9f;
+            padding: 6px 8px;
+            margin-top: 18px;
+            margin-bottom: 0;
+        }
+
+        /* ── Field table inside each section ── */
+        .field-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 4px;
+        }
+        .field-table td {
+            padding: 4px 6px;
+            border-bottom: 0.5px solid #dddddd;
+            vertical-align: top;
+        }
+        .field-label {
+            width: 38%;
+            color: #333333;
+            font-weight: bold;
+        }
+        .field-value {
+            width: 62%;
+            color: #555555;
+            word-wrap: break-word;
+        }
+
+        /* ── Cover info table ── */
+        .loose-table { border-collapse: collapse; width: 100%; }
+        .loose-table td { padding-bottom: 8px; }
+        .label  { text-align: left; width: 130px; color: #333333; font-weight: bold; }
+        .value  { text-align: left; color: #555555; }
+
+        /* ── Divider line ── */
+        .line { border-top: 1px solid #cccccc; width: 100%; margin: 10px 0; }
+
+        /* ── Thumbnail / files ── */
+        .thumbnail-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+        .thumbnail-cell  {
+            width: 160px; vertical-align: top; text-align: center;
+            padding: 10px; page-break-inside: avoid;
+        }
+        .thumbnail-img { max-width: 120px; max-height: 90px; margin-bottom: 5px; }
+
+        /* ── Badge-style status ── */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            background-color: #e8f0fe;
+            color: #1a56db;
+            font-weight: bold;
+        }
+
+        /* ── AI section bg ── */
+        .ai-section { background-color: #f5f5ff; }
+
+        /* ── Two-column layout for sections ── */
+        .col-left  { width: 49%; padding-right: 8px; vertical-align: top; }
+        .col-right { width: 49%; padding-left:  8px; vertical-align: top; }
+    </style>
+</head>
+<body>
+
+    <!-- RUNNING HEADER -->
+    <div class="header">
+        <!-- Replace with your logo static resource if available -->
+        <table width="100%">
+            <tr>
+                <td><strong style="font-size:16px; color:#2d6a9f;">INTAKE SUMMARY REPORT</strong></td>
+                <td align="right" style="font-size:10px; color:#888;">
+                    Ref: <apex:outputText value="{!intake.Name}" />
+                </td>
+            </tr>
+        </table>
+        <div class="line" style="margin-top:4px;"></div>
+    </div>
+
+    <!-- RUNNING FOOTER -->
+    <div class="footer">
+        <p align="right" style="font-size:9px; color:#888;">
+            Page <span class="pagenumber"/> of <span class="pagecount"/>
+        </p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         COVER / HEADER INFO
+    ══════════════════════════════════════════════ -->
+    <table class="flex-table" style="margin-bottom:20px;">
+        <tr>
+            <!-- Left column -->
+            <td class="w-half">
+                <table class="loose-table">
+                    <tr>
+                        <td class="label">Intake Reference</td>
+                        <td class="value"><apex:outputText value="{!intake.Name}" /></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Status</td>
+                        <td class="value">
+                            <span class="badge"><apex:outputText value="{!intake.Status__c}" /></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label">Intake Method</td>
+                        <td class="value"><apex:outputText value="{!intake.Intake_Method__c}" /></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Source</td>
+                        <td class="value"><apex:outputText value="{!intake.Source__c}" /></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Intake Rep</td>
+                        <td class="value"><apex:outputText value="{!intake.Intake_Rep__r.Name}" /></td>
+                    </tr>
+                </table>
+            </td>
+            <!-- Right column -->
+            <td class="w-half">
+                <table class="loose-table">
+                    <tr>
+                        <td class="label">Intake Date</td>
+                        <td class="value">
+                            <apex:outputText value="{0, date, MM/dd/yyyy}">
+                                <apex:param value="{!intake.Intake_Date__c}" />
+                            </apex:outputText>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label">Incident Date</td>
+                        <td class="value">
+                            <apex:outputText value="{0, date, MM/dd/yyyy}">
+                                <apex:param value="{!intake.Incident_Date__c}" />
+                            </apex:outputText>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label">Incident Type</td>
+                        <td class="value"><apex:outputText value="{!intake.Incident_Type__c}" /></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Contact</td>
+                        <td class="value"><apex:outputText value="{!intake.Contact__r.Name}" /></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Qualified</td>
+                        <td class="value">
+                            <apex:outputText value="{!IF(intake.Qualified__c, 'Yes', 'No')}" />
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <div class="line"></div>
+
+    <!-- ══════════════════════════════════════════════
+         DYNAMIC SECTIONS
+    ══════════════════════════════════════════════ -->
+    <apex:repeat value="{!groupedSections}" var="section">
+        <p class="section-heading"><apex:outputText value="{!section.sectionName}" /></p>
+        <table class="field-table">
+            <apex:repeat value="{!section.fields}" var="f">
+                <apex:outputPanel rendered="{!NOT(ISBLANK(f.value))}">
+                    <tr>
+                        <td class="field-label"><apex:outputText value="{!f.label}" /></td>
+                        <td class="field-value"><apex:outputText value="{!f.value}" /></td>
+                    </tr>
+                </apex:outputPanel>
+            </apex:repeat>
+        </table>
+    </apex:repeat>
+
+    <!-- ══════════════════════════════════════════════
+         ATTACHED FILES
+    ══════════════════════════════════════════════ -->
+    <apex:outputPanel rendered="{!NOT(ISNULL(intake.Id))}">
+        <div class="page-break"></div>
+
+        <p class="section-heading">Attached Files &amp; Documents</p>
+
+        <apex:outputPanel rendered="{!intakeFiles.size > 0}">
+            <table class="thumbnail-table">
+                <tr>
+                    <apex:variable var="colCount" value="{!0}" />
+                    <apex:repeat value="{!intakeFiles}" var="file">
+                        <td class="thumbnail-cell">
+                            <apex:outputLink value="{!file.viewUrl}" target="_blank">
+                                <apex:image value="{!IF(file.isImage, file.thumbnailUrl, '/resource/DefaultPDFThumbnail')}"
+                                    alt="{!file.name}"
+                                    title="Click to view full size"
+                                    style="{!IF(file.isImage, 'max-width:100px; height:auto;', 'width:40px; height:50px;')}" />
+                            </apex:outputLink>
+                            <div style="font-size:10px; word-wrap:break-word; padding-top:4px;">
+                                <apex:outputText value="{!file.name}" />
+                            </div>
+                            <div style="font-size:9px;">
+                                <apex:outputText value="{!file.size}" /> KB
+                            </div>
+                            <div style="font-size:9px;">
+                                <apex:outputPanel rendered="{!file.isImage}">
+                                    <apex:outputLink value="{!file.viewUrl}" target="_blank">Preview</apex:outputLink> |
+                                </apex:outputPanel>
+                                <apex:outputLink value="{!file.downloadUrl}" target="_blank">Download</apex:outputLink>
+                            </div>
+                        </td>
+                        <apex:variable var="colCount" value="{!colCount + 1}" />
+                        <apex:outputPanel rendered="{!MOD(colCount, 4) == 0}">
+                            <!-- row break every 4 files -->
+                        </apex:outputPanel>
+                    </apex:repeat>
+                </tr>
+            </table>
+        </apex:outputPanel>
+
+        <apex:outputPanel rendered="{!intakeFiles.size == 0}">
+            <p style="color:#888; font-style:italic;">No files or attachments found for this intake.</p>
+        </apex:outputPanel>
+    </apex:outputPanel>
+
+</body>
+</html>
+</apex:page>

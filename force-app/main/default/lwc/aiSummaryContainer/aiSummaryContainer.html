@@ -1,0 +1,107 @@
+<template>
+    <lightning-card class="ai-card">
+
+        <!-- Header -->
+        <div class="header">
+
+            <div class="header-left">
+
+                <lightning-icon
+                    icon-name="utility:einstein"
+                    size="small"
+                    class="einstein-icon">
+                </lightning-icon>
+
+                <div>
+                    <h2 class="title">
+                        AI Lead Analysis
+                    </h2>
+
+                    <p class="subtitle">
+                        Real-time intelligence summary
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="live-badge">
+                <span class="live-dot"></span>
+                LIVE
+            </div>
+
+        </div>
+
+        <!-- Loading -->
+        <template if:true={isLoading}>
+
+            <div class="loading-section">
+
+                <lightning-spinner
+                    size="small"
+                    alternative-text="Analyzing">
+                </lightning-spinner>
+
+                <div class="loading-text">
+                    Analyzing conversation...
+                </div>
+
+            </div>
+
+        </template>
+
+        <!-- Summary -->
+        <div class="content">
+
+            <div class="summary-text">
+                {displayedText}
+            </div>
+
+            <template if:false={isLoading}>
+
+                <div class="insights">
+
+                    <lightning-pill
+                        label={leadTemperature}>
+                    </lightning-pill>
+
+                    <lightning-pill
+                        label="AI Generated">
+                    </lightning-pill>
+
+                </div>
+
+            </template>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+
+            <div class="confidence">
+
+                <div class="score-header">
+
+                    <span>
+                        Lead Qualification Score
+                    </span>
+
+                    <span>
+                        {confidence}/100
+                    </span>
+
+                </div>
+
+                <lightning-progress-bar
+                    value={confidence}>
+                </lightning-progress-bar>
+
+            </div>
+
+            <div class="timestamp">
+                Updated just now
+            </div>
+
+        </div>
+
+    </lightning-card>
+</template>

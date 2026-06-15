@@ -1,0 +1,96 @@
+.container {
+    padding: 15px;
+    background: #f7f9fc;
+}
+
+/* Summary Cards */
+.summary {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.card {
+    flex: 1;
+    padding: 15px;
+    border-radius: 12px;
+    color: white;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.blue { background: linear-gradient(135deg,#4facfe,#00f2fe); }
+.green { background: linear-gradient(135deg,#43e97b,#38f9d7); }
+.red { background: linear-gradient(135deg,#fa709a,#fee140); }
+
+/* Task List */
+.task-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(250px,1fr));
+    gap: 15px;
+}
+
+/* Task Card */
+.task-card {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 5px 12px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border-left: 5px solid transparent;
+}
+
+.task-card:hover {
+    transform: scale(1.03);
+}
+
+.task-card.completed {
+    border-left: 5px solid #38f9d7;
+}
+
+.task-card.pending-anim {
+    border-left: 5px solid #fa709a;
+}
+
+/* Text */
+.task-title {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.task-meta {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Badge */
+.badge {
+    margin-top: 10px;
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    background: #38f9d7;
+    color: white;
+}
+
+.badge.pending {
+    background: #fa709a;
+}
+
+/* Click animation */
+.pulse {
+    animation: pulse 0.4s ease;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}

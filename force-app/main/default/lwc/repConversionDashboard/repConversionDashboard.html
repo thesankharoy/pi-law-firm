@@ -1,0 +1,107 @@
+<template>
+
+    <lightning-card title="Rep Conversion Dashboard">
+
+        <div class="table-container">
+
+            <table class="modern-table">
+
+                <thead>
+
+                    <tr>
+                        <th>Rank</th>
+                        <th>Intake Specialist</th>
+                        <th>Total Intakes</th>
+                        <th>Converted</th>
+                        <th>Conversion Rate</th>
+                        <th>Status</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    <template
+                        for:each={repData}
+                        for:item="rep">
+
+                        <tr key={rep.repName}>
+
+                            <td>
+                                <span class="rank">
+                                    {rep.rankIcon}
+                                </span>
+                            </td>
+
+                            <td>
+
+                                <div class="rep-info">
+
+                                    <lightning-icon
+                                        icon-name="standard:user"
+                                        size="x-small">
+                                    </lightning-icon>
+
+                                    <span>
+                                        {rep.repName}
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+                                {rep.totalIntakes}
+                            </td>
+
+                            <td>
+                                {rep.convertedIntakes}
+                            </td>
+
+                            <td>
+
+                                <div class="progress-wrapper">
+
+                                    <div class="progress-track">
+
+                                        <div
+                                            class={rep.barClass}
+                                            style={rep.widthStyle}>
+                                        </div>
+
+                                    </div>
+
+                                    <span class="percent">
+
+                                        {rep.conversionRate}%
+
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                <span
+                                    class={rep.badgeClass}>
+
+                                    {rep.performanceLabel}
+
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                    </template>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </lightning-card>
+
+</template>

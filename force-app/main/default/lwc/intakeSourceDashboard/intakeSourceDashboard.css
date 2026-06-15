@@ -1,0 +1,98 @@
+.dashboard-container {
+    padding: 15px;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    border-radius: 12px;
+}
+
+/* GRID */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 15px;
+}
+
+/* CARD */
+.source-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border-radius: 14px;
+    padding: 18px;
+    text-align: center;
+    color: white;
+    position: relative;
+    transition: all 0.4s ease;
+    overflow: hidden;
+}
+
+/* hover animation */
+.source-card:hover {
+    transform: translateY(-5px) scale(1.03);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+}
+
+/* SOURCE NAME */
+.source-name {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+/* COUNT */
+.source-count {
+    font-size: 28px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+/* animated bar */
+.pulse-bar {
+    height: 3px;
+    width: 100%;
+    background: linear-gradient(90deg, #00f5ff, #ff00d4, #00ff85);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    animation: moveBar 2s infinite linear;
+}
+
+/* TOP HIGHLIGHT FLASH */
+.top-glow {
+    border: 2px solid #00ff85;
+    box-shadow: 0 0 20px #00ff85;
+    animation: flash 1s infinite alternate;
+}
+
+@keyframes flash {
+    from {
+        box-shadow: 0 0 10px #00ff85;
+    }
+    to {
+        box-shadow: 0 0 25px #00ff85;
+    }
+}
+
+/* moving gradient */
+@keyframes moveBar {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* TOP BOX */
+.highlight-box {
+    margin-top: 20px;
+    padding: 12px;
+    background: rgba(0,0,0,0.4);
+    border-left: 4px solid #00ff85;
+    color: white;
+    border-radius: 8px;
+}
+
+.highlight-box span {
+    color: #00ff85;
+    font-weight: bold;
+}
+
+/* ERROR */
+.error-box {
+    color: red;
+    padding: 10px;
+}

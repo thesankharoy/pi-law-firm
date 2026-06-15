@@ -1,0 +1,163 @@
+<template>
+    <lightning-card title="Intake Questionnaire" icon-name="standard:survey">
+        
+        <div class="slds-p-horizontal_medium slds-p-top_medium">
+            <template if:false={selectedQuestionnaire}>
+                <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+                    
+                    
+                    <div class="slds-m-top_small">
+                        
+                        <p class="slds-text-body_small slds-m-bottom_x-small">Available Questionnaires</p>
+                        <div class="slds-m-bottom_x-small">
+                            <lightning-combobox
+                              name="questionnaire"
+                              label=""
+                              placeholder="Select a Questionnaire"
+                              options={questionnaireOptions}
+                              value={selectedQuestionnaireId}
+                              onchange={handleQuestionnaireSelect}>
+                            </lightning-combobox>
+                        </div>
+                        <div>
+                            <lightning-button
+                              label="Open Selected Questionnaire"
+                              variant="neutral"
+                              class="slds-m-top_small"
+                              onclick={openSelectedQuestionnaire}
+                              disabled={isOpenSelectedDisabled}>
+                            </lightning-button>
+                        </div>
+                        
+                    </div>
+                </div>
+            </template>
+
+            <template if:true={selectedQuestionnaire}>
+                <div class="questionnaire-header slds-m-bottom_medium">
+                    <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                        <h2 class="slds-text-heading_medium">{selectedQuestionnaire.Name}</h2>
+                        <lightning-button
+                            label="Change Questionnaire"
+                            variant="neutral"
+                            icon-name="utility:switch"
+                            onclick={resetQuestionnaire}>
+                        </lightning-button>
+                    </div>
+                </div>
+
+                <template if:true={isLoading}>
+                    <lightning-spinner alternative-text="Loading questions..." size="medium"></lightning-spinner>
+                </template>
+
+                <template if:false={isLoading}>
+                    <template for:each={sections} for:item="section">
+                        <div key={section.name} class="slds-box slds-m-bottom_medium">
+                            <h3 class="section-title slds-text-heading_small slds-m-bottom_medium">
+                                {section.name}
+                            </h3>
+                            
+                            <template for:each={section.questions} for:item="question">
+                                <div key={question.Id} class="question-row slds-m-bottom_medium"
+                                     data-visible={question.isVisible}>
+                                    <template if:true={question.isVisible}>
+                                        
+                                        <template if:true={question.isText}>
+                                            <lightning-input
+                                                label={question.Question_Text__c}
+                                                value={question.response}
+                                                data-id={question.Id}
+                                                required={question.Is_Required__c}
+                                                onchange={handleResponseChange}>
+                                            </lightning-input>
+                                        </template>
+
+                                        <template if:true={question.isDate}>
+                                            <lightning-input
+                                                type="date"
+                                                label={question.Question_Text__c}
+                                                value={question.response}
+                                                data-id={question.Id}
+                                                required={question.Is_Required__c}
+                                                onchange={handleResponseChange}>
+                                            </lightning-input>
+                                        </template>
+
+                                        <template if:true={question.isNumber}>
+                                            <lightning-input
+                                                type="number"
+                                                label={question.Question_Text__c}
+                                                value={question.response}
+                                                data-id={question.Id}
+                                                required={question.Is_Required__c}
+                                                onchange={handleResponseChange}>
+                                            </lightning-input>
+                                        </template>
+
+                                        <template if:true={question.isPicklist}>
+                                            <lightning-combobox
+                                                label={question.Question_Text__c}
+                                                value={question.response}
+                                                options={question.picklistOptions}
+                                                data-id={question.Id}
+                                                required={question.Is_Required__c}
+                                                onchange={handleResponseChange}>
+                                            </lightning-combobox>
+                                        </template>
+
+                                        <template if:true={question.isCheckbox}>
+                                            <lightning-input
+                                                type="checkbox"
+                                                label={question.Question_Text__c}
+                                                checked={question.responseBoolean}
+                                                data-id={question.Id}
+                                                onchange={handleCheckboxChange}>
+                                            </lightning-input>
+                                        </template>
+
+                                        <template if:true={question.isTextarea}>
+                                            <lightning-textarea
+                                                label={question.Question_Text__c}
+                                                value={question.response}
+                                                data-id={question.Id}
+                                                required={question.Is_Required__c}
+                                                onchange={handleResponseChange}>
+                                            </lightning-textarea>
+                                        </template>
+
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <div class="slds-grid slds-grid_align-end slds-m-top_medium slds-m-bottom_medium">
+                        <lightning-button
+                            label="Save Responses"
+                            variant="brand"
+                            onclick={handleSave}
+                            disabled={isSaving}>
+                        </lightning-button>
+                    </div>
+                </template>
+
+                <template if:true={savedResponses.length}>
+                  <div class="slds-box slds-theme_shade slds-m-top_medium">
+                    <template for:each={savedResponses} for:item="resp">
+                      <div key={resp.questionId} class="slds-m-bottom_small">
+                        <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_xx-small">
+                          <strong>{resp.questionText}</strong>
+                        </p>
+                        <p class="slds-text-body_small">
+                            {resp.responseText}
+                        </p>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+
+            </template>
+        </div>
+
+    </lightning-card>
+</template>

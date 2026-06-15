@@ -1,0 +1,126 @@
+<template>
+
+    <div class="dashboard-grid">
+
+        <div class="metric-card night">
+
+            <lightning-icon
+                icon-name="utility:nightview"
+                size="large">
+            </lightning-icon>
+
+            <div class="metric-value">
+                {afterHoursCount}
+            </div>
+
+            <div class="metric-title">
+                After-Hours Intakes
+            </div>
+
+        </div>
+
+        <div class="metric-card covered">
+
+            <lightning-icon
+                icon-name="utility:success"
+                size="large">
+            </lightning-icon>
+
+            <div class="metric-value">
+                {coveredCount}
+            </div>
+
+            <div class="metric-title">
+                Covered Within SLA
+            </div>
+
+        </div>
+
+        <div class="metric-card missed">
+
+            <lightning-icon
+                icon-name="utility:warning"
+                size="large">
+            </lightning-icon>
+
+            <div class="metric-value">
+                {missedCount}
+            </div>
+
+            <div class="metric-title">
+                Missed Opportunities
+            </div>
+
+        </div>
+
+        <div class="metric-card rate">
+
+            <lightning-icon
+                icon-name="utility:chart"
+                size="large">
+            </lightning-icon>
+
+            <div class="metric-value">
+                {coverageRate}%
+            </div>
+
+            <div class="metric-title">
+                Coverage Rate
+            </div>
+
+        </div>
+
+    </div>
+
+    <lightning-card
+        title="24x7 Intake Coverage">
+
+        <div class="coverage-container">
+
+            <div class="coverage-row">
+
+                <span class="label">
+                    Covered
+                </span>
+
+                <div class="bar-bg">
+
+                    <div
+                        class="covered-bar"
+                        style={coveredStyle}>
+                    </div>
+
+                </div>
+
+                <span>
+                    {coverageRate}%
+                </span>
+
+            </div>
+
+            <div class="coverage-row">
+
+                <span class="label">
+                    Missed
+                </span>
+
+                <div class="bar-bg">
+
+                    <div
+                        class="missed-bar"
+                        style={missedStyle}>
+                    </div>
+
+                </div>
+
+                <span>
+                    {missedPercent}%
+                </span>
+
+            </div>
+
+        </div>
+
+    </lightning-card>
+
+</template>

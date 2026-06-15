@@ -1,0 +1,118 @@
+<template>
+
+    <div class="dashboard-grid">
+
+        <div class="metric-card status">
+
+            <lightning-icon
+                icon-name="utility:change_record_type"
+                size="large">
+            </lightning-icon>
+
+            <div class="metric-value">
+                {statusChanges}
+            </div>
+
+            <div class="metric-title">
+                Status Changes
+            </div>
+
+        </div>
+
+        <div class="metric-card owner">
+
+            <lightning-icon
+                icon-name="utility:user"
+                size="large">
+            </lightning-icon>
+
+            <div class="metric-value">
+                {ownerChanges}
+            </div>
+
+            <div class="metric-title">
+                Owner Changes
+            </div>
+
+        </div>
+
+        <div class="metric-card source">
+
+            <lightning-icon
+                icon-name="utility:connected_apps"
+                size="large">
+            </lightning-icon>
+
+            <div class="metric-value">
+                {sourceChanges}
+            </div>
+
+            <div class="metric-title">
+                Source Changes
+            </div>
+
+        </div>
+
+        <div class="metric-card total">
+
+            <lightning-icon
+                icon-name="utility:activity"
+                size="large">
+            </lightning-icon>
+
+            <div class="metric-value">
+                {totalEvents}
+            </div>
+
+            <div class="metric-title">
+                Total Audit Events
+            </div>
+
+        </div>
+
+    </div>
+
+    <lightning-card title="Recent Audit Trail">
+
+    <div class="table-container">
+
+        <lightning-datatable
+            key-field="changeDate"
+            data={auditRecords}
+            columns={columns}
+            hide-checkbox-column>
+        </lightning-datatable>
+
+        <div class="pagination">
+
+            <lightning-button
+                label="Previous"
+                icon-name="utility:chevronleft"
+                onclick={handlePrevious}
+                disabled={disablePrevious}>
+            </lightning-button>
+
+            <span class="page-info">
+
+                Page
+                {pageNumber}
+                of
+                {totalPages}
+
+            </span>
+
+            <lightning-button
+                label="Next"
+                icon-name="utility:chevronright"
+                icon-position="right"
+                onclick={handleNext}
+                disabled={disableNext}>
+            </lightning-button>
+
+        </div>
+
+    </div>
+
+</lightning-card>
+
+</template>

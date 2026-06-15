@@ -1,0 +1,115 @@
+<template>
+
+    <lightning-card class="ai-card">
+
+        <!-- HEADER -->
+        <div class="header">
+
+            <div class="header-left">
+
+                <lightning-icon
+                    icon-name="utility:einstein"
+                    size="small"
+                    class="einstein-icon">
+                </lightning-icon>
+
+                <div>
+                    <h2 class="title">
+                        AI Recommended Actions
+                    </h2>
+
+                    <p class="subtitle">
+                        Strategic intake guidance
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="live-badge">
+
+                <span class="live-dot"></span>
+
+                LIVE
+
+            </div>
+
+        </div>
+
+        <!-- LOADING -->
+
+        <template if:true={isTyping}>
+
+            <div class="loading-section">
+
+                <lightning-spinner
+                    size="small"
+                    alternative-text="Analyzing">
+                </lightning-spinner>
+
+                <span>
+                    AI analyzing case behavior...
+                </span>
+
+            </div>
+
+        </template>
+
+        <!-- CONTENT -->
+
+        <div class="content-section">
+
+            <div class="section-title">
+
+                <lightning-icon
+                    icon-name="utility:insights"
+                    size="x-small">
+                </lightning-icon>
+
+                <span>
+                    {currentSection.title}
+                </span>
+
+            </div>
+
+            <div class="section-content">
+                {displayedContent}
+            </div>
+
+        </div>
+
+        <!-- PROGRESS -->
+
+        <div class="progress-container">
+
+            <lightning-progress-bar
+                value={progressValue}>
+            </lightning-progress-bar>
+
+        </div>
+
+        <!-- FOOTER -->
+
+        <div class="footer">
+
+            <lightning-button
+                label="Previous"
+                onclick={handlePrevious}
+                disabled={isFirst}>
+            </lightning-button>
+
+            <div class="counter">
+                {currentIndexDisplay}
+            </div>
+
+            <lightning-button
+                variant="brand"
+                label="Next"
+                onclick={handleNext}
+                disabled={isLast}>
+            </lightning-button>
+
+        </div>
+
+    </lightning-card>
+
+</template>

@@ -1,0 +1,378 @@
+/* =====================================
+   GRID
+===================================== */
+
+.analytics-grid {
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 24px;
+
+    margin-top: 20px;
+}
+
+.analytics-grid lightning-card {
+
+    height: 100%;
+}
+
+/* =====================================
+   CONTAINERS
+===================================== */
+
+.container,
+.response-container {
+
+    padding: 18px;
+
+    animation: fadeIn .8s ease;
+}
+
+/* =====================================
+   REVENUE LEAKAGE
+===================================== */
+
+.row {
+
+    display: flex;
+
+    align-items: center;
+
+    margin-bottom: 14px;
+
+    animation: slideUp .6s ease;
+}
+
+.stage-box {
+
+    min-width: 200px;
+
+    background: linear-gradient(
+        135deg,
+        #b0e309,
+        #42c8f4
+    );
+
+    border-radius: 14px;
+
+    padding: 10px 14px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    transition: all .35s ease;
+
+    box-shadow:
+        0 5px 15px rgba(249,115,22,.15);
+
+    position: relative;
+
+    overflow: hidden;
+}
+
+.stage-box:hover {
+
+    transform: translateX(6px)
+               scale(1.02);
+
+    box-shadow:
+        0 10px 25px rgba(249,115,22,.25);
+}
+
+.stage-box::after {
+
+    content: '';
+
+    position: absolute;
+
+    top: 0;
+
+    left: -100%;
+
+    width: 50%;
+
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.4),
+        transparent
+    );
+
+    animation: shine 3s infinite;
+}
+
+.stage-name {
+
+    color: #000000;
+
+    font-weight: 700;
+
+    font-size: 13px;
+}
+
+.stage-count {
+
+    color: #ea580c;
+
+    font-weight: 800;
+
+    font-size: 15px;
+}
+
+.dropoff {
+
+    flex: 1;
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    align-items: center;
+
+    gap: 8px;
+}
+
+.red {
+    background: linear-gradient(
+        135deg,
+        #fef2f2,
+        #fecaca
+    );
+
+    color: #b91c1c;
+
+    border: 1px solid rgba(220, 38, 38, 0.15);
+
+    border-radius: 999px;
+
+    padding: 6px 12px;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    box-shadow:
+        0 4px 12px rgba(220, 38, 38, 0.12);
+
+    transition: all .25s ease;
+}
+
+.red:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        0 6px 16px rgba(220, 38, 38, 0.18);
+}
+
+/* =====================================
+   RESPONSE TIME
+===================================== */
+
+.response-row {
+
+    margin-bottom: 20px;
+
+    animation: slideUp .6s ease;
+}
+
+.response-label {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 8px;
+}
+
+.source {
+
+    font-weight: 700;
+
+    color: #1e293b;
+
+    font-size: 14px;
+}
+
+.time {
+
+    background: rgba(124,58,237,.12);
+
+    color: #7c3aed;
+
+    padding: 4px 10px;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+
+    font-weight: 700;
+}
+
+.bar-container {
+
+    width: 100%;
+
+    height: 14px;
+
+    background: #e2e8f0;
+
+    border-radius: 999px;
+
+    overflow: hidden;
+
+    position: relative;
+}
+
+.bar {
+    height: 100%;
+    border-radius: 999px;
+
+    background: linear-gradient(
+        90deg,
+        #6366f1,
+        #8b5cf6,
+        #a855f7
+    );
+
+    background-size: 300% 300%;
+    animation: gradientMove 2s ease infinite;
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
+}
+
+.bar::after {
+
+    content: '';
+
+    position: absolute;
+
+    top: 0;
+
+    left: -100%;
+
+    width: 40%;
+
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.5),
+        transparent
+    );
+
+    animation: shine 2.5s infinite;
+}
+
+/* =====================================
+   CARD HOVER
+===================================== */
+
+lightning-card {
+
+    transition: all .35s ease;
+}
+
+lightning-card:hover {
+
+    transform: translateY(-4px);
+
+    box-shadow:
+        0 15px 35px rgba(15,23,42,.12);
+}
+
+/* =====================================
+   ANIMATIONS
+===================================== */
+
+@keyframes fadeIn {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateY(15px);
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateY(20px);
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+@keyframes growBar {
+
+    from {
+
+        width: 0%;
+    }
+}
+
+@keyframes shimmer {
+
+    0% {
+
+        filter: brightness(1);
+    }
+
+    50% {
+
+        filter: brightness(1.15);
+    }
+
+    100% {
+
+        filter: brightness(1);
+    }
+}
+
+@keyframes shine {
+
+    0% {
+
+        left: -100%;
+    }
+
+    100% {
+
+        left: 200%;
+    }
+}
+
+/* =====================================
+   MOBILE
+===================================== */
+
+@media only screen and (max-width: 1024px) {
+
+    .analytics-grid {
+
+        grid-template-columns: 1fr;
+    }
+}

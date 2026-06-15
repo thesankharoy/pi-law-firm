@@ -1,0 +1,47 @@
+<template>
+    <lightning-card title="Intake Source Performance Dashboard" class="main-card">
+
+        <div class="dashboard-container">
+
+            <template if:true={data}>
+                
+                <!-- TOP SUMMARY -->
+                <div class="summary-grid">
+
+                    <template for:each={data} for:item="item">
+                        <div key={item.source}
+                             class="source-card"
+                             data-source={item.source}>
+
+                            <div class="source-name">
+                                {item.source}
+                            </div>
+
+                            <div class="source-count">
+                                {item.totalIntakes}
+                            </div>
+
+                            <div class="pulse-bar"></div>
+
+                        </div>
+                    </template>
+
+                </div>
+
+                <!-- HIGHLIGHT SECTION -->
+                <div class="highlight-box">
+                    🏆 Top Performing Source: <span>{topSource}</span>
+                </div>
+
+            </template>
+
+            <template if:true={error}>
+                <div class="error-box">
+                    Error loading data
+                </div>
+            </template>
+
+        </div>
+
+    </lightning-card>
+</template>

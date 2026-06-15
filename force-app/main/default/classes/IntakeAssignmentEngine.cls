@@ -249,7 +249,7 @@ public class IntakeAssignmentEngine {
         for (Intake_Assignment_Condition__mdt c : [
             SELECT DeveloperName, Rule__r.DeveloperName, Field_API_Name__c, Operator__c, Value__c, Order__c
             FROM Intake_Assignment_Condition__mdt
-            ORDER BY Order__c ASC
+            ORDER BY Order__c ASC // local field only — supported
         ]) {
             String key = c.Rule__r.DeveloperName;
             if (!result.containsKey(key))

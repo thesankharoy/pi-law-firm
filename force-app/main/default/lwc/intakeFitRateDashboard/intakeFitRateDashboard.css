@@ -1,0 +1,344 @@
+/* ==================================
+   DASHBOARD GRID
+================================== */
+
+.dashboard-grid {
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 24px;
+
+    margin-top: 20px;
+}
+
+/* ==================================
+   LIGHTNING CARD OVERRIDE
+================================== */
+
+lightning-card {
+
+    border-radius: 18px;
+
+    overflow: hidden;
+
+    transition: all .35s ease;
+}
+
+/* ==================================
+   CONTAINERS
+================================== */
+
+.fit-container,
+.conversion-container {
+
+    padding: 20px;
+
+    animation: fadeIn .8s ease;
+}
+
+/* ==================================
+   ROWS
+================================== */
+
+.fit-row {
+
+    padding: 12px;
+
+    border-radius: 14px;
+
+    margin-bottom: 18px;
+
+    background: rgba(255,255,255,.75);
+
+    backdrop-filter: blur(10px);
+
+    transition: all .3s ease;
+
+    animation: slideUp .6s ease;
+}
+
+.fit-row:hover {
+
+    transform: translateY(-4px);
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.08);
+}
+
+/* ==================================
+   HEADER
+================================== */
+
+.fit-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 10px;
+}
+
+.source {
+
+    font-size: 14px;
+
+    font-weight: 700;
+
+    color: #1e293b;
+
+    letter-spacing: .3px;
+}
+
+/* ==================================
+   VALUE BADGES
+================================== */
+
+.fit-rate {
+
+    background: rgba(34,197,94,.12);
+
+    color: #16a34a;
+
+    padding: 4px 12px;
+
+    border-radius: 20px;
+
+    font-weight: 700;
+
+    font-size: 13px;
+}
+
+.conversion-rate {
+
+    background: rgba(59,130,246,.12);
+
+    color: #2563eb;
+
+    padding: 4px 12px;
+
+    border-radius: 20px;
+
+    font-weight: 700;
+
+    font-size: 13px;
+}
+
+/* ==================================
+   PROGRESS TRACK
+================================== */
+
+.progress-container {
+
+    width: 100%;
+
+    height: 16px;
+
+    background: #edf2f7;
+
+    border-radius: 999px;
+
+    overflow: hidden;
+
+    position: relative;
+
+    box-shadow:
+        inset 0 2px 5px rgba(0,0,0,.05);
+}
+
+/* ==================================
+   FIT RATE BAR
+================================== */
+
+.fit-progress-bar {
+
+    height: 100%;
+
+    border-radius: 999px;
+
+    background: linear-gradient(
+        90deg,
+        #22c55e,
+        #16a34a,
+        #4ade80
+    );
+
+    position: relative;
+
+    animation:
+        growBar 1.2s ease,
+        shimmer 3s infinite linear;
+}
+
+/* ==================================
+   CONVERSION BAR
+================================== */
+
+.conversion-progress-bar {
+
+    height: 100%;
+
+    border-radius: 999px;
+
+    background: linear-gradient(
+        90deg,
+        #3b82f6,
+        #2563eb,
+        #60a5fa
+    );
+
+    position: relative;
+
+    animation:
+        growBar 1.2s ease,
+        shimmer 3s infinite linear;
+}
+
+/* ==================================
+   SHIMMER EFFECT
+================================== */
+
+.fit-progress-bar::after,
+.conversion-progress-bar::after {
+
+    content: '';
+
+    position: absolute;
+
+    top: 0;
+
+    left: -100%;
+
+    width: 50%;
+
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.5),
+        transparent
+    );
+
+    animation:
+        shine 2.5s infinite;
+}
+
+/* ==================================
+   DETAILS
+================================== */
+
+.fit-detail {
+
+    margin-top: 8px;
+
+    font-size: 12px;
+
+    color: #64748b;
+
+    font-weight: 500;
+}
+
+/* ==================================
+   CARD HOVER GLOW
+================================== */
+
+lightning-card:hover {
+
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 12px 40px rgba(0,0,0,.10);
+}
+
+/* ==================================
+   ANIMATIONS
+================================== */
+
+@keyframes fadeIn {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateY(15px);
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateY(20px);
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+@keyframes growBar {
+
+    from {
+
+        width: 0%;
+    }
+}
+
+@keyframes shine {
+
+    0% {
+
+        left: -100%;
+    }
+
+    100% {
+
+        left: 200%;
+    }
+}
+
+@keyframes shimmer {
+
+    0% {
+
+        filter: brightness(1);
+    }
+
+    50% {
+
+        filter: brightness(1.15);
+    }
+
+    100% {
+
+        filter: brightness(1);
+    }
+}
+
+/* ==================================
+   RESPONSIVE
+================================== */
+
+@media only screen and (max-width: 1024px) {
+
+    .dashboard-grid {
+
+        grid-template-columns: 1fr;
+    }
+}

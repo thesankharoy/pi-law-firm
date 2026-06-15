@@ -1,0 +1,169 @@
+.ai-card {
+
+    border-radius: 12px;
+}
+
+.header {
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 1rem;
+
+    border-bottom: 1px solid #ecebea;
+}
+
+.header-left {
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.einstein-icon {
+
+    --slds-c-icon-color-foreground-default: #0176d3;
+}
+
+.title {
+
+    margin: 0;
+
+    font-size: 1.15rem;
+    font-weight: 700;
+
+    color: #181818;
+}
+
+.subtitle {
+
+    margin: 0;
+
+    font-size: 0.8rem;
+
+    color: #706e6b;
+}
+
+.live-badge {
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 4px 10px;
+
+    border-radius: 999px;
+
+    background: #eef4ff;
+
+    color: #0176d3;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.live-dot {
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: #2e844a;
+
+    animation: pulse 1.8s infinite;
+}
+
+.content {
+
+    padding: 1.25rem;
+}
+
+.summary-text {
+
+    min-height: 120px;
+
+    font-size: 14px;
+    line-height: 1.7;
+
+    color: #181818;
+
+    white-space: pre-wrap;
+}
+
+.insights {
+
+    margin-top: 16px;
+
+    display: flex;
+    gap: 8px;
+
+    flex-wrap: wrap;
+}
+
+.footer {
+
+    padding: 1rem 1.25rem;
+
+    border-top: 1px solid #ecebea;
+
+    background: #fafaf9;
+}
+
+.score-header {
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 8px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    color: #514f4d;
+}
+
+.timestamp {
+
+    margin-top: 10px;
+
+    font-size: 12px;
+
+    color: #706e6b;
+}
+
+.loading-section {
+
+    padding: 1.5rem;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.loading-text {
+
+    font-size: 14px;
+
+    color: #706e6b;
+}
+
+@keyframes pulse {
+
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.25);
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

@@ -1,0 +1,85 @@
+<template>
+
+    <div class="analytics-grid">
+
+        <!-- Where Intake Are Lost -->
+        <lightning-card title="Where Intake Are Lost">
+
+            <div class="container">
+
+                <template for:each={leakageData} for:item="item">
+
+                    <div key={item.stageName} class="row">
+
+                        <div
+                            class="stage-box"
+                            style={item.widthStyle}>
+
+                            <span class="stage-name">
+                                {item.stageName}
+                            </span>
+
+                            <span class="stage-count">
+                                {item.count}
+                            </span>
+
+                        </div>
+
+                        <div class="dropoff">
+
+                            <span class="red">
+                                {item.dropOff}
+                                ({item.dropOffPercent}%)
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </template>
+
+            </div>
+
+        </lightning-card>
+
+        <!-- Response Time -->
+        <lightning-card title="Response Time by Intake Source">
+
+            <div class="response-container">
+
+                <template for:each={responseData} for:item="item">
+
+                    <div key={item.source} class="response-row">
+
+                        <div class="response-label">
+
+                            <span class="source">
+                                {item.source}
+                            </span>
+
+                            <span class="time">
+                                {item.avgResponseTime} min
+                            </span>
+
+                        </div>
+
+                        <div class="bar-container">
+
+                            <div
+                                class="bar"
+                                style={item.widthStyle}>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </template>
+
+            </div>
+
+        </lightning-card>
+
+    </div>
+
+</template>
