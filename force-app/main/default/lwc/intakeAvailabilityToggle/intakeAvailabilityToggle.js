@@ -6,7 +6,7 @@ import setStatus from "@salesforce/apex/UserAvailabilityService.setStatus";
 import heartbeat from "@salesforce/apex/UserAvailabilityService.heartbeat";
 import getOpenIntakes from "@salesforce/apex/UserAvailabilityService.getOpenIntakes";
 
-const HEARTBEAT_INTERVAL = 60 * 1000; // 1 minute
+const HEARTBEAT_INTERVAL = 60 * 1000 * 5; // 5 minute
 const INTAKE_POLL_INTERVAL = 15 * 1000; // 15 seconds — live intake list
 
 function statusClass(status) {
@@ -52,7 +52,8 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
             this.specialistData = await getMyStatus();
             this.errorMessage = null;
         } catch (e) {
-            this.errorMessage = "Could not load status.";
+            // Show the actual Apex error so you can diagnose it
+            this.errorMessage = e?.body?.message || e?.message || "Could not load status.";
         }
     }
 
@@ -64,9 +65,22 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
                 statusClass: statusClass(i.status)
             }));
             const now = new Date();
-            this.lastRefreshed = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+            this.lastRefreshed = now.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            });
         } catch (e) {
-            /* silent — don't overwrite the list on transient errors */
+            // Previously silent — now surfaces the error so you can see it
+            console.error("getOpenIntakes failed:", e?.body?.message || e?.message);
+            // Don't overwrite the list on transient errors — keep showing stale data
+            const now = new Date();
+            this.lastRefreshed =
+                now.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit"
+                }) + " (refresh failed)";
         }
     }
 
@@ -75,7 +89,8 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
             try {
                 await heartbeat();
             } catch (e) {
-                /* silent */
+                // Show the actual Apex error so you can diagnose it
+                this.errorMessage = e?.body?.message || e?.message || "Failed to send heartbeat.";
             }
         }
     }
@@ -106,7 +121,8 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
                 })
             );
         } catch (e) {
-            this.errorMessage = e.body?.message || "Failed to update status.";
+            // Show the actual Apex error so you can diagnose it
+            this.errorMessage = e?.body?.message || e?.message || "Failed to update status.";
         } finally {
             this.isLoading = false;
         }

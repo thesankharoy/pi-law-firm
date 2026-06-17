@@ -5,14 +5,7 @@ public with sharing class UserAvailabilityService {
         Id userId = UserInfo.getUserId();
 
         List<Intake_Specialist__c> specs = [
-            SELECT
-                Id,
-                Status__c,
-                Active__c,
-                Current_Active_Count__c,
-                Max_Capacity__c,
-                Last_Assigned__c,
-                Last_Heartbeat__c
+            SELECT Id, Status__c, Active__c, Max_Capacity__c, Last_Assigned__c, Last_Heartbeat__c
             FROM Intake_Specialist__c
             WHERE User__c = :userId
             LIMIT 1
@@ -26,7 +19,14 @@ public with sharing class UserAvailabilityService {
             spec = specs[0];
         }
 
-        // Count intakes assigned today
+        // Live count — never read Current_Active_Count__c for display;
+        // the engine writes that field; we always derive it fresh here
+        Integer liveActiveCount = [
+            SELECT COUNT()
+            FROM Intake__c
+            WHERE OwnerId = :userId AND Status__c NOT IN ('Converted', 'Turned Down', 'Referred Out')
+        ];
+
         Integer assignedToday = [
             SELECT COUNT()
             FROM Intake__c
@@ -37,7 +37,7 @@ public with sharing class UserAvailabilityService {
             'id' => spec.Id,
             'status' => spec.Status__c,
             'isActive' => spec.Active__c,
-            'activeCount' => spec.Current_Active_Count__c != null ? (Integer) spec.Current_Active_Count__c : 0,
+            'activeCount' => liveActiveCount,
             'maxCapacity' => spec.Max_Capacity__c != null ? (Integer) spec.Max_Capacity__c : 15,
             'assignedToday' => assignedToday
         };
