@@ -42,8 +42,7 @@ public class IntakePDFExtension {
                 Incident_Location__StateCode__s, Incident_Location__PostalCode__s,
                 Incident_Location__CountryCode__s,
                 // Client
-                Contact__c, Contact__r.Name, Contact__r.Email, Contact__r.Phone,
-                Client__c, Client__r.Name,
+                Client__c, Client__r.Name, Client__r.Email, Client__r.Phone,
                 // Injury
                 Was_Injured__c, Injury_Severity__c, Injury_Types__c,
                 Body_Parts_Affected__c, Current_Symptoms__c,
@@ -101,14 +100,14 @@ public class IntakePDFExtension {
         ];
 
         this.intakeId = this.intake.Id;
-        this.intakeContactId = this.intake.Contact__c;
+        this.intakeContactId = this.intake.Client__c;
 
-        if (this.intake.Contact__c != null) {
+        if (this.intake.Client__c != null) {
             try {
                 this.contactRecord = [
                     SELECT Id, Name, Email, Phone
                     FROM Contact
-                    WHERE Id = :this.intake.Contact__c
+                    WHERE Id = :this.intake.Client__c
                     LIMIT 1
                 ];
             } catch (Exception e) {
@@ -144,7 +143,7 @@ public class IntakePDFExtension {
         IntakeSectionGroup clientGrp = new IntakeSectionGroup();
         clientGrp.sectionName = 'Client Information';
         clientGrp.fields = new List<FieldEntry>();
-        clientGrp.fields.add(fe('Contact Name',      intake.Contact__r?.Name));
+        clientGrp.fields.add(fe('Contact Name',      intake.Client__r?.Name));
         clientGrp.fields.add(fe('Client Name',       intake.Client__r?.Name));
         clientGrp.fields.add(fe('Date of Birth',     formatDate(intake.Date_of_Birth__c)));
         clientGrp.fields.add(fe('Gender',            intake.Gender__c));
@@ -368,121 +367,132 @@ public class IntakePDFExtension {
 
     // ─── InvocableMethod ─────────────────────────────────────────────
     @InvocableMethod(label='Create Intake PDF & Send Email')
-    public static void saveIntakePdfAndSendEmail(List<String> intakeIds) {
-        String intakeId;
-        for (String s : intakeIds) { intakeId = s; }
+public static void saveIntakePdfAndSendEmail(List<String> intakeIds) {
+    
+    String intakeId;
+    for (String s : intakeIds) { intakeId = s; }
 
-        try {
-            Intake__c intake = [
-                SELECT Id, Name, Status__c, Contact__c,
-                       Contact__r.Name, Contact__r.Email,
-                       Incident_Type__c,
-                       Incident_Location__City__s, Incident_Location__StateCode__s
-                FROM Intake__c
-                WHERE Id = :intakeId
-                LIMIT 1
-            ];
+    try {
+        Intake__c intake = [
+            SELECT Id, Name, Status__c, Client__c,
+                   Client__r.Name, Client__r.Email,
+                   Incident_Type__c,
+                   Incident_Location__City__s, Incident_Location__StateCode__s
+            FROM Intake__c
+            WHERE Id = :intakeId
+            LIMIT 1
+        ];
 
-            /*Contact con = [
-                SELECT Id, Name, Email
-                FROM Contact
-                WHERE Id = :intake.Contact__c
-                LIMIT 1
-            ];*/
-
-			if (intake.Contact__c == null) {
-    throw new AuraHandledException('Intake not linked to contact!');
-}
-
-List<Contact> conList = [
-    SELECT Id, Name, Email
-    FROM Contact
-    WHERE Id = :intake.Contact__c
-    LIMIT 1
-];
-
-if (conList.isEmpty()) {
-    throw new AuraHandledException('Could not find Contact record!');
-}
-
-Contact con = conList[0];
-
-if (String.isBlank(con.Email)) {
-    throw new AuraHandledException('Contact Email is blank!');
-}
-
-            // Build PDF
-            PageReference pdfPage = Page.IntakePDFPage;
-            pdfPage.getParameters().put('id', intake.Id);
-            Blob pdfBlob;
-            if (Test.isRunningTest()) {
-                pdfBlob = Blob.valueOf('test');
-            } else {
-                pdfBlob = pdfPage.getContentAsPDF();
-            }
-
-            // Save PDF as ContentVersion linked to Intake
-            ContentVersion cv = new ContentVersion(
-                Title                  = intake.Name + '_IntakePDF_' + System.now().format('yyyyMMddHHmmss') + '.pdf',
-                PathOnClient           = intake.Name + '_' + System.now().format('yyyyMMddHHmmss') + '.pdf',
-                VersionData            = pdfBlob,
-                FirstPublishLocationId = intake.Id,
-                Origin                 = 'C'
-            );
-            insert cv;
-
-            // Build location string for email
-            String locationStr = '';
-            if (String.isNotBlank(intake.Incident_Location__City__s))
-                locationStr += intake.Incident_Location__City__s;
-            if (String.isNotBlank(intake.Incident_Location__StateCode__s))
-                locationStr += (locationStr != '' ? ', ' : '') + intake.Incident_Location__StateCode__s;
-
-            // Email body
-            String emailBody =
-                'Dear ' + con.Name + ',<br><br>' +
-                'Please find attached the intake summary document for your ' +
-                (String.isNotBlank(intake.Incident_Type__c) ? intake.Incident_Type__c : 'incident') +
-                (String.isNotBlank(locationStr) ? ' case in ' + locationStr : '') + '.<br><br>' +
-                'This document contains all the information collected during your intake process. ' +
-                'Please review it carefully and contact us if you notice any discrepancies or have additional information to provide.<br><br>' +
-                '<b>Intake Reference:</b> ' + intake.Name + '<br>' +
-                '<b>Status:</b> ' + (intake.Status__c != null ? intake.Status__c : 'N/A') + '<br><br>' +
-                'If you have any questions or need to provide additional details, please do not hesitate to reach out to our team.<br><br>' +
-                'We appreciate your cooperation and will be in touch with you shortly.<br><br>' +
-                'Warm regards,<br><b>The Intake Team</b>';
-
-            Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
-            email.setToAddresses(new String[]{ con.Email });
-            email.setSubject('Intake Summary: ' + intake.Name);
-            email.setHTMLBody(emailBody);
-            email.setTargetObjectId(con.Id);
-            email.setWhatId(intake.Id);
-            email.setSaveAsActivity(false);
-
-            Messaging.EmailFileAttachment attachment = new Messaging.EmailFileAttachment();
-            attachment.setFileName(intake.Name + '.pdf');
-            attachment.setBody(pdfBlob);
-            attachment.setContentType('application/pdf');
-            email.setFileAttachments(new Messaging.EmailFileAttachment[]{ attachment });
-
-            Messaging.SendEmailResult[] results = Messaging.sendEmail(
-                new Messaging.SingleEmailMessage[]{ email }
-            );
-
-            if (results != null && results[0].isSuccess()) {
-                System.debug('Email sent to: ' + con.Email);
-            } else {
-                for (Messaging.SendEmailError err : results[0].getErrors()) {
-                    System.debug('Email Error: ' + err.getMessage() + ' | Status: ' + err.getStatusCode());
-                }
-                throw new AuraHandledException('Email failed: ' + results[0].getErrors()[0].getMessage());
-            }
-
-        } catch (Exception e) {
-            System.debug('IntakePDFExtension Error: ' + e.getMessage());
+        if (intake.Client__c == null) {
+            throw new AuraHandledException('Intake not linked to contact!');
         }
+
+        List<Contact> conList = [
+            SELECT Id, Name, Email
+            FROM Contact
+            WHERE Id = :intake.Client__c
+            LIMIT 1
+        ];
+
+        if (conList.isEmpty()) {
+            throw new AuraHandledException('Could not find Contact record!');
+        }
+
+        Contact con = conList[0];
+
+        if (String.isBlank(con.Email)) {
+            throw new AuraHandledException('Contact Email is blank!');
+        }
+
+        // Build PDF
+        PageReference pdfPage = Page.IntakePDFPage;
+        pdfPage.getParameters().put('id', intake.Id);
+        Blob pdfBlob;
+        if (Test.isRunningTest()) {
+            pdfBlob = Blob.valueOf('test');
+        } else {
+            pdfBlob = pdfPage.getContentAsPDF();
+        }
+
+        // Save PDF as ContentVersion linked to Intake
+        ContentVersion cv = new ContentVersion(
+            Title                  = intake.Name + '_IntakePDF_' + System.now().format('yyyyMMddHHmmss') + '.pdf',
+            PathOnClient           = intake.Name + '_' + System.now().format('yyyyMMddHHmmss') + '.pdf',
+            VersionData            = pdfBlob,
+            FirstPublishLocationId = intake.Id,
+            Origin                 = 'C'
+        );
+        insert cv;
+
+        // Build location string
+        String locationStr = '';
+        if (String.isNotBlank(intake.Incident_Location__City__s))
+            locationStr += intake.Incident_Location__City__s;
+        if (String.isNotBlank(intake.Incident_Location__StateCode__s))
+            locationStr += (locationStr != '' ? ', ' : '') + intake.Incident_Location__StateCode__s;
+
+        
+        String baseUrl = System.Label.Intake_Status_Update_URL;
+
+String approveUrl = baseUrl + intake.Id + '&varIntakeStatus=Retainer%20Agreement%20Signed';
+String rejectUrl  = baseUrl + intake.Id + '&varIntakeStatus=Turned%20Down';
+
+        // Email body
+        String emailBody =
+            'Dear ' + con.Name + ',<br><br>' +
+            'Please find attached the intake summary document for your ' +
+            (String.isNotBlank(intake.Incident_Type__c) ? intake.Incident_Type__c : 'incident') +
+            (String.isNotBlank(locationStr) ? ' case in ' + locationStr : '') + '.<br><br>' +
+            'This document contains all the information collected during your intake process. ' +
+            'Please review it carefully and contact us if you notice any discrepancies or have additional information to provide.<br><br>' +
+            '<b>Intake Reference:</b> ' + intake.Name + '<br>' +
+            '<b>Status:</b> ' + (intake.Status__c != null ? intake.Status__c : 'N/A') + '<br><br>' +
+            'If you have any questions or need to provide additional details, please do not hesitate to reach out to our team.<br><br>' +
+            'We appreciate your cooperation and will be in touch with you shortly.<br><br>' +
+            '<table cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">' +
+            '  <tr>' +
+            
+            '    <td style="padding-right:12px;">' +
+            '      <a href="' + approveUrl + '" style="display:inline-block; padding:10px 24px; background-color:#2e7d32; color:#ffffff; text-decoration:none; font-family:Arial,sans-serif; font-size:13px; font-weight:bold; border-radius:4px;">Approved</a>' +
+            '    </td>' +
+            '    <td>' +
+            '      <a href="' + rejectUrl + '" style="display:inline-block; padding:10px 24px; background-color:#c62828; color:#ffffff; text-decoration:none; font-family:Arial,sans-serif; font-size:13px; font-weight:bold; border-radius:4px;">Rejected</a>' +
+            '    </td>' +
+            '  </tr>' +
+            '</table>' +
+            'Warm regards,<br><b>The Intake Team</b>';
+
+        Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+        email.setToAddresses(new String[]{ con.Email });
+        email.setSubject('Intake Summary: ' + intake.Name);
+        email.setHTMLBody(emailBody);
+        email.setTargetObjectId(con.Id);
+        email.setWhatId(intake.Id);
+        email.setSaveAsActivity(false);
+
+        Messaging.EmailFileAttachment attachment = new Messaging.EmailFileAttachment();
+        attachment.setFileName(intake.Name + '.pdf');
+        attachment.setBody(pdfBlob);
+        attachment.setContentType('application/pdf');
+        email.setFileAttachments(new Messaging.EmailFileAttachment[]{ attachment });
+
+        Messaging.SendEmailResult[] results = Messaging.sendEmail(
+            new Messaging.SingleEmailMessage[]{ email }
+        );
+
+        if (results != null && results[0].isSuccess()) {
+            System.debug('Email sent to: ' + con.Email);
+        } else {
+            for (Messaging.SendEmailError err : results[0].getErrors()) {
+                System.debug('Email Error: ' + err.getMessage() + ' | Status: ' + err.getStatusCode());
+            }
+            throw new AuraHandledException('Email failed: ' + results[0].getErrors()[0].getMessage());
+        }
+
+    } catch (Exception e) {
+        System.debug('IntakePDFExtension Error: ' + e.getMessage());
     }
+}
 
     // ─── Helper Methods ───────────────────────────────────────────────
     private FieldEntry fe(String label, String val) {
@@ -539,4 +549,6 @@ if (String.isBlank(con.Email)) {
         if (addr.endsWith(', ')) addr = addr.substring(0, addr.length() - 2);
         return addr;
     }
+    
+    
 }
