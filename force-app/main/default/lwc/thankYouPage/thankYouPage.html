@@ -1,7 +1,5 @@
 <template>
-
     <section class="thankyou-wrapper">
-
         <!-- GRID -->
         <div class="grid-bg"></div>
 
@@ -11,51 +9,34 @@
 
         <!-- CONTENT -->
         <div class="content">
-
             <!-- CHECKMARK -->
             <div class="success-circle">
-
                 <svg viewBox="0 0 52 52">
+                    <circle class="circle" cx="26" cy="26" r="25" fill="none" />
 
-                    <circle
-                        class="circle"
-                        cx="26"
-                        cy="26"
-                        r="25"
-                        fill="none" />
-
-                    <path
-                        class="check"
-                        fill="none"
-                        d="M14 27l7 7 17-17" />
-
+                    <path class="check" fill="none" d="M14 27l7 7 17-17" />
                 </svg>
-
             </div>
 
-            <p class="mini-text">
-                SUBMISSION SUCCESSFUL
-            </p>
+            <p class="mini-text">SUBMISSION SUCCESSFUL</p>
 
-            <h1>
-                Thank You!
-            </h1>
+            <h1>Thank You!</h1>
 
             <p class="description">
-                Your information has been received successfully.
-                Our intake team will contact you shortly.
+                Your information has been received successfully. Our intake team will contact you shortly.
             </p>
 
-            <a
-                href="/delipatPI/s/"
-                class="home-btn">
+            <div class="reference-container">
+                <!-- Intake reference — only renders when the param is present -->
+                <template if:true={intakeRef}>
+                    <div class="ref-badge">
+                        <span class="ref-label">Your reference number</span>
+                        <span class="ref-number">{intakeRef}</span>
+                    </div>
+                </template>
 
-                Return Home
-
-            </a>
-
+                <a href="/delipatPI/s/" class="home-btn">Return Home</a>
+            </div>
         </div>
-
     </section>
-
 </template>

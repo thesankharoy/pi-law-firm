@@ -1,5 +1,4 @@
 global virtual class IntakeWrapper {
-    public String submissionUuid;
     public String firstName;
     public String lastName;
     public String email;

@@ -12,13 +12,15 @@ public with sharing class IntakeController {
         } catch (Exception e) {
             throw new AuraHandledException('Malformed submission.');
         }
-        IntakeSubmissionService.IntakeResponse res = IntakeSubmissionService.validateAndEnqueue(body);
+
+        IntakeSubmissionService.IntakeResponse res = IntakeSubmissionService.validateAndProcess(body);
+        
         if (res.success != true) {
             throw new AuraHandledException(
                 (res.errors != null && !res.errors.isEmpty()) ? String.join(res.errors, ' ') : res.message
             );
         }
-        return res.referenceNumber;
+        return res.intakeReference;
     }
 
     @AuraEnabled(cacheable=true)

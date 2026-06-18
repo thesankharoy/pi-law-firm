@@ -2,7 +2,7 @@
 global with sharing class IntakeSubmissionService {
     global class IntakeResponse {
         public Boolean success;
-        public String referenceNumber; // the submission UUID (tracking token)
+        public String intakeReference; // Intake__c.Name, for human reference
         public String message;
         public List<String> errors;
         public transient Integer statusCode; // internal; not serialized to the body
@@ -28,13 +28,17 @@ global with sharing class IntakeSubmissionService {
             return bad;
         }
 
-        IntakeResponse out = validateAndEnqueue(body);
+        IntakeResponse out = validateAndProcess(body);
         res.statusCode = out.statusCode;
         return out;
     }
 
-    /** Shared by the REST endpoint and the LWC controller: validate -> enqueue. No DML, no staging. */
-    public static IntakeResponse validateAndEnqueue(IntakeWrapper body) {
+    /**
+     * Shared by the REST endpoint and the LWC controller.
+     * Synchronous — no Queueable. Caller knows immediately whether creation
+     * succeeded and gets the real Intake Name back.
+     */
+    public static IntakeResponse validateAndProcess(IntakeWrapper body) {
         IntakeResponse out = new IntakeResponse();
         out.errors = new List<String>();
 
@@ -47,16 +51,24 @@ global with sharing class IntakeSubmissionService {
             return out;
         }
 
-        if (String.isBlank(body.submissionUuid))
-            body.submissionUuid = generateUuid();
+        try {
+            PartyIntakeService.ProcessResult result = PartyIntakeService.process(body);
+            out.success = true;
+            out.statusCode = 201;
+            out.intakeReference = result.intakeReference;
+            out.message = result.status == 'Needs Review'
+                ? 'Submission received. Our team will review and contact you shortly.'
+                : 'Submission received successfully.';
+        } catch (Exception e) {
+            out.success = false;
+            out.statusCode = 500;
+            out.message = 'We could not process your submission. Please try again or call our office.';
+            System.debug(
+                LoggingLevel.ERROR,
+                'Intake creation failed: ' + e.getMessage() + ' | ' + e.getStackTraceString()
+            );
+        }
 
-        // Payload goes straight to async processing.
-        System.enqueueJob(new IntakeSubmissionProcessor(new List<IntakeWrapper>{ body }));
-
-        out.success = true;
-        out.statusCode = 202;
-        out.referenceNumber = body.submissionUuid;
-        out.message = 'Submission received and is being processed.';
         return out;
     }
 
@@ -79,17 +91,5 @@ global with sharing class IntakeSubmissionService {
         if (b.consent != true)
             errs.add('consent is required.');
         return errs;
-    }
-    static String generateUuid() {
-        String h = EncodingUtil.convertToHex(Crypto.generateAesKey(128));
-        return h.substring(0, 8) +
-            '-' +
-            h.substring(8, 12) +
-            '-' +
-            h.substring(12, 16) +
-            '-' +
-            h.substring(16, 20) +
-            '-' +
-            h.substring(20, 32);
     }
 }

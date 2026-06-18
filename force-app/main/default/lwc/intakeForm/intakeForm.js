@@ -20,9 +20,7 @@ export default class IntakeForm extends LightningElement {
     consent = false;
 
     submitting = false;
-    submitted = false;
     errorMsg = "";
-    successMsg = "";
 
     // dynamic picklist options
     incidentTypeOptions = [];
@@ -30,12 +28,6 @@ export default class IntakeForm extends LightningElement {
     medicalTreatmentOptions = [];
     insuranceAvailableOptions = [];
     liabilityClarityOptions = [];
-
-    // Stable idempotency token per page load — re-clicks won't double-submit.
-    submissionUuid =
-        typeof crypto !== "undefined" && crypto.randomUUID
-            ? crypto.randomUUID()
-            : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
     @wire(getIntakePicklists)
     wiredPicklists({ data, error }) {
@@ -77,7 +69,6 @@ export default class IntakeForm extends LightningElement {
 
         this.submitting = true;
         const payload = {
-            submissionUuid: this.submissionUuid,
             firstName: this.firstName,
             lastName: this.lastName,
             email: this.email,
@@ -98,13 +89,12 @@ export default class IntakeForm extends LightningElement {
 
         try {
             const ref = await createIntake({ payloadJson: JSON.stringify(payload) });
-            this.successMsg = `Thank you — your request was received (reference ${ref}). Our intake team will contact you shortly.`;
-            this.submitted = true;
+            // Redirect to the community success page with the Intake Name as a URL param.
+            // The success page can read ?id= to display a personalised confirmation.
+            window.location.href = `/s/thank-you?id=${ref}`;
         } catch (e) {
             this.errorMsg =
                 (e && e.body && e.body.message) || "Something went wrong. Please try again or call our office.";
-        } finally {
-            this.submitting = false;
         }
     }
 }

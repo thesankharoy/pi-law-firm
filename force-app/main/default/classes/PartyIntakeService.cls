@@ -2,6 +2,7 @@ public without sharing class PartyIntakeService {
     public class ProcessResult {
         public Id partyId;
         public Id intakeId;
+        public String intakeReference; // Intake__c.Name, for human reference
         public Integer matchCount = 0;
         public String status; // 'Processed' | 'Needs Review'
         public Boolean createdNewParty = false;
@@ -29,7 +30,7 @@ public without sharing class PartyIntakeService {
         Boolean ambiguous = candidateIds.size() > 1;
 
         Intake__c intake = new Intake__c(
-            RecordTypeId = recordTypeId('Intake__c', 'Active_Intake'),
+            RecordTypeId = recordTypeId('Intake__c', 'New_Intake'),
             Client__c = (party != null ? party.Id : null),
             Incident_Type__c = matchPicklist('Intake__c', 'Incident_Type__c', inwrapper.incidentType),
             Incident_Date__c = parseDate(inwrapper.incidentDate),
@@ -49,18 +50,22 @@ public without sharing class PartyIntakeService {
             Police_Called__c = (inwrapper.policeCalled == true),
             Insurance_Available__c = matchPicklist('Intake__c', 'Insurance_Available__c', inwrapper.insuranceAvailable),
             Liability_Clarity__c = matchPicklist('Intake__c', 'Liability_Clarity__c', inwrapper.liabilityClarity),
+            Intake_Phone__c = phone,
             Source__c = 'Web',
             Sign_Up_Method__c = 'Web'
         );
         insert intake;
         r.intakeId = intake.Id;
 
+        // Auto-number Name is set by the server on insert — must re-query to get it
+        r.intakeReference = [SELECT Name FROM Intake__c WHERE Id = :intake.Id LIMIT 1].Name;
+
         if (party != null) {
             insert new Role__c(
                 Role__c = 'Client',
                 Party__c = party.Id,
                 Intake__c = intake.Id,
-                Comments__c = 'Auto-created from web intake submission ' + inwrapper.submissionUuid
+                Comments__c = 'Auto-created from web intake — ' + r.intakeReference
             );
             r.partyId = party.Id;
             r.status = 'Processed';
