@@ -2,7 +2,7 @@ import { LightningElement, api, wire } from 'lwc';
 import { getRecord } from 'lightning/uiRecordApi';
 
 import NEW_AT from '@salesforce/schema/Intake__c.New_Entered_At__c'
-import OPEN_AT from '@salesforce/schema/Intake__c.Open_Entered_At__c';
+import ASSIGNED_AT from '@salesforce/schema/Intake__c.Assigned_Entered_At__c';
 import WORKING_AT from '@salesforce/schema/Intake__c.Working_Entered_At__c';
 import UNDER_REVIEW_AT from '@salesforce/schema/Intake__c.Under_Review_Entered_At__c';
 import QUALIFIED_AT from '@salesforce/schema/Intake__c.Qualified_Entered_At__c';
@@ -26,7 +26,7 @@ import TIME_CONVERTED from '@salesforce/schema/Intake__c.Time_in_Converted__c';
 import STATUS from '@salesforce/schema/Intake__c.Status__c';
 
 const FIELDS = [
-    NEW_AT, OPEN_AT, WORKING_AT, UNDER_REVIEW_AT, QUALIFIED_AT,
+    NEW_AT, ASSIGNED_AT, WORKING_AT, UNDER_REVIEW_AT, QUALIFIED_AT,
     RET_SENT_AT, RET_SIGNED_AT, TURNED_DOWN_AT, REFERRED_OUT_AT, CONVERTED_AT,
     TIME_NEW, TIME_OPEN, TIME_WORKING, TIME_UNDER_REVIEW,
     TIME_QUALIFIED, TIME_RET_SENT, TIME_RET_SIGNED,
@@ -75,8 +75,8 @@ wiredRecord({ data, error }) {
                 timeSpentField: fields.Time_in_New__c?.value,
             },
             {
-                name: 'Open',
-                enteredAtField: fields.Open_Entered_At__c?.value,
+                name: 'Assigned',
+                enteredAtField: fields.Assigned_Entered_At__c?.value,
                 timeSpentField: fields.Time_in_Open__c?.value,
             },
             {

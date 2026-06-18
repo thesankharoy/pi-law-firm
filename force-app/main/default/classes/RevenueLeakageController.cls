@@ -13,7 +13,7 @@ public with sharing class RevenueLeakageController {
 
         List<String> stages = new List<String>{
             'New',
-            'Open',
+            'Assigned',
             'Working',
             'Under Review',
             'Qualified',

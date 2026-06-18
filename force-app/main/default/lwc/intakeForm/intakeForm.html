@@ -4,88 +4,73 @@
             <h1>Free Case Evaluation</h1>
             <p class="subtitle">Tell us what happened. A member of our intake team will reach out shortly.</p>
 
-            <template if:true={errorMsg}>
-                <div class="msg error">{errorMsg}</div>
-            </template>
-
-            <template if:true={successMsg}>
-                <div class="msg success">{successMsg}</div>
-            </template>
-
-            <template if:false={submitted}>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="req" for="firstName">First name</label>
-                        <input id="firstName" name="firstName" type="text" value={firstName} onchange={handleChange} />
-                    </div>
-                    <div class="form-group">
-                        <label class="req" for="lastName">Last name</label>
-                        <input id="lastName" name="lastName" type="text" value={lastName} onchange={handleChange} />
-                    </div>
-                </div>
-
+            <div class="form-row">
                 <div class="form-group">
-                    <label for="email">Email</label>
-                    <input id="email" name="email" type="email" value={email} onchange={handleChange} />
+                    <label class="req" for="firstName">First name</label>
+                    <input id="firstName" name="firstName" type="text" value={firstName} onchange={handleChange} />
                 </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="phone">Phone</label>
-                        <input id="phone" name="phone" type="tel" value={phone} onchange={handleChange} />
-                    </div>
-                    <div class="form-group">
-                        <label for="country">Country</label>
-                        <select id="country" name="country" value={country} onchange={handleChange}>
-                            <option value="">Select…</option>
-                            <option value="India">India</option>
-                            <option value="United States">United States</option>
-                            <option value="United Kingdom">United Kingdom</option>
-                            <option value="Canada">Canada</option>
-                            <option value="Australia">Australia</option>
-                            <option value="Singapore">Singapore</option>
-                            <option value="Germany">Germany</option>
-                            <option value="France">France</option>
-                            <option value="Japan">Japan</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                </div>
-
                 <div class="form-group">
-                    <label for="dateOfBirth">Date of birth</label>
+                    <label class="req" for="lastName">Last name</label>
+                    <input id="lastName" name="lastName" type="text" value={lastName} onchange={handleChange} />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" value={email} onchange={handleChange} />
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input id="phone" name="phone" type="tel" value={phone} onchange={handleChange} />
+                </div>
+                <div class="form-group">
+                    <label for="country">Country</label>
+                    <select id="country" name="country" value={country} onchange={handleChange}>
+                        <option value="">Select…</option>
+                        <option value="India">India</option>
+                        <option value="United States">United States</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="Canada">Canada</option>
+                        <option value="Australia">Australia</option>
+                        <option value="Singapore">Singapore</option>
+                        <option value="Germany">Germany</option>
+                        <option value="France">France</option>
+                        <option value="Japan">Japan</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="dateOfBirth">Date of birth</label>
+                <input id="dateOfBirth" name="dateOfBirth" type="date" value={dateOfBirth} onchange={handleChange} />
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="incidentType">What happened?</label>
+                    <select id="incidentType" name="incidentType" value={incidentType} onchange={handleChange}>
+                        <option value="">Select…</option>
+                        <template for:each={incidentTypeOptions} for:item="opt">
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        </template>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="incidentDate">Date of incident</label>
                     <input
-                        id="dateOfBirth"
-                        name="dateOfBirth"
+                        id="incidentDate"
+                        name="incidentDate"
                         type="date"
-                        value={dateOfBirth}
+                        value={incidentDate}
                         onchange={handleChange}
                     />
                 </div>
+            </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="incidentType">What happened?</label>
-                        <select id="incidentType" name="incidentType" value={incidentType} onchange={handleChange}>
-                            <option value="">Select…</option>
-                            <template for:each={incidentTypeOptions} for:item="opt">
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            </template>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="incidentDate">Date of incident</label>
-                        <input
-                            id="incidentDate"
-                            name="incidentDate"
-                            type="date"
-                            value={incidentDate}
-                            onchange={handleChange}
-                        />
-                    </div>
-                </div>
-
-                <!-- <div class="form-group">
+            <!-- <div class="form-group">
                     <label for="incidentLocation">Where did it happen?</label>
                     <input
                         id="incidentLocation"
@@ -96,100 +81,98 @@
                     />
                 </div> -->
 
+            <div class="form-group">
+                <label for="description">Briefly describe what happened</label>
+                <textarea
+                    id="description"
+                    name="description"
+                    rows="4"
+                    value={description}
+                    onchange={handleChange}
+                ></textarea>
+            </div>
+
+            <div class="form-row">
                 <div class="form-group">
-                    <label for="description">Briefly describe what happened</label>
-                    <textarea
-                        id="description"
-                        name="description"
-                        rows="4"
-                        value={description}
+                    <label for="injurySeverity">Injury severity</label>
+                    <select id="injurySeverity" name="injurySeverity" value={injurySeverity} onchange={handleChange}>
+                        <option value="">Select…</option>
+                        <template for:each={injurySeverityOptions} for:item="opt">
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        </template>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="medicalTreatmentStatus">Medical treatment started</label>
+                    <select
+                        id="medicalTreatmentStatus"
+                        name="medicalTreatmentStatus"
+                        value={medicalTreatmentStatus}
                         onchange={handleChange}
-                    ></textarea>
+                    >
+                        <option value="">Select…</option>
+                        <template for:each={medicalTreatmentOptions} for:item="opt">
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        </template>
+                    </select>
                 </div>
+            </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="injurySeverity">Injury severity</label>
-                        <select
-                            id="injurySeverity"
-                            name="injurySeverity"
-                            value={injurySeverity}
-                            onchange={handleChange}
-                        >
-                            <option value="">Select…</option>
-                            <template for:each={injurySeverityOptions} for:item="opt">
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            </template>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="medicalTreatmentStatus">Medical treatment started</label>
-                        <select
-                            id="medicalTreatmentStatus"
-                            name="medicalTreatmentStatus"
-                            value={medicalTreatmentStatus}
-                            onchange={handleChange}
-                        >
-                            <option value="">Select…</option>
-                            <template for:each={medicalTreatmentOptions} for:item="opt">
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            </template>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="insuranceAvailable">Insurance available</label>
-                        <select
-                            id="insuranceAvailable"
-                            name="insuranceAvailable"
-                            value={insuranceAvailable}
-                            onchange={handleChange}
-                        >
-                            <option value="">Select…</option>
-                            <template for:each={insuranceAvailableOptions} for:item="opt">
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            </template>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="liabilityClarity">Liability clarity</label>
-                        <select
-                            id="liabilityClarity"
-                            name="liabilityClarity"
-                            value={liabilityClarity}
-                            onchange={handleChange}
-                        >
-                            <option value="">Select…</option>
-                            <template for:each={liabilityClarityOptions} for:item="opt">
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            </template>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="check-group">
-                    <input
-                        id="policeCalled"
-                        name="policeCalled"
-                        type="checkbox"
-                        checked={policeCalled}
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="insuranceAvailable">Insurance available</label>
+                    <select
+                        id="insuranceAvailable"
+                        name="insuranceAvailable"
+                        value={insuranceAvailable}
                         onchange={handleChange}
-                    />
-                    <label for="policeCalled" class="check-label">Police were called to the scene</label>
+                    >
+                        <option value="">Select…</option>
+                        <template for:each={insuranceAvailableOptions} for:item="opt">
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        </template>
+                    </select>
                 </div>
-
-                <div class="consent">
-                    <input id="consent" name="consent" type="checkbox" checked={consent} onchange={handleChange} />
-                    <label for="consent" class="consent-label">
-                        I agree to be contacted about my inquiry and accept the privacy policy. Submitting this form
-                        does not create an attorney-client relationship.
-                    </label>
+                <div class="form-group">
+                    <label for="liabilityClarity">Liability clarity</label>
+                    <select
+                        id="liabilityClarity"
+                        name="liabilityClarity"
+                        value={liabilityClarity}
+                        onchange={handleChange}
+                    >
+                        <option value="">Select…</option>
+                        <template for:each={liabilityClarityOptions} for:item="opt">
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        </template>
+                    </select>
                 </div>
+            </div>
 
-                <button onclick={handleSubmit} disabled={submitting}>{buttonLabel}</button>
+            <div class="check-group">
+                <input
+                    id="policeCalled"
+                    name="policeCalled"
+                    type="checkbox"
+                    checked={policeCalled}
+                    onchange={handleChange}
+                />
+                <label for="policeCalled" class="check-label">Police were called to the scene</label>
+            </div>
+
+            <div class="consent">
+                <input id="consent" name="consent" type="checkbox" checked={consent} onchange={handleChange} />
+                <label for="consent" class="consent-label">
+                    I agree to be contacted about my inquiry and accept the privacy policy. Submitting this form does
+                    not create an attorney-client relationship.
+                </label>
+            </div>
+
+            <template if:true={errorMsg}>
+                <div class="msg error">{errorMsg}</div>
             </template>
+
+            <button onclick={handleSubmit} disabled={submitting}>{buttonLabel}</button>
         </div>
     </div>
 </template>

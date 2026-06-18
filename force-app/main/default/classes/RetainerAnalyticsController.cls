@@ -23,7 +23,7 @@ public with sharing class RetainerAnalyticsController {
         dto.openCount = (Integer)[
             SELECT COUNT()
             FROM Intake__c
-            WHERE Status__c = 'Open'
+            WHERE Status__c = 'Assigned'
         ];
 
         dto.signedCount = (Integer)[
