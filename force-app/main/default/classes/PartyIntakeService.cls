@@ -13,7 +13,9 @@ public without sharing class PartyIntakeService {
 
         String email = normalizeEmail(inwrapper.email);
         String phone = digits(inwrapper.phone);
+        String firstName = (inwrapper.firstName != null) ? inwrapper.firstName.trim() : null;
         String lastName = (inwrapper.lastName != null) ? inwrapper.lastName.trim() : null;
+        String fullName = ((firstName != null) ? firstName : '') + ' ' + ((lastName != null) ? lastName : '');
         Date dob = parseDate(inwrapper.dateOfBirth);
 
         Set<Id> candidateIds = findCandidateParties(email, phone, lastName, dob);
@@ -65,6 +67,7 @@ public without sharing class PartyIntakeService {
                 Role__c = 'Client',
                 Party__c = party.Id,
                 Intake__c = intake.Id,
+                Name = fullName,
                 Comments__c = 'Auto-created from web intake — ' + r.intakeReference
             );
             r.partyId = party.Id;
