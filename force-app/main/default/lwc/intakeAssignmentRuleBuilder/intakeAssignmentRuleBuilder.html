@@ -5,6 +5,16 @@
             </lightning-button>
         </div>
 
+        <!-- Deployment overlay — blocks all interaction and shows live progress -->
+        <template if:true={isDeploying}>
+            <div class="deploy-overlay">
+                <div class="deploy-modal">
+                    <lightning-spinner alternative-text="Deploying" size="medium"></lightning-spinner>
+                    <p class="deploy-msg">{deployingMsg}</p>
+                </div>
+            </div>
+        </template>
+
         <template if:true={isLoading}>
             <div class="center-spinner">
                 <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>

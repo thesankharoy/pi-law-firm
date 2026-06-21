@@ -117,7 +117,7 @@ public with sharing class AssignmentRuleController {
 
     // ── Delete a rule ────────────────────────────────────────────
     @AuraEnabled
-    public static void toggleRule(String developerName, Boolean isActive) {
+    public static String toggleRule(String developerName, Boolean isActive) {
         // We can't delete CMT via Metadata API easily — instead deactivate
         // To truly delete, use Setup UI or SFDX
         // Here we just toggle active flag
@@ -126,14 +126,15 @@ public with sharing class AssignmentRuleController {
         md.label = developerName.replace('_', ' ');
         md.values = new List<Metadata.CustomMetadataValue>{ makeField('Active__c', isActive) };
 
-        Metadata.DeployContainer c = new Metadata.DeployContainer();
-        c.addMetadata(md);
-        Metadata.Operations.enqueueDeployment(c, new MetadataCallback());
+        Metadata.DeployContainer container = new Metadata.DeployContainer();
+        container.addMetadata(md);
+        Id jobId = Metadata.Operations.enqueueDeployment(container, new MetadataCallback());
+        return jobId;
     }
 
     // ── Reorder rules ─────────────────────────────────────────────
     @AuraEnabled
-    public static void reorderRules(List<String> orderedDeveloperNames) {
+    public static String reorderRules(List<String> orderedDeveloperNames) {
         Metadata.DeployContainer container = new Metadata.DeployContainer();
         Integer order = 1;
         for (String devName : orderedDeveloperNames) {
@@ -144,10 +145,61 @@ public with sharing class AssignmentRuleController {
             container.addMetadata(md);
             order++;
         }
-        Metadata.Operations.enqueueDeployment(container, new MetadataCallback());
+        Id jobId = Metadata.Operations.enqueueDeployment(container, new MetadataCallback());
+        return jobId;
     }
 
     // ── Helpers ───────────────────────────────────────────────────
+    /**
+     * Check the status of a Metadata API deployment job.
+     * @param jobId The deployment job Id returned by enqueueDeployment().
+     * @return The status string: "Pending", "InProgress", "Succeeded", "Failed", "Canceled", or "Canceling".
+     * @throws AuraHandledException if the jobId is invalid or if the status check fails.
+     */
+    @AuraEnabled
+    public static String checkDeployStatus(String jobId) {
+        if (String.isBlank(jobId)) {
+            throw new AuraHandledException('Invalid deployment job Id.');
+        }
+
+        try {
+            HttpRequest req = new HttpRequest();
+            req.setMethod('GET');
+            req.setHeader('Content-Type', 'application/json');
+            req.setEndpoint('callout:Salesforce_NC/services/data/v66.0/tooling/sobjects/DeployRequest/' + jobId);
+
+            HttpResponse res = new Http().send(req);
+
+            if (res.getStatusCode() != 200) {
+                throw new AuraHandledException(
+                    'Status check failed (HTTP ' + res.getStatusCode() + '). Body: ' + res.getBody()
+                );
+            }
+
+            Map<String, Object> body = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+            String status = (String) body.get('Status');
+
+            if (status == 'Succeeded')
+                return 'Succeeded';
+
+            if (status == 'Failed' || status == 'Canceled' || status == 'Canceling') {
+                String msg = 'Deployment ' + status.toLowerCase() + '.';
+                Object detail = body.get('StateDetail');
+                if (detail != null && String.isNotBlank(String.valueOf(detail))) {
+                    msg += ' ' + String.valueOf(detail);
+                }
+                throw new AuraHandledException(msg);
+            }
+
+            // Pending or InProgress — LWC keeps polling
+            return status;
+        } catch (AuraHandledException ahe) {
+            throw ahe; // re-throw our own errors unchanged
+        } catch (Exception e) {
+            throw new AuraHandledException('Could not check deployment status: ' + e.getMessage());
+        }
+    }
+
     private static Metadata.CustomMetadata buildRuleMd(RuleWrapper rule) {
         Metadata.CustomMetadata md = new Metadata.CustomMetadata();
         md.fullName = 'Intake_Assignment_Rule.' + rule.developerName;

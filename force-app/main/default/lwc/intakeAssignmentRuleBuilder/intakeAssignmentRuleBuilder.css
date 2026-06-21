@@ -192,6 +192,37 @@
     gap: 10px;
     padding-top: 4px;
 }
+/* ── Deployment overlay ── */
+.deploy-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.deploy-modal {
+    background: #ffffff;
+    border: 1px solid #e0e5ee;
+    border-radius: 16px;
+    padding: 36px 56px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    min-width: 280px;
+}
+.deploy-msg {
+    font-size: 14px;
+    font-weight: 600;
+    color: #04152f;
+    margin: 0;
+    letter-spacing: 0.01em;
+}
 @media (max-width: 700px) {
     .builder-layout {
         grid-template-columns: 1fr;
