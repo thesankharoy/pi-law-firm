@@ -12,8 +12,8 @@ import checkDeployStatus from "@salesforce/apex/AssignmentRuleController.checkDe
 let _uid = 0;
 const nextId = () => `cid_${++_uid}`;
 
-const POLL_INTERVAL_MS = 2000;
-const MAX_POLLS = 30; // 60 second ceiling before a timeout warning
+const POLL_MS = 2000;
+const MAX_POLL = 30;
 
 const OPS = {
     STRING: [
@@ -73,18 +73,12 @@ const LOGIC_OPTS = [
     { label: "All conditions must match (AND)", value: "AND" },
     { label: "Any condition must match (OR)", value: "OR" }
 ];
-const ASSIGN_OPTS = [
-    { label: "Queue", value: "Queue" },
-    { label: "User", value: "User" }
-];
 
 export default class IntakeAssignmentRuleBuilder extends LightningElement {
     @track rules = [];
     @track editingRule = null;
     @track isLoading = true;
     @track isSaving = false;
-
-    // Deployment overlay state
     @track isDeploying = false;
     @track deployingMsg = "";
 
@@ -110,7 +104,7 @@ export default class IntakeAssignmentRuleBuilder extends LightningElement {
             this._users = users || [];
             this.rules = (rawRules || []).map((r) => this.buildRule(r));
         } catch (e) {
-            this.toast("Error", this.errMsg(e), "error");
+            this.toast("Error loading rules", this.errMsg(e), "error");
         } finally {
             this.isLoading = false;
         }
@@ -118,6 +112,8 @@ export default class IntakeAssignmentRuleBuilder extends LightningElement {
 
     buildRule(r) {
         const conditions = (r.conditions || []).map((c, i) => this.buildCond(c, i));
+        const count = conditions.length;
+        const logic = r.conditionLogic || "AND";
         return {
             developerName: r.developerName || "",
             label: r.label || "",
@@ -126,13 +122,21 @@ export default class IntakeAssignmentRuleBuilder extends LightningElement {
             assignToType: r.assignToType || "Queue",
             assignToId: r.assignToId || "",
             assignToName: r.assignToName || "",
-            conditionLogic: r.conditionLogic || "AND",
+            conditionLogic: logic,
             stopOnMatch: r.stopOnMatch === true,
             conditions,
-            activeBadgeClass: r.isActive !== false ? "badge badge-on" : "badge badge-off",
+            // display props
             activeLabel: r.isActive !== false ? "Active" : "Inactive",
+            activePillClass: r.isActive !== false ? "active-pill on" : "active-pill off",
+            orderBadgeClass: r.isActive !== false ? "order-badge active" : "order-badge inactive",
+            conditionCountText:
+                count === 0 ? "No conditions (catch-all)" : count === 1 ? "1 condition" : `${count} conditions`,
+            showLogicBadge: count > 1,
+            logicBadge: logic,
+            logicBadgeClass: logic === "AND" ? "logic-badge and" : "logic-badge or",
             targetOptions: this.targetOpts(r.assignToType || "Queue"),
-            conditionSummary: this.buildSummary(r)
+            _lastEditedLabel: "",
+            _devNameLocked: true
         };
     }
 
@@ -163,93 +167,87 @@ export default class IntakeAssignmentRuleBuilder extends LightningElement {
             : this._queues.map((q) => ({ label: q.name, value: q.id }));
     }
 
-    buildSummary(r) {
-        const conds = r.conditions || [];
-        if (!conds.length) return "No conditions (catch-all)";
-        if (conds.length === 1) {
-            const c = conds[0];
-            return `${c.fieldApiName || "?"} ${c.operator || "?"}${c.value ? ` "${c.value}"` : ""}`;
-        }
-        return `${conds.length} conditions [${r.conditionLogic || "AND"}]`;
-    }
-
-    // ── Getters ─────────────────────────────────────────────────────
-    get fieldOptions() {
-        return this._fields.map((f) => ({ label: f.label, value: f.value }));
-    }
-    get logicOptions() {
-        return LOGIC_OPTS;
-    }
-    get assignTypeOptions() {
-        return ASSIGN_OPTS;
-    }
+    // ── Getters ──────────────────────────────────────────────────────
     get hasRules() {
         return this.rules.length > 0;
     }
     get showEditor() {
         return this.editingRule !== null;
     }
-    get editorTitle() {
-        return this.editingRule?.developerName ? `Editing: ${this.editingRule.label}` : "New Rule";
+    get logicOptions() {
+        return LOGIC_OPTS;
+    }
+    get fieldOptions() {
+        return this._fields.map((f) => ({ label: f.label, value: f.value }));
     }
     get saveLabel() {
         return this.isSaving ? "Saving…" : "Save Rule";
+    }
+
+    get activeRulesCount() {
+        return this.rules.filter((r) => r.isActive).length;
+    }
+    get rulesStatLabel() {
+        if (!this.hasRules) return "No rules yet";
+        return `${this.activeRulesCount} active · ${this.rules.length} rules`;
+    }
+    get statDotClass() {
+        return this.activeRulesCount > 0 ? "stat-dot has-active" : "stat-dot no-active";
+    }
+    get activeToggleLabel() {
+        return this.editingRule?.isActive ? "Active · On" : "Active · Off";
+    }
+    get queueBtnClass() {
+        return this.editingRule?.assignToType === "Queue" ? "type-btn selected" : "type-btn";
+    }
+    get userBtnClass() {
+        return this.editingRule?.assignToType === "User" ? "type-btn selected" : "type-btn";
+    }
+    get editingConditionLogicLabel() {
+        const logic = this.editingRule?.conditionLogic || "AND";
+        const count = this.editingRule?.conditions?.length || 0;
+        if (!count) return "No conditions";
+        return logic === "AND" ? "All conditions (AND)" : "Any condition (OR)";
+    }
+    get editingConditionCount() {
+        return this.editingRule?.conditions?.length || 0;
     }
     get displayRules() {
         const sel = this.editingRule?.developerName;
         return this.rules.map((r) => ({
             ...r,
-            cardClass: "rule-card" + (r.developerName === sel ? " rule-card-selected" : "")
+            cardClass: "rule-card" + (r.developerName === sel ? " selected" : "")
         }));
     }
 
-    // ── Core polling helper ─────────────────────────────────────────
-    /**
-     * Shows the overlay, polls every 2 s until the deployment finishes,
-     * then reloads the rule list and shows the appropriate toast.
-     * Never resolves to a blind setTimeout — the UX is always driven by
-     * the actual deployment state.
-     */
-    async deployAndPoll(jobId, successMsg, deployingLabel) {
-        this.isDeploying = true;
-        this.deployingMsg = deployingLabel || "Saving changes…";
-        let polls = 0;
-        try {
-            while (polls < MAX_POLLS) {
-                await this._sleep(POLL_INTERVAL_MS);
-                polls++;
-                try {
-                    const status = await checkDeployStatus({ jobId });
-                    if (status === "Succeeded") {
-                        await this.loadAll();
-                        this.toast("Saved", successMsg, "success");
-                        return;
-                    }
-                    // Pending / InProgress — keep polling, update the counter so user sees progress
-                    this.deployingMsg = `${deployingLabel || "Saving changes…"} (${polls * (POLL_INTERVAL_MS / 1000)}s)`;
-                } catch (apexErr) {
-                    // Apex threw — deployment failed or was cancelled
-                    this.toast("Deploy Failed", this.errMsg(apexErr), "error");
-                    return;
-                }
+    // ── renderedCallback: sync native select values ───────────────────
+    renderedCallback() {
+        if (!this.editingRule) return;
+
+        const syncSel = (selector, value) => {
+            const el = this.template.querySelector(selector);
+            if (el && el.value !== value) el.value = value || "";
+        };
+
+        syncSel('select[data-fld="assignToId"]', this.editingRule.assignToId || "");
+        syncSel('select[data-fld="conditionLogic"]', this.editingRule.conditionLogic || "AND");
+
+        (this.editingRule.conditions || []).forEach((cond) => {
+            // Field select: no data-fld attribute
+            const fieldSel = this.template.querySelector(`select[data-tempid="${cond.tempId}"]:not([data-fld])`);
+            if (fieldSel) fieldSel.value = cond.fieldApiName || "";
+
+            const opSel = this.template.querySelector(`select[data-tempid="${cond.tempId}"][data-fld="operator"]`);
+            if (opSel) opSel.value = cond.operator || "equals";
+
+            if (cond.isPicklist) {
+                const valSel = this.template.querySelector(`select[data-tempid="${cond.tempId}"][data-fld="value"]`);
+                if (valSel) valSel.value = cond.value || "";
             }
-            // Exceeded max polls — very unlikely but handle gracefully
-            this.toast(
-                "Still deploying…",
-                "The deployment is taking longer than expected. Check Setup → Deployment Status.",
-                "warning"
-            );
-        } finally {
-            this.isDeploying = false;
-            this.deployingMsg = "";
-        }
+        });
     }
 
-    _sleep(ms) {
-        return new Promise((r) => setTimeout(r, ms));
-    }
-
-    // ── Left panel ──────────────────────────────────────────────────
+    // ── Left panel ────────────────────────────────────────────────────
     handleAddRule() {
         this.editingRule = {
             developerName: "",
@@ -263,7 +261,10 @@ export default class IntakeAssignmentRuleBuilder extends LightningElement {
             stopOnMatch: false,
             conditions: [],
             targetOptions: this.targetOpts("Queue"),
-            _devNameLocked: false
+            activeLabel: "Active",
+            activePillClass: "active-pill on",
+            _devNameLocked: false,
+            _lastEditedLabel: ""
         };
     }
 
@@ -274,11 +275,12 @@ export default class IntakeAssignmentRuleBuilder extends LightningElement {
             ...rule,
             conditions: rule.conditions.map((c, i) => ({ ...c, tempId: nextId(), displayIndex: i + 1 })),
             targetOptions: this.targetOpts(rule.assignToType),
-            _devNameLocked: true
+            _devNameLocked: true,
+            _lastEditedLabel: ""
         };
     }
 
-    async handleToggleRule(e) {
+    async handleTogglePill(e) {
         e.stopPropagation();
         const devName = e.currentTarget.dataset.devname;
         const rule = this.rules.find((r) => r.developerName === devName);
@@ -306,13 +308,13 @@ export default class IntakeAssignmentRuleBuilder extends LightningElement {
         else if (dir === "down" && idx < arr.length - 1) [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
         else return;
         arr.forEach((r, i) => (r.order = i + 1));
-        this.rules = arr; // optimistic update so the card order shifts immediately
+        this.rules = arr;
         try {
             const jobId = await reorderRules({ orderedDeveloperNames: arr.map((r) => r.developerName) });
             await this.deployAndPoll(jobId, "Rule order saved.", "Saving order…");
         } catch (e2) {
             this.toast("Error", this.errMsg(e2), "error");
-            await this.loadAll(); // revert optimistic update on failure
+            await this.loadAll();
         }
     }
 
@@ -320,19 +322,42 @@ export default class IntakeAssignmentRuleBuilder extends LightningElement {
         e.stopPropagation();
     }
 
-    // ── Editor: rule-level ──────────────────────────────────────────
-    handleRuleFieldChange(e) {
-        const fld = e.currentTarget.dataset.fld;
-        const val = e.detail.checked !== undefined ? e.detail.checked : e.detail.value;
-        let patch = { [fld]: val };
+    // ── Editor: rule-level native element handlers ────────────────────
+    handleInputChange(e) {
+        const fld = e.target.dataset.fld;
+        const val = e.target.value;
+        let patch = { [fld]: val, _lastEditedLabel: "Last edited just now" };
         if (fld === "label" && !this.editingRule._devNameLocked) {
             patch.developerName = this.safeDevName(val);
         }
-        if (fld === "assignToType") {
-            patch.targetOptions = this.targetOpts(val);
-            patch.assignToId = "";
-            patch.assignToName = "";
-        }
+        this.editingRule = { ...this.editingRule, ...patch };
+    }
+
+    handleCheckboxChange(e) {
+        const fld = e.target.dataset.fld;
+        this.editingRule = {
+            ...this.editingRule,
+            [fld]: e.target.checked,
+            _lastEditedLabel: "Last edited just now"
+        };
+    }
+
+    handleTypeToggle(e) {
+        const type = e.currentTarget.dataset.type;
+        this.editingRule = {
+            ...this.editingRule,
+            assignToType: type,
+            targetOptions: this.targetOpts(type),
+            assignToId: "",
+            assignToName: "",
+            _lastEditedLabel: "Last edited just now"
+        };
+    }
+
+    handleSelectChange(e) {
+        const fld = e.target.dataset.fld;
+        const val = e.target.value;
+        let patch = { [fld]: val, _lastEditedLabel: "Last edited just now" };
         if (fld === "assignToId") {
             const opt = (this.editingRule.targetOptions || []).find((o) => o.value === val);
             patch.assignToName = opt ? opt.label : "";
@@ -340,10 +365,14 @@ export default class IntakeAssignmentRuleBuilder extends LightningElement {
         this.editingRule = { ...this.editingRule, ...patch };
     }
 
-    // ── Editor: condition-level ─────────────────────────────────────
+    // ── Editor: condition-level handlers ─────────────────────────────
     handleAddCondition() {
         const cond = this.buildCond({}, this.editingRule.conditions.length);
-        this.editingRule = { ...this.editingRule, conditions: [...this.editingRule.conditions, cond] };
+        this.editingRule = {
+            ...this.editingRule,
+            conditions: [...this.editingRule.conditions, cond],
+            _lastEditedLabel: "Last edited just now"
+        };
     }
 
     handleRemoveCondition(e) {
@@ -351,37 +380,55 @@ export default class IntakeAssignmentRuleBuilder extends LightningElement {
         const conditions = this.editingRule.conditions
             .filter((c) => c.tempId !== tid)
             .map((c, i) => ({ ...c, displayIndex: i + 1, order: i + 1 }));
-        this.editingRule = { ...this.editingRule, conditions };
+        this.editingRule = { ...this.editingRule, conditions, _lastEditedLabel: "Last edited just now" };
     }
 
-    handleCondChange(e) {
-        const tid = e.currentTarget.dataset.tempid;
-        const fld = e.currentTarget.dataset.fld;
-        const val = e.detail.value;
+    handleFieldSelectChange(e) {
+        const tid = e.target.dataset.tempid;
+        const val = e.target.value;
         const conditions = this.editingRule.conditions.map((c, idx) => {
             if (c.tempId !== tid) return c;
+            const meta = this._fields.find((f) => f.value === val) || {};
+            const type = meta.type || "STRING";
+            const pvs = meta.picklistValues || [];
+            return {
+                ...c,
+                fieldApiName: val,
+                operator: "equals",
+                value: "",
+                operatorOptions: OPS[type] || OPS.STRING,
+                showValue: true,
+                isPicklist: type === "PICKLIST" && pvs.length > 0,
+                valueOptions: pvs.map((v) => ({ label: v, value: v }))
+            };
+        });
+        this.editingRule = { ...this.editingRule, conditions, _lastEditedLabel: "Last edited just now" };
+    }
+
+    handleCondSelectChange(e) {
+        const tid = e.target.dataset.tempid;
+        const fld = e.target.dataset.fld;
+        const val = e.target.value;
+        const conditions = this.editingRule.conditions.map((c) => {
+            if (c.tempId !== tid) return c;
             let next = { ...c, [fld]: val };
-            if (fld === "fieldApiName") {
-                const meta = this._fields.find((f) => f.value === val) || {};
-                const type = meta.type || "STRING";
-                const pvs = meta.picklistValues || [];
-                next.operatorOptions = OPS[type] || OPS.STRING;
-                next.operator = "equals";
-                next.value = "";
-                next.showValue = true;
-                next.isPicklist = type === "PICKLIST" && pvs.length > 0;
-                next.valueOptions = pvs.map((v) => ({ label: v, value: v }));
-            }
             if (fld === "operator") {
                 next.showValue = !NO_VAL.has(val);
                 if (!next.showValue) next.value = "";
             }
             return next;
         });
-        this.editingRule = { ...this.editingRule, conditions };
+        this.editingRule = { ...this.editingRule, conditions, _lastEditedLabel: "Last edited just now" };
     }
 
-    // ── Save ────────────────────────────────────────────────────────
+    handleCondInputChange(e) {
+        const tid = e.target.dataset.tempid;
+        const val = e.target.value;
+        const conditions = this.editingRule.conditions.map((c) => (c.tempId !== tid ? c : { ...c, value: val }));
+        this.editingRule = { ...this.editingRule, conditions, _lastEditedLabel: "Last edited just now" };
+    }
+
+    // ── Save ──────────────────────────────────────────────────────────
     async handleSaveRule() {
         const err = this.validate();
         if (err) {
@@ -389,37 +436,29 @@ export default class IntakeAssignmentRuleBuilder extends LightningElement {
             return;
         }
         this.isSaving = true;
+
+        const strippedConditions = this.editingRule.conditions.map(
+            ({ tempId, operatorOptions, showValue, isPicklist, valueOptions, displayIndex, ...rest }, i) => ({
+                ...rest,
+                order: i + 1
+            })
+        );
         const payload = {
-            ...this.editingRule,
-            conditions: this.editingRule.conditions.map(
-                (
-                    {
-                        tempId,
-                        operatorOptions,
-                        showValue,
-                        isPicklist,
-                        valueOptions,
-                        displayIndex,
-                        activeBadgeClass,
-                        activeLabel,
-                        targetOptions,
-                        conditionSummary,
-                        cardClass,
-                        ...rest
-                    },
-                    i
-                ) => ({ ...rest, order: i + 1 })
-            )
+            developerName: this.editingRule.developerName,
+            label: this.editingRule.label,
+            order: this.editingRule.order,
+            isActive: this.editingRule.isActive,
+            assignToType: this.editingRule.assignToType,
+            assignToId: this.editingRule.assignToId,
+            assignToName: this.editingRule.assignToName,
+            conditionLogic: this.editingRule.conditionLogic,
+            stopOnMatch: this.editingRule.stopOnMatch,
+            conditions: strippedConditions
         };
-        delete payload.activeBadgeClass;
-        delete payload.activeLabel;
-        delete payload.targetOptions;
-        delete payload.conditionSummary;
-        delete payload.cardClass;
-        delete payload._devNameLocked;
+
         try {
             const jobId = await saveRule({ ruleJson: JSON.stringify(payload) });
-            this.editingRule = null; // close the editor immediately
+            this.editingRule = null;
             await this.deployAndPoll(jobId, `Rule "${payload.label}" saved successfully.`, "Saving rule…");
         } catch (e) {
             this.toast("Save Failed", this.errMsg(e), "error");
@@ -435,7 +474,7 @@ export default class IntakeAssignmentRuleBuilder extends LightningElement {
     validate() {
         const r = this.editingRule;
         if (!r.label?.trim()) return "Rule name is required.";
-        if (!r.assignToId) return "Select a target queue or user.";
+        if (!r.assignToId) return `Select a target ${r.assignToType}.`;
         if (!r._devNameLocked) {
             const taken = this.rules.some((ex) => ex.developerName === r.developerName);
             if (taken) return `Developer name "${r.developerName}" is already taken. Use a different rule name.`;
@@ -445,6 +484,39 @@ export default class IntakeAssignmentRuleBuilder extends LightningElement {
             if (c.showValue && !c.value?.trim()) return "A condition is missing its value.";
         }
         return null;
+    }
+
+    // ── Deploy polling ────────────────────────────────────────────────
+    async deployAndPoll(jobId, successMsg, label) {
+        this.isDeploying = true;
+        this.deployingMsg = label || "Saving…";
+        let polls = 0;
+        try {
+            while (polls < MAX_POLL) {
+                await this._sleep(POLL_MS);
+                polls++;
+                try {
+                    const status = await checkDeployStatus({ jobId });
+                    if (status === "Succeeded") {
+                        await this.loadAll();
+                        this.toast("Saved", successMsg, "success");
+                        return;
+                    }
+                    this.deployingMsg = `${label} (${polls * (POLL_MS / 1000)}s)`;
+                } catch (pollErr) {
+                    this.toast("Deploy Failed", this.errMsg(pollErr), "error");
+                    return;
+                }
+            }
+            this.toast("Still deploying…", "Check Setup → Deployment Status.", "warning");
+        } finally {
+            this.isDeploying = false;
+            this.deployingMsg = "";
+        }
+    }
+
+    _sleep(ms) {
+        return new Promise((r) => setTimeout(r, ms));
     }
 
     safeDevName(label) {

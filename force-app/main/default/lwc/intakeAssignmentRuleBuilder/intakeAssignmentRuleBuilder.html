@@ -1,274 +1,566 @@
 <template>
-    <lightning-card title="Intake Assignment Rules" icon-name="standard:case_wrap_up">
-        <div slot="actions">
-            <lightning-button variant="brand" icon-name="utility:add" label="Add Rule" onclick={handleAddRule}>
-            </lightning-button>
+    <!-- Deploy overlay -->
+    <template if:true={isDeploying}>
+        <div class="deploy-overlay">
+            <div class="deploy-modal">
+                <lightning-spinner alternative-text="Deploying" size="medium"></lightning-spinner>
+                <p class="deploy-msg">{deployingMsg}</p>
+            </div>
         </div>
+    </template>
 
-        <!-- Deployment overlay — blocks all interaction and shows live progress -->
-        <template if:true={isDeploying}>
-            <div class="deploy-overlay">
-                <div class="deploy-modal">
-                    <lightning-spinner alternative-text="Deploying" size="medium"></lightning-spinner>
-                    <p class="deploy-msg">{deployingMsg}</p>
+    <div class="iarb-root">
+        <!-- ── HEADER ── -->
+        <div class="iarb-header">
+            <div class="header-brand">
+                <div class="brand-icon-wrap">
+                    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="36" height="36" rx="8" fill="#2563eb" />
+                        <rect x="9" y="11" width="18" height="2.5" rx="1.25" fill="white" />
+                        <rect x="9" y="17" width="14" height="2.5" rx="1.25" fill="white" />
+                        <rect x="9" y="23" width="10" height="2.5" rx="1.25" fill="white" />
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <div class="brand-sub">DELIPAT INTAKE</div>
+                    <div class="brand-title">Intake Assignment Rules</div>
                 </div>
             </div>
-        </template>
+            <div class="header-actions">
+                <div class="rules-stat">
+                    <span class={statDotClass}></span>
+                    <span class="stat-text">{rulesStatLabel}</span>
+                </div>
+                <button class="btn-primary" onclick={handleAddRule}>+ Add Rule</button>
+            </div>
+        </div>
 
+        <!-- ── PAGE LOADING ── -->
         <template if:true={isLoading}>
-            <div class="center-spinner">
+            <div class="page-loading">
                 <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
             </div>
         </template>
 
         <template if:false={isLoading}>
-            <div class="builder-layout">
-                <!-- ── Left: rules list ── -->
-                <div class="panel-left">
-                    <template if:true={hasRules}>
-                        <template for:each={displayRules} for:item="rule">
-                            <div
-                                key={rule.developerName}
-                                class={rule.cardClass}
-                                data-devname={rule.developerName}
-                                onclick={handleSelectRule}
-                            >
-                                <div class="rc-main">
-                                    <span class="rc-order">{rule.order}</span>
-                                    <div class="rc-info">
-                                        <div class="rc-name">{rule.label}</div>
-                                        <div class="rc-target">→ {rule.assignToName}</div>
-                                        <div class="rc-summary">{rule.conditionSummary}</div>
+            <!-- ── FULL EMPTY STATE (no rules at all) ── -->
+            <template if:false={hasRules}>
+                <div class="empty-fullpage">
+                    <div class="empty-illustration">
+                        <svg viewBox="0 0 280 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="8" y="62" width="80" height="46" rx="10" fill="#0f1f3d" />
+                            <rect x="18" y="76" width="36" height="3" rx="1.5" fill="rgba(255,255,255,0.4)" />
+                            <rect x="18" y="83" width="52" height="3" rx="1.5" fill="rgba(255,255,255,0.6)" />
+                            <rect x="18" y="90" width="28" height="3" rx="1.5" fill="rgba(255,255,255,0.3)" />
+                            <text x="20" y="71" fill="rgba(255,255,255,0.5)" font-size="7" font-family="sans-serif">
+                                New intake
+                            </text>
+                            <polygon
+                                points="126,90 141,75 156,90 141,105"
+                                fill="none"
+                                stroke="#2563eb"
+                                stroke-width="2.5"
+                            />
+                            <path d="M88 85 L126 85" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 2" />
+                            <path d="M156 90 C166 90 166 42 178 42" stroke="#94a3b8" stroke-width="1.5" />
+                            <path d="M156 90 L178 90" stroke="#2563eb" stroke-width="2" />
+                            <path d="M156 90 C166 90 166 138 178 138" stroke="#94a3b8" stroke-width="1.5" />
+                            <rect
+                                x="178"
+                                y="22"
+                                width="88"
+                                height="36"
+                                rx="8"
+                                fill="white"
+                                stroke="#e2e8f0"
+                                stroke-width="1.5"
+                            />
+                            <circle cx="192" cy="40" r="6" fill="#ef4444" />
+                            <rect x="204" y="36" width="48" height="4" rx="2" fill="#e2e8f0" />
+                            <rect x="204" y="43" width="34" height="3" rx="1.5" fill="#f1f5f9" />
+                            <rect
+                                x="178"
+                                y="72"
+                                width="88"
+                                height="36"
+                                rx="8"
+                                fill="white"
+                                stroke="#2563eb"
+                                stroke-width="2"
+                            />
+                            <circle cx="192" cy="90" r="6" fill="#22c55e" />
+                            <rect x="204" y="86" width="48" height="4" rx="2" fill="#dbeafe" />
+                            <rect x="204" y="93" width="34" height="3" rx="1.5" fill="#eff6ff" />
+                            <rect
+                                x="178"
+                                y="122"
+                                width="88"
+                                height="36"
+                                rx="8"
+                                fill="white"
+                                stroke="#e2e8f0"
+                                stroke-width="1.5"
+                            />
+                            <circle cx="192" cy="140" r="6" fill="#f59e0b" />
+                            <rect x="204" y="136" width="48" height="4" rx="2" fill="#e2e8f0" />
+                            <rect x="204" y="143" width="34" height="3" rx="1.5" fill="#f1f5f9" />
+                        </svg>
+                    </div>
+                    <div class="empty-kicker">GET STARTED</div>
+                    <h2 class="empty-heading">Set up your first assignment rule</h2>
+                    <p class="empty-desc">
+                        Assignment rules automatically route each incoming intake to the right
+                        <strong> queue</strong> or <strong>specialist</strong>, based on conditions like injury
+                        severity, accident type, police involvement, or lead source. Create one from scratch.
+                    </p>
+                    <button class="btn-primary large" onclick={handleAddRule}>+ Create a rule</button>
+                </div>
+            </template>
+
+            <!-- ── TWO-PANEL LAYOUT ── -->
+            <template if:true={hasRules}>
+                <div class="iarb-body">
+                    <!-- LEFT PANEL: rule list -->
+                    <div class="panel-left">
+                        <div class="panel-left-header">
+                            <span class="eval-label">EVALUATION ORDER</span>
+                            <span class="eval-hint">top → bottom</span>
+                        </div>
+                        <div class="rule-list">
+                            <template for:each={displayRules} for:item="rule">
+                                <div
+                                    key={rule.developerName}
+                                    class={rule.cardClass}
+                                    data-devname={rule.developerName}
+                                    onclick={handleSelectRule}
+                                >
+                                    <div class="rc-top">
+                                        <span class={rule.orderBadgeClass}>{rule.order}</span>
+                                        <div class="rc-info">
+                                            <div class="rc-name">{rule.label}</div>
+                                            <div class="rc-target">→ {rule.assignToName}</div>
+                                        </div>
+                                        <button
+                                            class={rule.activePillClass}
+                                            data-devname={rule.developerName}
+                                            onclick={handleTogglePill}
+                                            title="Click to toggle active"
+                                        >
+                                            {rule.activeLabel}
+                                        </button>
                                     </div>
-                                    <span class={rule.activeBadgeClass}>{rule.activeLabel}</span>
+                                    <div class="rc-bottom">
+                                        <span class="cond-count-text">{rule.conditionCountText}</span>
+                                        <template if:true={rule.showLogicBadge}>
+                                            <span class={rule.logicBadgeClass}>{rule.logicBadge}</span>
+                                        </template>
+                                        <div class="rc-order-btns" onclick={stopProp}>
+                                            <button
+                                                class="icon-btn"
+                                                data-devname={rule.developerName}
+                                                data-dir="up"
+                                                onclick={handleReorder}
+                                                title="Move up"
+                                            >
+                                                <svg viewBox="0 0 16 16" width="14" height="14">
+                                                    <path d="M8 4 L13 10 L3 10 Z" fill="currentColor" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                class="icon-btn"
+                                                data-devname={rule.developerName}
+                                                data-dir="down"
+                                                onclick={handleReorder}
+                                                title="Move down"
+                                            >
+                                                <svg viewBox="0 0 16 16" width="14" height="14">
+                                                    <path d="M8 12 L13 6 L3 6 Z" fill="currentColor" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="rc-actions" onclick={stopProp}>
-                                    <lightning-button-icon
-                                        icon-name="utility:up"
-                                        variant="bare"
-                                        size="x-small"
-                                        title="Move up"
-                                        data-devname={rule.developerName}
-                                        data-dir="up"
-                                        onclick={handleReorder}
-                                    >
-                                    </lightning-button-icon>
-                                    <lightning-button-icon
-                                        icon-name="utility:down"
-                                        variant="bare"
-                                        size="x-small"
-                                        title="Move down"
-                                        data-devname={rule.developerName}
-                                        data-dir="down"
-                                        onclick={handleReorder}
-                                    >
-                                    </lightning-button-icon>
-                                    <lightning-button-icon
-                                        icon-name="utility:toggle_panel_closed"
-                                        variant="bare"
-                                        size="x-small"
-                                        title="Toggle active"
-                                        data-devname={rule.developerName}
-                                        onclick={handleToggleRule}
-                                    >
-                                    </lightning-button-icon>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT PANEL: editor -->
+                    <div class="panel-right">
+                        <!-- No rule selected -->
+                        <template if:false={showEditor}>
+                            <div class="no-rule-selected">
+                                <div class="no-rule-icon">
+                                    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect
+                                            x="6"
+                                            y="10"
+                                            width="36"
+                                            height="28"
+                                            rx="6"
+                                            fill="#f1f5f9"
+                                            stroke="#e2e8f0"
+                                            stroke-width="1.5"
+                                        />
+                                        <rect x="13" y="18" width="22" height="3" rx="1.5" fill="#cbd5e1" />
+                                        <rect x="13" y="24" width="16" height="3" rx="1.5" fill="#e2e8f0" />
+                                        <circle cx="37" cy="34" r="7" fill="#2563eb" />
+                                        <rect x="34" y="33" width="6" height="2" rx="1" fill="white" />
+                                        <rect x="36" y="31" width="2" height="6" rx="1" fill="white" />
+                                    </svg>
+                                </div>
+                                <h3 class="no-rule-title">No rule selected</h3>
+                                <p class="no-rule-desc">
+                                    Pick a rule from the list to edit it, or create a new one to start routing intakes.
+                                </p>
+                                <button class="btn-primary" onclick={handleAddRule}>+ Add Rule</button>
+                            </div>
+                        </template>
+
+                        <!-- Editor -->
+                        <template if:true={showEditor}>
+                            <!-- Dark route banner -->
+                            <div class="route-banner">
+                                <div class="banner-left">
+                                    <div class="banner-kicker">WHEN MATCHED, ROUTE TO</div>
+                                    <div class="banner-route">
+                                        <span class="banner-rule-name">{editingRule.label}</span>
+                                        <span class="banner-sep">→</span>
+                                        <span class="banner-target">{editingRule.assignToName}</span>
+                                    </div>
+                                </div>
+                                <div class="banner-right">
+                                    <span class="banner-logic-pill">{editingConditionLogicLabel}</span>
+                                </div>
+                            </div>
+
+                            <div class="editor-scroll">
+                                <!-- RULE SECTION -->
+                                <div class="editor-section">
+                                    <div class="section-header">
+                                        <svg class="section-icon" viewBox="0 0 20 20" fill="none">
+                                            <rect x="2" y="4" width="16" height="2.5" rx="1.25" fill="currentColor" />
+                                            <rect x="2" y="9" width="12" height="2.5" rx="1.25" fill="currentColor" />
+                                            <rect x="2" y="14" width="8" height="2.5" rx="1.25" fill="currentColor" />
+                                        </svg>
+                                        <span class="section-title">RULE</span>
+                                    </div>
+                                    <div class="field-group">
+                                        <label class="field-label">Rule name</label>
+                                        <input
+                                            class="field-input"
+                                            type="text"
+                                            placeholder="e.g. Truck Accident → MVA Priority Queue"
+                                            value={editingRule.label}
+                                            data-fld="label"
+                                            onchange={handleInputChange}
+                                        />
+                                    </div>
+                                    <div class="toggles-row">
+                                        <label class="toggle-wrap">
+                                            <div class="toggle-switch-row">
+                                                <input
+                                                    class="toggle-input"
+                                                    type="checkbox"
+                                                    checked={editingRule.isActive}
+                                                    data-fld="isActive"
+                                                    onchange={handleCheckboxChange}
+                                                />
+                                                <span class="toggle-slider"></span>
+                                                <span class="toggle-text">{activeToggleLabel}</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-wrap">
+                                            <input
+                                                type="checkbox"
+                                                checked={editingRule.stopOnMatch}
+                                                data-fld="stopOnMatch"
+                                                onchange={handleCheckboxChange}
+                                            />
+                                            <span class="checkbox-label">Stop on match</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- ASSIGN TO SECTION -->
+                                <div class="editor-section">
+                                    <div class="section-header">
+                                        <svg class="section-icon" viewBox="0 0 20 20" fill="none">
+                                            <circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="1.8" />
+                                            <path
+                                                d="M3 17c0-3.314 3.134-6 7-6s7 2.686 7 6"
+                                                stroke="currentColor"
+                                                stroke-width="1.8"
+                                                stroke-linecap="round"
+                                            />
+                                        </svg>
+                                        <span class="section-title">ASSIGN TO</span>
+                                    </div>
+                                    <div class="field-group">
+                                        <label class="field-label">Type</label>
+                                        <div class="type-toggle-group">
+                                            <button class={queueBtnClass} data-type="Queue" onclick={handleTypeToggle}>
+                                                <svg viewBox="0 0 18 18" width="14" height="14" fill="none">
+                                                    <rect
+                                                        x="2"
+                                                        y="5"
+                                                        width="14"
+                                                        height="3"
+                                                        rx="1.5"
+                                                        fill="currentColor"
+                                                    />
+                                                    <rect
+                                                        x="2"
+                                                        y="10"
+                                                        width="14"
+                                                        height="3"
+                                                        rx="1.5"
+                                                        fill="currentColor"
+                                                        opacity=".5"
+                                                    />
+                                                </svg>
+                                                Queue
+                                            </button>
+                                            <button class={userBtnClass} data-type="User" onclick={handleTypeToggle}>
+                                                <svg viewBox="0 0 18 18" width="14" height="14" fill="none">
+                                                    <circle
+                                                        cx="9"
+                                                        cy="7"
+                                                        r="3"
+                                                        stroke="currentColor"
+                                                        stroke-width="1.5"
+                                                    />
+                                                    <path
+                                                        d="M2 16c0-3 3.134-5 7-5s7 2 7 5"
+                                                        stroke="currentColor"
+                                                        stroke-width="1.5"
+                                                        stroke-linecap="round"
+                                                    />
+                                                </svg>
+                                                User
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="field-group">
+                                        <label class="field-label">Target {editingRule.assignToType}</label>
+                                        <div class="select-wrap">
+                                            <select
+                                                class="field-select"
+                                                data-fld="assignToId"
+                                                onchange={handleSelectChange}
+                                            >
+                                                <option value="">Select {editingRule.assignToType}…</option>
+                                                <template for:each={editingRule.targetOptions} for:item="opt">
+                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                </template>
+                                            </select>
+                                            <svg class="select-chevron" viewBox="0 0 16 16" fill="none">
+                                                <path
+                                                    d="M4 6l4 4 4-4"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.5"
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- CONDITIONS SECTION -->
+                                <div class="editor-section">
+                                    <div class="section-header">
+                                        <svg class="section-icon" viewBox="0 0 20 20" fill="none">
+                                            <path
+                                                d="M3 5h14M5 10h10M7 15h6"
+                                                stroke="currentColor"
+                                                stroke-width="1.8"
+                                                stroke-linecap="round"
+                                            />
+                                            <circle cx="15" cy="15" r="3" fill="currentColor" stroke="none" />
+                                        </svg>
+                                        <span class="section-title">CONDITIONS</span>
+                                    </div>
+
+                                    <div class="cond-match-row">
+                                        <span class="match-label">Match</span>
+                                        <div class="select-wrap inline-select-wrap">
+                                            <select
+                                                class="field-select inline-select"
+                                                data-fld="conditionLogic"
+                                                onchange={handleSelectChange}
+                                            >
+                                                <template for:each={logicOptions} for:item="opt">
+                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                </template>
+                                            </select>
+                                            <svg class="select-chevron" viewBox="0 0 16 16" fill="none">
+                                                <path
+                                                    d="M4 6l4 4 4-4"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.5"
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                />
+                                            </svg>
+                                        </div>
+                                        <span class="cond-total-badge">{editingConditionCount} conditions</span>
+                                    </div>
+
+                                    <div class="cond-list">
+                                        <template for:each={editingRule.conditions} for:item="cond">
+                                            <div key={cond.tempId} class="cond-row">
+                                                <span class="cond-num-bubble">{cond.displayIndex}</span>
+
+                                                <!-- Field: native select so browser opens up/down based on viewport -->
+                                                <div class="select-wrap cond-select-wrap">
+                                                    <select
+                                                        class="field-select cond-select"
+                                                        data-tempid={cond.tempId}
+                                                        onchange={handleFieldSelectChange}
+                                                    >
+                                                        <option value="">Field</option>
+                                                        <template for:each={fieldOptions} for:item="fopt">
+                                                            <option key={fopt.value} value={fopt.value}>
+                                                                {fopt.label}
+                                                            </option>
+                                                        </template>
+                                                    </select>
+                                                    <svg class="select-chevron" viewBox="0 0 16 16" fill="none">
+                                                        <path
+                                                            d="M4 6l4 4 4-4"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.5"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                        />
+                                                    </svg>
+                                                </div>
+
+                                                <!-- Operator -->
+                                                <div class="select-wrap cond-select-wrap">
+                                                    <select
+                                                        class="field-select cond-select"
+                                                        data-tempid={cond.tempId}
+                                                        data-fld="operator"
+                                                        onchange={handleCondSelectChange}
+                                                    >
+                                                        <template for:each={cond.operatorOptions} for:item="op">
+                                                            <option key={op.value} value={op.value}>{op.label}</option>
+                                                        </template>
+                                                    </select>
+                                                    <svg class="select-chevron" viewBox="0 0 16 16" fill="none">
+                                                        <path
+                                                            d="M4 6l4 4 4-4"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.5"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                        />
+                                                    </svg>
+                                                </div>
+
+                                                <!-- Value -->
+                                                <template if:true={cond.showValue}>
+                                                    <template if:true={cond.isPicklist}>
+                                                        <div class="select-wrap cond-select-wrap">
+                                                            <select
+                                                                class="field-select cond-select"
+                                                                data-tempid={cond.tempId}
+                                                                data-fld="value"
+                                                                onchange={handleCondSelectChange}
+                                                            >
+                                                                <option value="">Select value</option>
+                                                                <template for:each={cond.valueOptions} for:item="vopt">
+                                                                    <option key={vopt.value} value={vopt.value}>
+                                                                        {vopt.label}
+                                                                    </option>
+                                                                </template>
+                                                            </select>
+                                                            <svg class="select-chevron" viewBox="0 0 16 16" fill="none">
+                                                                <path
+                                                                    d="M4 6l4 4 4-4"
+                                                                    stroke="currentColor"
+                                                                    stroke-width="1.5"
+                                                                    stroke-linecap="round"
+                                                                    stroke-linejoin="round"
+                                                                />
+                                                            </svg>
+                                                        </div>
+                                                    </template>
+                                                    <template if:false={cond.isPicklist}>
+                                                        <input
+                                                            class="field-input cond-val-input"
+                                                            type="text"
+                                                            placeholder="Value"
+                                                            value={cond.value}
+                                                            data-tempid={cond.tempId}
+                                                            data-fld="value"
+                                                            onchange={handleCondInputChange}
+                                                        />
+                                                    </template>
+                                                </template>
+                                                <template if:false={cond.showValue}>
+                                                    <span class="cond-blank"></span>
+                                                </template>
+
+                                                <button
+                                                    class="cond-remove-btn"
+                                                    data-tempid={cond.tempId}
+                                                    onclick={handleRemoveCondition}
+                                                    title="Remove condition"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <button class="btn-add-condition" onclick={handleAddCondition}>
+                                        + Add condition
+                                    </button>
+                                </div>
+
+                                <!-- EDITOR FOOTER -->
+                                <div class="editor-footer">
+                                    <span class="last-edited-label">{editingRule._lastEditedLabel}</span>
+                                    <div class="footer-btns">
+                                        <button class="btn-secondary" onclick={handleCancelEdit}>Cancel</button>
+                                        <button class="btn-save" onclick={handleSaveRule} disabled={isSaving}>
+                                            <svg viewBox="0 0 18 18" width="14" height="14" fill="none">
+                                                <rect
+                                                    x="3"
+                                                    y="3"
+                                                    width="12"
+                                                    height="12"
+                                                    rx="2"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.5"
+                                                />
+                                                <rect
+                                                    x="6"
+                                                    y="3"
+                                                    width="6"
+                                                    height="5"
+                                                    rx="1"
+                                                    fill="currentColor"
+                                                    stroke="none"
+                                                />
+                                                <path
+                                                    d="M5 10h8M5 13h5"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.2"
+                                                    stroke-linecap="round"
+                                                />
+                                            </svg>
+                                            {saveLabel}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </template>
-                    </template>
-                    <template if:false={hasRules}>
-                        <div class="panel-empty">No rules yet.<br />Click "Add Rule" to start.</div>
-                    </template>
+                    </div>
                 </div>
-
-                <!-- ── Right: editor ── -->
-                <div class="panel-right">
-                    <template if:false={showEditor}>
-                        <div class="editor-empty">
-                            <lightning-icon icon-name="utility:assignment" size="large"></lightning-icon>
-                            <p>Select a rule to edit, or click "Add Rule" to create one.</p>
-                        </div>
-                    </template>
-
-                    <template if:true={showEditor}>
-                        <div class="editor-wrap">
-                            <div class="editor-topbar">
-                                <h2 class="editor-title">{editorTitle}</h2>
-                                <lightning-button-icon
-                                    icon-name="utility:close"
-                                    variant="bare"
-                                    alternative-text="Close"
-                                    onclick={handleCancelEdit}
-                                >
-                                </lightning-button-icon>
-                            </div>
-
-                            <!-- Rule name & toggles -->
-                            <div class="editor-section">
-                                <div class="section-label">Rule Settings</div>
-                                <lightning-input
-                                    label="Rule Name"
-                                    placeholder="e.g. Truck Accident → MVA Priority Queue"
-                                    value={editingRule.label}
-                                    data-fld="label"
-                                    onchange={handleRuleFieldChange}
-                                >
-                                </lightning-input>
-                                <div class="toggles-row">
-                                    <lightning-input
-                                        type="toggle"
-                                        label="Active"
-                                        message-toggle-active="On"
-                                        message-toggle-inactive="Off"
-                                        checked={editingRule.isActive}
-                                        data-fld="isActive"
-                                        onchange={handleRuleFieldChange}
-                                    >
-                                    </lightning-input>
-                                    <lightning-input
-                                        type="checkbox"
-                                        label="Stop on match"
-                                        checked={editingRule.stopOnMatch}
-                                        data-fld="stopOnMatch"
-                                        onchange={handleRuleFieldChange}
-                                    >
-                                    </lightning-input>
-                                </div>
-                            </div>
-
-                            <!-- Assign To -->
-                            <div class="editor-section">
-                                <div class="section-label">Assign To</div>
-                                <lightning-radio-group
-                                    label="Type"
-                                    options={assignTypeOptions}
-                                    value={editingRule.assignToType}
-                                    type="radio"
-                                    data-fld="assignToType"
-                                    onchange={handleRuleFieldChange}
-                                >
-                                </lightning-radio-group>
-                                <div class="slds-m-top_small">
-                                    <lightning-combobox
-                                        label="Target"
-                                        placeholder="Select a queue or user…"
-                                        value={editingRule.assignToId}
-                                        options={editingRule.targetOptions}
-                                        data-fld="assignToId"
-                                        onchange={handleRuleFieldChange}
-                                    >
-                                    </lightning-combobox>
-                                </div>
-                            </div>
-
-                            <!-- Conditions -->
-                            <div class="editor-section">
-                                <div class="section-label-row">
-                                    <span class="section-label">Conditions</span>
-                                    <lightning-combobox
-                                        label="Logic"
-                                        variant="label-hidden"
-                                        value={editingRule.conditionLogic}
-                                        options={logicOptions}
-                                        data-fld="conditionLogic"
-                                        class="logic-combo"
-                                        onchange={handleRuleFieldChange}
-                                    >
-                                    </lightning-combobox>
-                                </div>
-
-                                <template for:each={editingRule.conditions} for:item="cond">
-                                    <div key={cond.tempId} class="cond-row">
-                                        <span class="cond-num">{cond.displayIndex}</span>
-
-                                        <lightning-combobox
-                                            variant="label-hidden"
-                                            placeholder="Field"
-                                            value={cond.fieldApiName}
-                                            options={fieldOptions}
-                                            data-tempid={cond.tempId}
-                                            data-fld="fieldApiName"
-                                            onchange={handleCondChange}
-                                        >
-                                        </lightning-combobox>
-
-                                        <lightning-combobox
-                                            variant="label-hidden"
-                                            placeholder="Operator"
-                                            value={cond.operator}
-                                            options={cond.operatorOptions}
-                                            data-tempid={cond.tempId}
-                                            data-fld="operator"
-                                            onchange={handleCondChange}
-                                        >
-                                        </lightning-combobox>
-
-                                        <template if:true={cond.showValue}>
-                                            <template if:true={cond.isPicklist}>
-                                                <lightning-combobox
-                                                    variant="label-hidden"
-                                                    placeholder="Value"
-                                                    value={cond.value}
-                                                    options={cond.valueOptions}
-                                                    data-tempid={cond.tempId}
-                                                    data-fld="value"
-                                                    onchange={handleCondChange}
-                                                >
-                                                </lightning-combobox>
-                                            </template>
-                                            <template if:false={cond.isPicklist}>
-                                                <lightning-input
-                                                    variant="label-hidden"
-                                                    placeholder="Value"
-                                                    value={cond.value}
-                                                    data-tempid={cond.tempId}
-                                                    data-fld="value"
-                                                    onchange={handleCondChange}
-                                                >
-                                                </lightning-input>
-                                            </template>
-                                        </template>
-                                        <template if:false={cond.showValue}>
-                                            <span class="cond-blank"></span>
-                                        </template>
-
-                                        <lightning-button-icon
-                                            icon-name="utility:close"
-                                            variant="bare"
-                                            size="small"
-                                            alternative-text="Remove"
-                                            data-tempid={cond.tempId}
-                                            onclick={handleRemoveCondition}
-                                        >
-                                        </lightning-button-icon>
-                                    </div>
-                                </template>
-
-                                <lightning-button
-                                    label="Add Condition"
-                                    icon-name="utility:add"
-                                    variant="neutral"
-                                    onclick={handleAddCondition}
-                                    class="slds-m-top_x-small"
-                                >
-                                </lightning-button>
-                            </div>
-
-                            <!-- Footer -->
-                            <div class="editor-footer">
-                                <lightning-button label="Cancel" onclick={handleCancelEdit}> </lightning-button>
-                                <lightning-button
-                                    variant="brand"
-                                    label={saveLabel}
-                                    onclick={handleSaveRule}
-                                    disabled={isSaving}
-                                >
-                                </lightning-button>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </div>
+            </template>
         </template>
-    </lightning-card>
+    </div>
 </template>
