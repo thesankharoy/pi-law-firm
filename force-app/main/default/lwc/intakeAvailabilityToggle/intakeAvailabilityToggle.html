@@ -1,87 +1,188 @@
 <template>
-    <div class="availability-widget">
-        <!-- Header -->
-        <div class="widget-header">
-            <span class="widget-title">My Availability</span>
-            <span class={statusBadgeClass}>{currentStatus}</span>
-        </div>
-
-        <!-- Stats row -->
-        <template if:true={specialistData}>
-            <div class="stats-row">
-                <div class="stat-cell">
-                    <div class="stat-value">{specialistData.activeCount}</div>
-                    <div class="stat-label">Active</div>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-cell">
-                    <div class="stat-value">{specialistData.maxCapacity}</div>
-                    <div class="stat-label">Capacity</div>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-cell">
-                    <div class="stat-value">{specialistData.assignedToday}</div>
-                    <div class="stat-label">Today</div>
-                </div>
-            </div>
-
-            <!-- Capacity progress bar -->
-            <div class="cap-bar-wrap">
-                <div class="cap-bar-track">
-                    <div class="cap-bar-fill" style={capacityBarStyle}></div>
-                </div>
-                <span class="cap-pct">{capacityPercent}%</span>
+    <div class="widget">
+        <!-- ── INITIAL LOAD ── -->
+        <template if:true={isInitialLoad}>
+            <div class="widget-init-loading">
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
             </div>
         </template>
 
-        <!-- Action buttons -->
-        <div class="action-row">
-            <template if:false={isActive}>
-                <button class="btn btn-active" onclick={handleGoActive} disabled={isLoading}>
-                    <template if:false={isLoading}>⚡ Go Active</template>
-                    <template if:true={isLoading}>Updating...</template>
-                </button>
-            </template>
-            <template if:true={isActive}>
-                <button class="btn btn-inactive" onclick={handleGoInactive} disabled={isLoading}>Go Inactive</button>
-                <button class="btn btn-break" onclick={handleOnBreak} disabled={isLoading}>On Break</button>
-            </template>
-        </div>
-
-        <!-- Error -->
-        <template if:true={errorMessage}>
-            <div class="error-msg">{errorMessage}</div>
-        </template>
-
-        <!-- Open Intakes -->
-        <div class="intakes-section">
-            <div class="intakes-header">
-                <span>Open Intakes</span>
-                <span class="intakes-badge">{openIntakesCount}</span>
+        <template if:false={isInitialLoad}>
+            <!-- ── HEADER ── -->
+            <div class="w-header">
+                <div class="w-header-left">
+                    <div class="user-avatar">
+                        <template if:true={hasPhoto}>
+                            <img src={userPhotoUrl} alt="Profile" class="avatar-img" />
+                        </template>
+                        <template if:false={hasPhoto}> {userInitials} </template>
+                    </div>
+                    <div class="w-header-text">
+                        <div class="w-role">INTAKE SPECIALIST</div>
+                        <div class="w-title">My Availability</div>
+                    </div>
+                </div>
+                <span class={statusBadgeClass}>{currentStatus}</span>
             </div>
 
-            <template if:true={hasOpenIntakes}>
-                <div class="intakes-list">
-                    <template for:each={openIntakes} for:item="intake">
-                        <div key={intake.id} class="intake-row" data-id={intake.id} onclick={handleIntakeClick}>
-                            <div class="intake-row-top">
-                                <span class="intake-name">{intake.name}</span>
-                                <span class={intake.statusClass}>{intake.status}</span>
-                            </div>
-                            <div class="intake-row-bottom">
-                                <span class="intake-type">{intake.incidentType}</span>
-                                <span class="intake-client">{intake.clientName}</span>
+            <template if:true={specialistData}>
+                <!-- ── CAPACITY CIRCLE + WARNING ── -->
+                <div class="capacity-section">
+                    <div class="cap-circle-wrap">
+                        <svg class="cap-svg" viewBox="0 0 110 110">
+                            <circle class="cap-track" cx="55" cy="55" r="46" />
+                            <circle class="cap-arc" cx="55" cy="55" r="46" style={capacityArcStyle} />
+                        </svg>
+                        <div class="cap-center">
+                            <div class={capNumberClass}>{specialistData.activeCount}</div>
+                            <div class="cap-sub">of {specialistData.maxCapacity} cap.</div>
+                        </div>
+                    </div>
+
+                    <template if:true={isOverCapacity}>
+                        <div class="over-cap-banner">
+                            <span class="over-cap-icon">⚠️</span>
+                            <div class="over-cap-text">
+                                <div class="over-cap-title">Over capacity</div>
+                                <div class="over-cap-desc">
+                                    You're carrying more than your set capacity — new intakes are paused until you free
+                                    up space.
+                                </div>
                             </div>
                         </div>
                     </template>
                 </div>
+
+                <!-- ── STATS ROW ── -->
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-val">{specialistData.activeCount}</div>
+                        <div class="stat-lbl">OPEN</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val">{specialistData.maxCapacity}</div>
+                        <div class="stat-lbl">CAPACITY</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val">{specialistData.assignedToday}</div>
+                        <div class="stat-lbl">TODAY</div>
+                    </div>
+                </div>
             </template>
 
-            <template if:false={hasOpenIntakes}>
-                <div class="intakes-empty">No open intakes assigned.</div>
+            <!-- ── ACTION BUTTONS ── -->
+            <div class="action-row">
+                <template if:false={isActive}>
+                    <button class="btn-go-active" onclick={handleGoActive} disabled={isLoading}>
+                        <template if:false={isLoading}>⚡ Go Active</template>
+                        <template if:true={isLoading}>
+                            <lightning-spinner
+                                size="x-small"
+                                alternative-text="Updating"
+                                style="--lwc-colorBrand: #fff"
+                            ></lightning-spinner>
+                            Updating…
+                        </template>
+                    </button>
+                </template>
+                <template if:true={isActive}>
+                    <button class="btn btn-inactive" onclick={handleGoInactive} disabled={isLoading}>
+                        Go Inactive
+                    </button>
+                    <button class="btn btn-break" onclick={handleOnBreak} disabled={isLoading}>On Break</button>
+                </template>
+            </div>
+
+            <!-- ── ERROR ── -->
+            <template if:true={errorMessage}>
+                <div class="error-msg">{errorMessage}</div>
             </template>
 
-            <div class="last-refreshed">Refreshed {lastRefreshed}</div>
-        </div>
+            <!-- ── OPEN INTAKES ── -->
+            <div class="intakes-section">
+                <div class="intakes-header">
+                    <div class="intakes-header-left">
+                        <span class="intakes-title">OPEN INTAKES</span>
+                        <span class="intakes-badge">{openIntakesCount}</span>
+                    </div>
+                    <!-- <button class="filter-icon-btn" title="Filter intakes">
+                        <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
+                            <path
+                                d="M2 4h12M4 8h8M6 12h4"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </button> -->
+                </div>
+
+                <!-- Status legend -->
+                <template if:true={hasStatusCounts}>
+                    <div class="status-legend">
+                        <template for:each={statusCountsRow1} for:item="sc">
+                            <span key={sc.status} class="legend-item">
+                                <span class="legend-dot" style={sc.dotStyle}></span>
+                                <span class="legend-label">{sc.label} </span>
+                                <span class="legend-value">{sc.count}</span>
+                            </span>
+                        </template>
+                    </div>
+                    <template if:true={hasStatusCountsRow2}>
+                        <div class="status-legend">
+                            <template for:each={statusCountsRow2} for:item="sc">
+                                <span key={sc.status} class="legend-item">
+                                    <span class="legend-dot" style={sc.dotStyle}></span>
+                                    <span class="legend-label">{sc.label} </span>
+                                    <span class="legend-value">{sc.count}</span>
+                                </span>
+                            </template>
+                        </div>
+                    </template>
+                </template>
+
+                <!-- Intakes loading -->
+                <template if:true={isIntakesLoading}>
+                    <div class="intakes-spinner">
+                        <lightning-spinner alternative-text="Loading intakes" size="x-small"></lightning-spinner>
+                    </div>
+                </template>
+
+                <template if:false={isIntakesLoading}>
+                    <template if:true={hasOpenIntakes}>
+                        <div class="intakes-list">
+                            <template for:each={openIntakes} for:item="intake">
+                                <div key={intake.id} class="intake-row" data-id={intake.id} onclick={handleIntakeClick}>
+                                    <div class="intake-left-bar" style={intake.barStyle}></div>
+                                    <div class="intake-content">
+                                        <div class="intake-row-top">
+                                            <span class="intake-name">{intake.name}</span>
+                                            <template if:true={intake.status}>
+                                                <span class="intake-status-pill" style={intake.badgeStyle}
+                                                    >{intake.status}</span
+                                                >
+                                            </template>
+                                        </div>
+                                        <div class="intake-row-bottom">
+                                            <span class="intake-client">{intake.clientName}</span>
+                                            <template if:true={intake.incidentType}>
+                                                <span class="intake-sep">·</span>
+                                                <span class="intake-type">{intake.incidentType}</span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template if:false={hasOpenIntakes}>
+                        <div class="intakes-empty">No open intakes assigned.</div>
+                    </template>
+                </template>
+
+                <div class="last-refreshed">Refreshed {lastRefreshed}</div>
+            </div>
+        </template>
     </div>
 </template>

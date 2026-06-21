@@ -3,6 +3,7 @@ public with sharing class UserAvailabilityService {
     @AuraEnabled(cacheable=false)
     public static Map<String, Object> getMyStatus() {
         Id userId = UserInfo.getUserId();
+        User u = [SELECT Id, SmallPhotoUrl FROM User WHERE Id = :userId LIMIT 1];
 
         List<Intake_Specialist__c> specs = [
             SELECT Id, Status__c, Active__c, Max_Capacity__c, Last_Assigned__c, Last_Heartbeat__c
@@ -39,7 +40,9 @@ public with sharing class UserAvailabilityService {
             'isActive' => spec.Active__c,
             'activeCount' => liveActiveCount,
             'maxCapacity' => spec.Max_Capacity__c != null ? (Integer) spec.Max_Capacity__c : 15,
-            'assignedToday' => assignedToday
+            'assignedToday' => assignedToday,
+            'userName' => UserInfo.getName(),
+            'photoUrl' => u.SmallPhotoUrl
         };
     }
 
