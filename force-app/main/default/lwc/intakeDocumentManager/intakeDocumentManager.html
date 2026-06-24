@@ -1,0 +1,536 @@
+<template>
+    <div class="dms-root">
+        <!-- ── TOOLBAR ── -->
+        <div class="dms-toolbar">
+            <div class="toolbar-left">
+                <span class="view-by-label">VIEW BY:</span>
+                <button class={folderViewBtnClass} onclick={setFolderView}>
+                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none">
+                        <path
+                            d="M2 3h5l1.5 2H14v8H2z"
+                            stroke="currentColor"
+                            stroke-width="1.3"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                    Folder
+                </button>
+                <button class={listViewBtnClass} onclick={setListView}>
+                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none">
+                        <path
+                            d="M2 4h12M2 8h12M2 12h12"
+                            stroke="currentColor"
+                            stroke-width="1.3"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                    List
+                </button>
+            </div>
+
+            <div class="toolbar-right">
+                <div class="search-wrap">
+                    <svg class="search-icon" viewBox="0 0 16 16" width="14" height="14" fill="none">
+                        <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.3" />
+                        <path d="M10 10l3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+                    </svg>
+                    <input
+                        class="search-input"
+                        type="text"
+                        placeholder="Search for Files by Name or Description"
+                        value={searchQuery}
+                        oninput={handleSearch}
+                    />
+                </div>
+                <button class="toolbar-btn" onclick={handleUploadClick} title="Upload files">
+                    <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
+                        <path
+                            d="M8 10V3M5 6l3-3 3 3"
+                            stroke="currentColor"
+                            stroke-width="1.3"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                        <path d="M3 12h10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+                    </svg>
+                </button>
+                <button class="toolbar-btn" onclick={handleNewFolder} title="New folder">
+                    <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
+                        <path
+                            d="M2 3h5l1.5 2H14v8H2z"
+                            stroke="currentColor"
+                            stroke-width="1.3"
+                            stroke-linejoin="round"
+                        />
+                        <path d="M8 7v4M6 9h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+                    </svg>
+                </button>
+                <button class="toolbar-btn" onclick={handleRefresh} title="Refresh">
+                    <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
+                        <path d="M13 8A5 5 0 103 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+                        <path
+                            d="M13 5v3h-3"
+                            stroke="currentColor"
+                            stroke-width="1.3"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- ── BREADCRUMB ── -->
+        <div class="breadcrumb-row">
+            <template for:each={breadcrumb} for:item="crumb">
+                <span key={crumb.id} class="crumb-wrap">
+                    <button class={crumb.cssClass} data-id={crumb.id} onclick={handleBreadcrumb}>{crumb.name}</button>
+                    <template if:true={crumb.hasChevron}>
+                        <svg viewBox="0 0 8 12" width="6" height="10" fill="none" class="crumb-chevron">
+                            <path
+                                d="M2 2l4 4-4 4"
+                                stroke="#94a3b8"
+                                stroke-width="1.4"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </template>
+                </span>
+            </template>
+            <span class="refresh-hint">Refreshed {lastRefreshed}</span>
+        </div>
+
+        <!-- ── UPLOAD PROGRESS STRIP ── -->
+        <template if:true={hasUploads}>
+            <div class="upload-strip">
+                <template for:each={uploadItems} for:item="up">
+                    <div key={up.id} class={up.rowClass}>
+                        <div class="up-icon-wrap">
+                            <svg viewBox="0 0 20 20" width="16" height="16" fill="none">
+                                <path
+                                    d="M10 13V6M7 9l3-3 3 3"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                                <rect x="3" y="14" width="14" height="3" rx="1.5" fill="currentColor" opacity=".25" />
+                            </svg>
+                        </div>
+                        <div class="up-details">
+                            <div class="up-name">{up.name}</div>
+                            <div class="up-bar-wrap">
+                                <div class="up-bar-track">
+                                    <div class="up-bar-fill" style={up.barStyle}></div>
+                                </div>
+                                <span class="up-pct">{up.pct}%</span>
+                            </div>
+                        </div>
+                        <div class="up-status">{up.statusLabel}</div>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- ── MAIN CONTENT ── -->
+        <template if:true={isLoading}>
+            <div class="dms-loading">
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <!-- Drag overlay -->
+            <template if:true={isDraggingOver}>
+                <div class="drag-overlay">
+                    <div class="drag-overlay-inner">
+                        <svg viewBox="0 0 48 48" width="48" height="48" fill="none">
+                            <path
+                                d="M24 32V16M16 24l8-8 8 8"
+                                stroke="#2563eb"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                            <rect x="4" y="36" width="40" height="8" rx="3" fill="#2563eb" opacity=".2" />
+                        </svg>
+                        <div class="drag-label">Drop files to upload</div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- ── FOLDER VIEW ── -->
+            <template if:true={isFolderView}>
+                <div
+                    class="folder-view"
+                    ondragenter={handleDragEnter}
+                    ondragover={handleDragOver}
+                    ondragleave={handleDragLeave}
+                    ondrop={handleDrop}
+                >
+                    <!-- Empty state -->
+                    <template if:true={isEmpty}>
+                        <div class="empty-state">
+                            <svg viewBox="0 0 80 60" width="80" height="60" fill="none">
+                                <rect
+                                    x="4"
+                                    y="16"
+                                    width="36"
+                                    height="30"
+                                    rx="4"
+                                    fill="#f1f5f9"
+                                    stroke="#e2e8f0"
+                                    stroke-width="1.5"
+                                />
+                                <path d="M4 22h36" stroke="#e2e8f0" stroke-width="1.5" />
+                                <rect
+                                    x="20"
+                                    y="10"
+                                    width="56"
+                                    height="36"
+                                    rx="4"
+                                    fill="#fff"
+                                    stroke="#e2e8f0"
+                                    stroke-width="1.5"
+                                />
+                                <path d="M20 20h56" stroke="#e2e8f0" stroke-width="1.5" />
+                                <path
+                                    d="M34 33h28M34 38h20"
+                                    stroke="#e2e8f0"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                            <div class="empty-title">This folder is empty</div>
+                            <div class="empty-desc">Upload files or create a subfolder to get started.</div>
+                        </div>
+                    </template>
+
+                    <!-- Folders row -->
+                    <template if:true={hasFolders}>
+                        <div class="section-label">Folders</div>
+                        <div class="folder-grid">
+                            <template for:each={folders} for:item="folder">
+                                <div
+                                    key={folder.id}
+                                    class="folder-card"
+                                    data-id={folder.id}
+                                    ondblclick={handleFolderDblClick}
+                                    onclick={handleFolderClick}
+                                >
+                                    <svg viewBox="0 0 24 20" width="48" height="40" fill="none">
+                                        <path
+                                            d="M1 4a2 2 0 012-2h5l2 2h11a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2z"
+                                            fill="#fbbf24"
+                                            stroke="#f59e0b"
+                                            stroke-width=".8"
+                                        />
+                                    </svg>
+                                    <div class="folder-card-name" title={folder.name}>{folder.name}</div>
+                                    <button
+                                        class="item-menu-btn"
+                                        data-id={folder.id}
+                                        data-type="folder"
+                                        onclick={handleItemMenuClick}
+                                        title="More options"
+                                    >
+                                        ⋮
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Files row -->
+                    <template if:true={hasFiles}>
+                        <div class="section-label">Files</div>
+                        <div class="file-grid">
+                            <template for:each={files} for:item="file">
+                                <div
+                                    key={file.id}
+                                    class="file-card"
+                                    data-id={file.id}
+                                    onclick={handleFileClick}
+                                    ondblclick={handleFileDblClick}
+                                >
+                                    <div class="file-icon-wrap">
+                                        <svg viewBox="0 0 32 38" width="32" height="38" fill="none">
+                                            <path
+                                                d="M4 2h17l7 7v27H4z"
+                                                fill="#eff6ff"
+                                                stroke="#dbeafe"
+                                                stroke-width="1.2"
+                                            />
+                                            <path d="M21 2v7h7" stroke="#dbeafe" stroke-width="1.2" />
+                                            <rect x="8" y="16" width="16" height="2" rx="1" fill="#93c5fd" />
+                                            <rect x="8" y="20" width="12" height="2" rx="1" fill="#bfdbfe" />
+                                            <rect x="8" y="24" width="10" height="2" rx="1" fill="#bfdbfe" />
+                                        </svg>
+                                        <div class="file-ext-badge">{file.ext}</div>
+                                    </div>
+                                    <div class="file-card-name" title={file.name}>{file.name}</div>
+                                    <div class="file-card-meta">{file.fileSizeLabel}</div>
+                                    <button
+                                        class="item-menu-btn"
+                                        data-id={file.id}
+                                        data-type="file"
+                                        onclick={handleItemMenuClick}
+                                        title="More options"
+                                    >
+                                        ⋮
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <!-- ── LIST VIEW ── -->
+            <template if:false={isFolderView}>
+                <div
+                    class="list-view"
+                    ondragenter={handleDragEnter}
+                    ondragover={handleDragOver}
+                    ondragleave={handleDragLeave}
+                    ondrop={handleDrop}
+                >
+                    <table class="list-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" onchange={handleSelectAll} /></th>
+                                <th class="col-name">
+                                    NAME
+                                    <svg viewBox="0 0 10 12" width="8" height="8" fill="none">
+                                        <path
+                                            d="M5 1v10M2 4l3-3 3 3M2 9l3 3 3-3"
+                                            stroke="currentColor"
+                                            stroke-width="1.2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </svg>
+                                </th>
+                                <th>UPDATED ON</th>
+                                <th>UPDATED BY</th>
+                                <th>SIZE</th>
+                                <th>DOCUMENT CATE...</th>
+                                <th>PARENT FOLDER</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Folders first -->
+                            <template for:each={folders} for:item="folder">
+                                <tr
+                                    key={folder.id}
+                                    class="list-row"
+                                    data-id={folder.id}
+                                    ondblclick={handleFolderDblClick}
+                                >
+                                    <td><input type="checkbox" /></td>
+                                    <td class="cell-name">
+                                        <svg viewBox="0 0 20 16" width="18" height="14" fill="none">
+                                            <path
+                                                d="M1 3a1 1 0 011-1h4l2 2h10a1 1 0 011 1v8a1 1 0 01-1 1H2a1 1 0 01-1-1z"
+                                                fill="#fbbf24"
+                                                stroke="#f59e0b"
+                                                stroke-width=".7"
+                                            />
+                                        </svg>
+                                        <button class="link-btn" data-id={folder.id} onclick={handleFolderNameClick}>
+                                            {folder.name}
+                                        </button>
+                                    </td>
+                                    <td class="cell-meta">{folder.createdDate}</td>
+                                    <td class="cell-meta">{folder.createdBy}</td>
+                                    <td class="cell-meta">—</td>
+                                    <td class="cell-meta">—</td>
+                                    <td class="cell-meta">—</td>
+                                    <td>
+                                        <button
+                                            class="list-menu-btn"
+                                            data-id={folder.id}
+                                            data-type="folder"
+                                            onclick={handleItemMenuClick}
+                                        >
+                                            ⋮
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                            <!-- Files -->
+                            <template for:each={files} for:item="file">
+                                <tr key={file.id} class="list-row">
+                                    <td><input type="checkbox" /></td>
+                                    <td class="cell-name">
+                                        <div class="file-ext-icon">{file.ext}</div>
+                                        <button class="link-btn" data-id={file.id} onclick={handleFileNameClick}>
+                                            {file.name}
+                                        </button>
+                                    </td>
+                                    <td class="cell-meta">{file.createdDate}</td>
+                                    <td class="cell-meta">{file.createdBy}</td>
+                                    <td class="cell-meta">{file.fileSizeLabel}</td>
+                                    <td class="cell-meta">{file.category}</td>
+                                    <td class="cell-meta">{file.parentFolderName}</td>
+                                    <td>
+                                        <button
+                                            class="list-menu-btn"
+                                            data-id={file.id}
+                                            data-type="file"
+                                            onclick={handleItemMenuClick}
+                                        >
+                                            ⋮
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                            <!-- Empty -->
+                            <template if:true={isEmpty}>
+                                <tr>
+                                    <td colspan="8" class="list-empty">
+                                        This folder is empty. Upload files or create a subfolder.
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+        </template>
+
+        <!-- Hidden file input -->
+        <input type="file" class="hidden-input" multiple data-id="fileInput" onchange={handleFileInputChange} />
+
+        <!-- ── CONTEXT MENU ── -->
+        <template if:true={showContextMenu}>
+            <div class="context-menu" style={contextMenuStyle}>
+                <!-- File-only actions -->
+                <template if:true={ctxIsFile}>
+                    <button class="ctx-item" data-action="download" onclick={handleContextAction}>
+                        <svg viewBox="0 0 16 16" width="13" height="13" fill="none">
+                            <path
+                                d="M8 3v8M5 8l3 3 3-3"
+                                stroke="currentColor"
+                                stroke-width="1.3"
+                                stroke-linecap="round"
+                            />
+                            <path d="M3 13h10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+                        </svg>
+                        Download
+                    </button>
+                </template>
+
+                <!-- Both file and folder -->
+                <button class="ctx-item" data-action="rename" onclick={handleContextAction}>
+                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none">
+                        <path
+                            d="M11 2l3 3-8 8H3v-3z"
+                            stroke="currentColor"
+                            stroke-width="1.3"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                    Rename
+                </button>
+                <div class="ctx-divider"></div>
+                <button class="ctx-item ctx-danger" data-action="delete" onclick={handleContextAction}>
+                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none">
+                        <path
+                            d="M3 5h10M6 5V3h4v2M7 8v4M9 8v4"
+                            stroke="currentColor"
+                            stroke-width="1.3"
+                            stroke-linecap="round"
+                        />
+                        <rect x="4" y="5" width="8" height="9" rx="1" stroke="currentColor" stroke-width="1.3" />
+                    </svg>
+                    Delete
+                </button>
+            </div>
+        </template>
+        <template if:true={showContextMenu}>
+            <div class="ctx-backdrop" onclick={handleContextMenuClose}></div>
+        </template>
+
+        <!-- ── NEW FOLDER MODAL ── -->
+        <template if:true={showNewFolderModal}>
+            <div class="modal-backdrop" onclick={closeNewFolderModal}>
+                <div class="modal" onclick={stopProp}>
+                    <div class="modal-header">
+                        <h2 class="modal-title">New Folder</h2>
+                        <button class="modal-close" onclick={closeNewFolderModal}>×</button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="modal-label">Folder Name</label>
+                        <input
+                            class="modal-input"
+                            type="text"
+                            placeholder="e.g. Medical Records"
+                            value={newFolderName}
+                            onkeyup={handleNewFolderKey}
+                            oninput={handleNewFolderInput}
+                        />
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick={closeNewFolderModal}>Cancel</button>
+                        <button class="btn-primary" onclick={confirmNewFolder} disabled={newFolderNameEmpty}>
+                            Create
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── RENAME MODAL ── -->
+        <template if:true={showRenameModal}>
+            <div class="modal-backdrop" onclick={closeRenameModal}>
+                <div class="modal" onclick={stopProp}>
+                    <div class="modal-header">
+                        <h2 class="modal-title">Rename</h2>
+                        <button class="modal-close" onclick={closeRenameModal}>×</button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="modal-label">New Name</label>
+                        <input
+                            class="modal-input"
+                            type="text"
+                            value={renameName}
+                            oninput={handleRenameInput}
+                            onkeyup={handleRenameKey}
+                        />
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick={closeRenameModal}>Cancel</button>
+                        <button class="btn-primary" onclick={confirmRename} disabled={renameNameEmpty}>Rename</button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── DELETE CONFIRM MODAL ── -->
+        <template if:true={showDeleteModal}>
+            <div class="modal-backdrop" onclick={closeDeleteModal}>
+                <div class="modal modal-sm" onclick={stopProp}>
+                    <div class="modal-header">
+                        <h2 class="modal-title">Delete {deleteItemType}?</h2>
+                        <button class="modal-close" onclick={closeDeleteModal}>×</button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="modal-desc">
+                            <strong>{deleteItemName}</strong> will be permanently removed and cannot be recovered.
+                            <template if:true={deleteIsFolder}>
+                                All files inside this folder will also be deleted.
+                            </template>
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick={closeDeleteModal}>Cancel</button>
+                        <button class="btn-danger" onclick={confirmDelete}>Delete</button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>
