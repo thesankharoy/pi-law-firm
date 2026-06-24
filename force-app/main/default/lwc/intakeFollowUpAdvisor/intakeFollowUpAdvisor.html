@@ -1,0 +1,129 @@
+<template>
+    <div class="advisor-root">
+        <!-- ── AI RECOMMENDATION CARD ── -->
+        <div class="rec-card">
+            <div class="rec-header">
+                <div class="rec-header-left">
+                    <div class="rec-icon-wrap">
+                        <svg viewBox="0 0 20 20" width="16" height="16" fill="none">
+                            <circle cx="10" cy="10" r="8" stroke="#6366f1" stroke-width="1.5" />
+                            <path
+                                d="M7 10l2 2 4-4"
+                                stroke="#6366f1"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </div>
+                    <span class="rec-label">Contact Intelligence</span>
+                    <template if:true={rec}>
+                        <span class={confidencePillClass}>{rec.confidence}</span>
+                    </template>
+                </div>
+                <button
+                    class="refresh-btn"
+                    onclick={handleRefresh}
+                    disabled={isRefreshing}
+                    title="Regenerate recommendation"
+                >
+                    <svg width="50px" height="50px" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M25 38c-7.2 0-13-5.8-13-13 0-3.2 1.2-6.2 3.3-8.6l1.5 1.3C15 19.7 14 22.3 14 25c0 6.1 4.9 11 11 11 1.6 0 3.1-.3 4.6-1l.8 1.8c-1.7.8-3.5 1.2-5.4 1.2z"
+                        />
+                        <path
+                            d="M34.7 33.7l-1.5-1.3c1.8-2 2.8-4.6 2.8-7.3 0-6.1-4.9-11-11-11-1.6 0-3.1.3-4.6 1l-.8-1.8c1.7-.8 3.5-1.2 5.4-1.2 7.2 0 13 5.8 13 13 0 3.1-1.2 6.2-3.3 8.6z"
+                        />
+                        <path d="M18 24h-2v-6h-6v-2h8z" />
+                        <path d="M40 34h-8v-8h2v6h6z" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Loading skeleton -->
+            <template if:true={isLoading}>
+                <div class="skeleton-wrap">
+                    <div class="skeleton skeleton-title"></div>
+                    <div class="skeleton skeleton-body"></div>
+                    <div class="skeleton skeleton-body short"></div>
+                </div>
+            </template>
+
+            <!-- Error state -->
+            <template if:true={recError}>
+                <div class="rec-error">
+                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none">
+                        <circle cx="8" cy="8" r="7" stroke="#dc2626" stroke-width="1.2" />
+                        <path d="M8 5v4M8 11v.5" stroke="#dc2626" stroke-width="1.4" stroke-linecap="round" />
+                    </svg>
+                    Could not load recommendation. <button class="link-btn-sm" onclick={handleRefresh}>Retry</button>
+                </div>
+            </template>
+
+            <!-- Recommendation content -->
+            <template if:true={rec}>
+                <div class="rec-body">
+                    <!-- Primary recommendation banner -->
+                    <div class="rec-primary">
+                        <div class="rec-channel-badge">
+                            <span class="rec-channel-icon">{rec.primaryChannelIcon}</span>
+                            <span class="rec-channel-label">{rec.primaryChannel} first</span>
+                        </div>
+                        <div class="rec-time-badge">
+                            <svg viewBox="0 0 14 14" width="11" height="11" fill="none">
+                                <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.2" />
+                                <path
+                                    d="M7 4v3.5l2 1.5"
+                                    stroke="currentColor"
+                                    stroke-width="1.2"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                            {rec.bestTimeWindow}
+                        </div>
+                    </div>
+                    <!-- Reasoning -->
+                    <p class="rec-reasoning">{rec.reasoning}</p>
+                    <!-- Cache indicator -->
+                    <div class="rec-footer-row">
+                        <span class="rec-updated">
+                            <template if:true={rec.fromCache}>↩ Cached · </template>
+                            {rec.generatedAt}
+                        </span>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- ── TASK LIST ── -->
+        <template if:true={hasTasks}>
+            <div class="task-list">
+                <template for:each={groupedDays} for:item="day">
+                    <div key={day.label} class="day-group">
+                        <div class="day-label">{day.label}</div>
+                        <template for:each={day.tasks} for:item="task">
+                            <div key={task.id} class="task-row">
+                                <div class="task-icon">{task.typeIcon}</div>
+                                <div class="task-details">
+                                    <div class="task-subject">{task.displaySubject}</div>
+                                    <div class="task-due">{task.activityDate}</div>
+                                </div>
+                                <div class={task.hintClass}>
+                                    <span class="hint-dot"></span>
+                                    {task.hint}
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- No tasks -->
+        <template if:false={hasTasks}>
+            <template if:false={isLoading}>
+                <div class="no-tasks">All follow-up tasks are complete or no tasks scheduled yet.</div>
+            </template>
+        </template>
+    </div>
+</template>
