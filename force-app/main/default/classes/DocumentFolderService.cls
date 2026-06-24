@@ -12,6 +12,8 @@ public without sharing class DocumentFolderService {
         public String createdDate;
         @AuraEnabled
         public String createdBy;
+        @AuraEnabled
+        public Boolean hasChildren;
     }
 
     // ── Ensure root folder exists for an Intake ────────────────────
@@ -32,17 +34,46 @@ public without sharing class DocumentFolderService {
 
     // ── List subfolders of a given folder ──────────────────────────
     public static List<FolderDTO> listFolders(Id parentFolderId) {
-        List<FolderDTO> result = new List<FolderDTO>();
-
-        for (Folder__c f : [
+        List<Folder__c> fetched = [
             SELECT Id, Name, Parent_Folder__c, Path__c, CreatedDate, CreatedBy.Name
             FROM Folder__c
             WHERE Parent_Folder__c = :parentFolderId
             ORDER BY Name ASC
-        ]) {
-            result.add(toDTO(f));
-        }
+        ];
+        if (fetched.isEmpty())
+            return new List<FolderDTO>();
 
+        Set<Id> folderIds = new Map<Id, Folder__c>(fetched).keySet();
+
+        // Subfolders count
+        Map<Id, Integer> subCount = new Map<Id, Integer>();
+        for (AggregateResult ar : [
+            SELECT Parent_Folder__c pid, COUNT(Id) cnt
+            FROM Folder__c
+            WHERE Parent_Folder__c IN :folderIds
+            GROUP BY Parent_Folder__c
+        ])
+            subCount.put((Id) ar.get('pid'), (Integer) ar.get('cnt'));
+
+        // Files count
+        Map<Id, Integer> fileCount = new Map<Id, Integer>();
+        for (AggregateResult ar : [
+            SELECT Folder__c fid, COUNT(Id) cnt
+            FROM Document__c
+            WHERE Folder__c IN :folderIds AND Status__c != 'Deleted'
+            GROUP BY Folder__c
+        ])
+            fileCount.put((Id) ar.get('fid'), (Integer) ar.get('cnt'));
+
+        List<FolderDTO> result = new List<FolderDTO>();
+        for (Folder__c f : fetched) {
+            FolderDTO d = toDTO(f);
+            Integer children =
+                (subCount.containsKey(f.Id) ? subCount.get(f.Id) : 0) +
+                (fileCount.containsKey(f.Id) ? fileCount.get(f.Id) : 0);
+            d.hasChildren = children > 0;
+            result.add(d);
+        }
         return result;
     }
 

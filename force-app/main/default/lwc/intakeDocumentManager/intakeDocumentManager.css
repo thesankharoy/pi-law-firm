@@ -288,7 +288,7 @@
 /* ── Folder view ── */
 .folder-view {
     padding: 16px;
-    min-height: 300px;
+    min-height: 400px;
     position: relative;
 }
 .section-label {

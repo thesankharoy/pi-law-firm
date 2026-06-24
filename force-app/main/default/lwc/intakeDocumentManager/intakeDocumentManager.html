@@ -43,7 +43,7 @@
                     />
                 </div>
                 <button class="toolbar-btn" onclick={handleUploadClick} title="Upload files">
-                    <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
+                    <svg viewBox="0 0 16 16" width="18" height="18" fill="none">
                         <path
                             d="M8 10V3M5 6l3-3 3 3"
                             stroke="currentColor"
@@ -55,7 +55,7 @@
                     </svg>
                 </button>
                 <button class="toolbar-btn" onclick={handleNewFolder} title="New folder">
-                    <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
+                    <svg viewBox="0 0 16 16" width="18" height="18" fill="none">
                         <path
                             d="M2 3h5l1.5 2H14v8H2z"
                             stroke="currentColor"
@@ -66,12 +66,25 @@
                     </svg>
                 </button>
                 <button class="toolbar-btn" onclick={handleRefresh} title="Refresh">
-                    <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
-                        <path d="M13 8A5 5 0 103 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
                         <path
-                            d="M13 5v3h-3"
+                            d="M23 4v6h-6"
                             stroke="currentColor"
-                            stroke-width="1.3"
+                            stroke-width="2.2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                        <path
+                            d="M1 20v-6h6"
+                            stroke="currentColor"
+                            stroke-width="2.2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                        <path
+                            d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"
+                            stroke="currentColor"
+                            stroke-width="2.2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                         />
@@ -219,14 +232,55 @@
                                     ondblclick={handleFolderDblClick}
                                     onclick={handleFolderClick}
                                 >
-                                    <svg viewBox="0 0 24 20" width="48" height="40" fill="none">
-                                        <path
-                                            d="M1 4a2 2 0 012-2h5l2 2h11a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2z"
-                                            fill="#fbbf24"
-                                            stroke="#f59e0b"
-                                            stroke-width=".8"
-                                        />
-                                    </svg>
+                                    <!-- Full folder — has subfolders or files inside -->
+                                    <template if:true={folder.hasChildren}>
+                                        <svg
+                                            viewBox="0 0 24 20"
+                                            width="48"
+                                            height="40"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <!-- Back folder panel -->
+                                            <path
+                                                d="M1 4a2 2 0 012-2h5l2 2h11a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2z"
+                                                fill="#fbbf24"
+                                                stroke="#f59e0b"
+                                                stroke-width=".8"
+                                            />
+                                            <!-- Paper stack peeking out from top -->
+                                            <rect
+                                                x="4.5"
+                                                y="5"
+                                                width="15"
+                                                height="6"
+                                                rx=".4"
+                                                fill="#fffbeb"
+                                                stroke="#f0e68c"
+                                                stroke-width=".6"
+                                            />
+                                            <!-- Front folder flap -->
+                                            <path
+                                                d="M1 9.5h22v6.5a2 2 0 01-2 2H3a2 2 0 01-2-2z"
+                                                fill="#fcd34d"
+                                                stroke="#f59e0b"
+                                                stroke-width=".8"
+                                            />
+                                        </svg>
+                                    </template>
+
+                                    <!-- Empty folder -->
+                                    <template if:false={folder.hasChildren}>
+                                        <svg viewBox="0 0 24 20" width="48" height="40" fill="none">
+                                            <path
+                                                d="M1 4a2 2 0 012-2h5l2 2h11a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2z"
+                                                fill="#fbbf24"
+                                                stroke="#f59e0b"
+                                                stroke-width=".8"
+                                            />
+                                        </svg>
+                                    </template>
+
                                     <div class="folder-card-name" title={folder.name}>{folder.name}</div>
                                     <button
                                         class="item-menu-btn"
@@ -331,14 +385,51 @@
                                 >
                                     <td><input type="checkbox" /></td>
                                     <td class="cell-name">
-                                        <svg viewBox="0 0 20 16" width="18" height="14" fill="none">
-                                            <path
-                                                d="M1 3a1 1 0 011-1h4l2 2h10a1 1 0 011 1v8a1 1 0 01-1 1H2a1 1 0 01-1-1z"
-                                                fill="#fbbf24"
-                                                stroke="#f59e0b"
-                                                stroke-width=".7"
-                                            />
-                                        </svg>
+                                        <template if:true={folder.hasChildren}>
+                                            <svg
+                                                viewBox="0 0 20 16"
+                                                width="18"
+                                                height="14"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                                <!-- Back folder panel -->
+                                                <path
+                                                    d="M1 3a1 1 0 011-1h4l2 2h10a1 1 0 011 1v8a1 1 0 01-1 1H2a1 1 0 01-1-1z"
+                                                    fill="#fbbf24"
+                                                    stroke="#f59e0b"
+                                                    stroke-width=".7"
+                                                />
+                                                <!-- Paper stack peeking out from top -->
+                                                <rect
+                                                    x="4"
+                                                    y="3.5"
+                                                    width="12"
+                                                    height="5"
+                                                    rx=".3"
+                                                    fill="#fffbeb"
+                                                    stroke="#f0e68c"
+                                                    stroke-width=".5"
+                                                />
+                                                <!-- Front folder flap -->
+                                                <path
+                                                    d="M1 7.5h18v4.5a1 1 0 01-1 1H2a1 1 0 01-1-1z"
+                                                    fill="#fcd34d"
+                                                    stroke="#f59e0b"
+                                                    stroke-width=".7"
+                                                />
+                                            </svg>
+                                        </template>
+                                        <template if:false={folder.hasChildren}>
+                                            <svg viewBox="0 0 20 16" width="18" height="14" fill="none">
+                                                <path
+                                                    d="M1 3a1 1 0 011-1h4l2 2h10a1 1 0 011 1v8a1 1 0 01-1 1H2a1 1 0 01-1-1z"
+                                                    fill="#fbbf24"
+                                                    stroke="#f59e0b"
+                                                    stroke-width=".7"
+                                                />
+                                            </svg>
+                                        </template>
                                         <button class="link-btn" data-id={folder.id} onclick={handleFolderNameClick}>
                                             {folder.name}
                                         </button>
