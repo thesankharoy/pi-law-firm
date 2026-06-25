@@ -5,7 +5,7 @@ public class MetadataCallback implements Metadata.DeployCallback {
             System.debug('CMT Deploy FAILED: ' + result.errorMessage);
             // Optionally: insert error log record here
             Error_Log__c log = new Error_Log__c(
-                Error_Label__C = 'CMT Deploy Failure',
+                Error_Label__c = 'CMT Deploy Failure',
                 Message__c = result.errorMessage
             );
             insert log;

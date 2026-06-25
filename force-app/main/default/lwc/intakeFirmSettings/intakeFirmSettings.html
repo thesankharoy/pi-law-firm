@@ -1,0 +1,362 @@
+<template>
+    <div class="fs-root">
+        <!-- Deploy overlay (same as rule builder) -->
+        <template if:true={isDeploying}>
+            <div class="deploy-overlay">
+                <div class="deploy-modal">
+                    <lightning-spinner alternative-text="Saving" size="medium"></lightning-spinner>
+                    <p class="deploy-msg">{deployingMsg}</p>
+                </div>
+            </div>
+        </template>
+
+        <!-- Header -->
+        <div class="fs-header">
+            <div class="fs-header-left">
+                <div class="fs-brand-icon">
+                    <svg viewBox="0 0 36 36" fill="none" width="36" height="36">
+                        <rect width="36" height="36" rx="8" fill="#0f1f3d" />
+                        <path d="M10 12h16M10 18h12M10 24h8" stroke="white" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="fs-brand-sub">DELIPAT INTAKE</div>
+                    <div class="fs-brand-title">Firm Settings</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="fs-body">
+            <!-- ── INTAKE MANAGER SECTION ── -->
+            <div class="fs-card">
+                <div class="fs-card-header">
+                    <div class="fs-card-icon">
+                        <svg viewBox="0 0 20 20" width="16" height="16" fill="none">
+                            <circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="1.6" />
+                            <path
+                                d="M3 17c0-3.314 3.134-6 7-6s7 2.686 7 6"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="fs-card-title">Intake Manager</div>
+                        <div class="fs-card-desc">
+                            The manager who receives cold lead escalations and becomes the new owner when a lead is
+                            reassigned.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current manager display -->
+                <template if:true={currentManager}>
+                    <div class="manager-display">
+                        <div class="manager-avatar-wrap">
+                            <template if:true={currentManager.photoUrl}>
+                                <img src={currentManager.photoUrl} class="manager-avatar" alt="Manager" />
+                            </template>
+                            <template if:false={currentManager.photoUrl}>
+                                <div class="manager-avatar manager-initials">{managerInitials}</div>
+                            </template>
+                            <div class="manager-active-dot"></div>
+                        </div>
+                        <div class="manager-info">
+                            <div class="manager-name">{currentManager.name}</div>
+                            <div class="manager-email">{currentManager.email}</div>
+                            <div class="manager-role-badge">Intake Manager</div>
+                        </div>
+                        <button class="btn-ghost" onclick={handleChangeManager}>Change</button>
+                    </div>
+                </template>
+
+                <template if:false={currentManager}>
+                    <div class="manager-empty">
+                        <div class="manager-empty-icon-wrap">
+                            <svg viewBox="0 0 48 48" width="48" height="48" fill="none">
+                                <circle cx="24" cy="24" r="23" stroke="#e2e8f0" stroke-width="1.5" />
+                                <circle cx="24" cy="19" r="7" stroke="#94a3b8" stroke-width="1.5" />
+                                <path
+                                    d="M9 40c0-8.284 6.716-15 15-15s15 6.716 15 15"
+                                    stroke="#94a3b8"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                />
+                                <circle cx="36" cy="35" r="7" fill="#2563eb" />
+                                <path d="M33 35h6M36 32v6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" />
+                            </svg>
+                        </div>
+                        <div class="manager-empty-title">No manager assigned</div>
+                        <div class="manager-empty-desc">Assign an intake manager to enable lead escalation.</div>
+                        <button class="btn-assign-manager" onclick={handleChangeManager}>+ Assign Manager</button>
+                    </div>
+                </template>
+
+                <!-- User search (shown when changing) -->
+                <template if:true={showUserSearch}>
+                    <div class="user-search-wrap">
+                        <div class="search-field-row">
+                            <div class="search-input-wrap">
+                                <svg class="search-input-icon" viewBox="0 0 16 16" width="14" height="14" fill="none">
+                                    <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.3" />
+                                    <path
+                                        d="M10 10l3 3"
+                                        stroke="currentColor"
+                                        stroke-width="1.3"
+                                        stroke-linecap="round"
+                                    />
+                                </svg>
+                                <input
+                                    class="search-input"
+                                    type="text"
+                                    placeholder="Search by name…"
+                                    value={userSearchQuery}
+                                    oninput={handleUserSearch}
+                                />
+                            </div>
+                            <button class="btn-ghost" onclick={cancelUserSearch}>Cancel</button>
+                        </div>
+                        <template if:true={userSearchResults.length}>
+                            <div class="user-results">
+                                <template for:each={userSearchResults} for:item="u">
+                                    <div
+                                        key={u.id}
+                                        class="user-result-row"
+                                        data-userid={u.id}
+                                        data-username={u.name}
+                                        onclick={handleSelectUser}
+                                    >
+                                        <template if:true={u.photoUrl}>
+                                            <img src={u.photoUrl} class="user-result-avatar" alt={u.name} />
+                                        </template>
+                                        <template if:false={u.photoUrl}>
+                                            <div class="user-result-avatar user-initials-sm">{u.initials}</div>
+                                        </template>
+                                        <div class="user-result-info">
+                                            <div class="user-result-name">{u.name}</div>
+                                            <div class="user-result-email">{u.email}</div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <template if:true={isSearching}>
+                            <div class="search-loading">
+                                <lightning-spinner size="x-small" alternative-text="Searching"></lightning-spinner>
+                                <span>Searching users…</span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <!-- ── ENGAGEMENT RULES SECTION ── -->
+            <div class="fs-card">
+                <div class="fs-card-header">
+                    <div class="fs-card-icon">
+                        <svg viewBox="0 0 20 20" width="16" height="16" fill="none">
+                            <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6" />
+                            <path
+                                d="M10 6v4.5l2.5 2.5"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="fs-card-title">Engagement Rules</div>
+                        <div class="fs-card-desc">
+                            Define how long (in business hours days) before an intake's engagement level changes and
+                            escalation fires.
+                        </div>
+                    </div>
+                </div>
+
+                <template if:true={isRulesLoading}>
+                    <div class="rules-loading">
+                        <lightning-spinner size="small" alternative-text="Loading"></lightning-spinner>
+                    </div>
+                </template>
+
+                <template if:false={isRulesLoading}>
+                    <div class="rules-grid">
+                        <!-- Level timeline -->
+                        <div class="level-timeline">
+                            <div class="level-node hot">
+                                <div class="level-dot"></div>
+                                <div class="level-label">🔥 Hot</div>
+                                <div class="level-desc">New lead — active</div>
+                            </div>
+                            <div class="level-connector">
+                                <div class="connector-line"></div>
+                                <div class="connector-label">after</div>
+                            </div>
+                            <div class="level-node warm">
+                                <div class="level-dot"></div>
+                                <div class="level-label">🌤 Warm</div>
+                                <div class="level-desc">Starting to drift</div>
+                            </div>
+                            <div class="level-connector">
+                                <div class="connector-line"></div>
+                                <div class="connector-label">after</div>
+                            </div>
+                            <div class="level-node cold">
+                                <div class="level-dot"></div>
+                                <div class="level-label">❄️ Cold</div>
+                                <div class="level-desc">Specialist notified</div>
+                            </div>
+                            <div class="level-connector">
+                                <div class="connector-line"></div>
+                                <div class="connector-label">after</div>
+                            </div>
+                            <div class="level-node dead">
+                                <div class="level-dot"></div>
+                                <div class="level-label">💀 Dead</div>
+                                <div class="level-desc">Write-off likely</div>
+                            </div>
+                        </div>
+
+                        <!-- Threshold inputs -->
+                        <div class="threshold-inputs">
+                            <div class="threshold-row">
+                                <label class="threshold-label">
+                                    <span class="level-tag hot-tag">HOT ⟶ WARM</span>
+                                </label>
+                                <div class="threshold-input-wrap">
+                                    <input
+                                        class="threshold-input"
+                                        type="number"
+                                        min="0"
+                                        max="30"
+                                        value={rules.warmAfterDays}
+                                        data-field="warmAfterDays"
+                                        onchange={handleRuleChange}
+                                    />
+                                    <span class="threshold-unit">BH days</span>
+                                </div>
+                            </div>
+                            <div class="threshold-row">
+                                <label class="threshold-label">
+                                    <span class="level-tag warm-tag">WARM ⟶ COLD</span>
+                                </label>
+                                <div class="threshold-input-wrap">
+                                    <input
+                                        class="threshold-input"
+                                        type="number"
+                                        min="1"
+                                        max="30"
+                                        value={rules.coldAfterDays}
+                                        data-field="coldAfterDays"
+                                        onchange={handleRuleChange}
+                                    />
+                                    <span class="threshold-unit">BH days</span>
+                                </div>
+                            </div>
+                            <div class="threshold-row">
+                                <label class="threshold-label">
+                                    <span class="level-tag cold-tag">COLD ⟶ DEAD</span>
+                                </label>
+                                <div class="threshold-input-wrap">
+                                    <input
+                                        class="threshold-input"
+                                        type="number"
+                                        min="1"
+                                        max="30"
+                                        value={rules.deadAfterDays}
+                                        data-field="deadAfterDays"
+                                        onchange={handleRuleChange}
+                                    />
+                                    <span class="threshold-unit">BH days</span>
+                                </div>
+                            </div>
+
+                            <div class="rule-divider">
+                                <span>Escalation</span>
+                            </div>
+
+                            <div class="threshold-row">
+                                <label class="threshold-label">
+                                    <span class="level-tag escalate-tag">🚨 Escalate after cold for</span>
+                                </label>
+                                <div class="threshold-input-wrap">
+                                    <input
+                                        class="threshold-input"
+                                        type="number"
+                                        min="1"
+                                        max="30"
+                                        value={rules.escalateAfterDays}
+                                        data-field="escalateAfterDays"
+                                        onchange={handleRuleChange}
+                                    />
+                                    <span class="threshold-unit">BH days</span>
+                                </div>
+                            </div>
+
+                            <div class="toggle-row">
+                                <label class="toggle-wrap">
+                                    <input
+                                        class="toggle-input"
+                                        type="checkbox"
+                                        checked={rules.specialistNotify}
+                                        data-field="specialistNotify"
+                                        onchange={handleRuleToggle}
+                                    />
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <div class="toggle-text-wrap">
+                                    <div class="toggle-text-main">Email specialist when lead goes Cold</div>
+                                    <div class="toggle-text-sub">
+                                        Specialist receives a one-time email the moment engagement drops to Cold
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="toggle-row">
+                                <label class="toggle-wrap">
+                                    <input
+                                        class="toggle-input"
+                                        type="checkbox"
+                                        checked={rules.active}
+                                        data-field="active"
+                                        onchange={handleRuleToggle}
+                                    />
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <div class="toggle-text-wrap">
+                                    <div class="toggle-text-main">Engine active</div>
+                                    <div class="toggle-text-sub">
+                                        Uncheck to pause all engagement level updates and notifications
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Validation error -->
+                    <template if:true={rulesError}>
+                        <div class="rules-error">{rulesError}</div>
+                    </template>
+
+                    <div class="rules-footer">
+                        <button class="btn-secondary" onclick={loadRules}>Reset</button>
+                        <button class="btn-primary" onclick={handleSaveRules} disabled={isSavingRules}>
+                            <svg viewBox="0 0 16 16" width="13" height="13" fill="none">
+                                <path
+                                    d="M2 9l4 4 8-8"
+                                    stroke="currentColor"
+                                    stroke-width="1.6"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                            {saveRulesLabel}
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+</template>

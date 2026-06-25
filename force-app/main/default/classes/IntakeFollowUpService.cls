@@ -222,33 +222,45 @@ public without sharing class IntakeFollowUpService {
 
     // ── Shared processor (morning scheduler + mid-day flush) ──────
     public static void processSchedules(List<Intake_Follow_Up__c> schedules) {
-        List<Task> tasks = new List<Task>();
-        List<Intake_Follow_Up__c> toMark = new List<Intake_Follow_Up__c>();
+        try {
+            List<Task> tasks = new List<Task>();
+            List<Intake_Follow_Up__c> toMark = new List<Intake_Follow_Up__c>();
 
-        for (Intake_Follow_Up__c s : schedules) {
-            Id ownerId;
-            try {
-                ownerId = Id.valueOf(s.Assigned_To__c);
-            } catch (Exception e) {
-                continue;
+            for (Intake_Follow_Up__c s : schedules) {
+                Id ownerId;
+                try {
+                    ownerId = Id.valueOf(s.Assigned_To__c);
+                } catch (Exception e) {
+                    continue;
+                }
+
+                // Hard guard: Tasks cannot be queue-owned — skip, do not mark as created
+                // (will be picked up after specialist claims the intake)
+                if (ownerId.getSObjectType() != Schema.User.SObjectType)
+                    continue;
+
+                Integer day = s.Day_Number__c != null ? (Integer) s.Day_Number__c : 1;
+                tasks.addAll(
+                    buildTasks(
+                        s.Intake__c,
+                        s.Intake__r.Client__c,
+                        s.Intake__r.Client__r?.Name,
+                        ownerId,
+                        day,
+                        Date.today()
+                    )
+                );
+                toMark.add(new Intake_Follow_Up__c(Id = s.Id, Created__c = true));
             }
 
-            // Hard guard: Tasks cannot be queue-owned — skip, do not mark as created
-            // (will be picked up after specialist claims the intake)
-            if (ownerId.getSObjectType() != Schema.User.SObjectType)
-                continue;
-
-            Integer day = s.Day_Number__c != null ? (Integer) s.Day_Number__c : 1;
-            tasks.addAll(
-                buildTasks(s.Intake__c, s.Intake__r.Client__c, s.Intake__r.Client__r?.Name, ownerId, day, Date.today())
-            );
-            toMark.add(new Intake_Follow_Up__c(Id = s.Id, Created__c = true));
+            if (!tasks.isEmpty())
+                insert tasks;
+            if (!toMark.isEmpty())
+                update toMark;
+        } catch (Exception e) {
+            Error_Log__c log = new Error_Log__c(Error_Label__c = e.getMessage(), Message__c = e.getStackTraceString());
+            insert log;
         }
-
-        if (!tasks.isEmpty())
-            insert tasks;
-        if (!toMark.isEmpty())
-            update toMark;
     }
 
     // ── Builders ──────────────────────────────────────────────────
