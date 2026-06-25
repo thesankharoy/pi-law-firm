@@ -15,7 +15,7 @@
                         <template if:true={hasPhoto}>
                             <img src={userPhotoUrl} alt="Profile" class="avatar-img" />
                         </template>
-                        <template if:false={hasPhoto}> {userInitials} </template>
+                        <template if:false={hasPhoto}>{userInitials}</template>
                     </div>
                     <div class="w-header-text">
                         <div class="w-role">INTAKE SPECIALIST</div>
@@ -26,7 +26,7 @@
             </div>
 
             <template if:true={specialistData}>
-                <!-- ── CAPACITY CIRCLE + WARNING ── -->
+                <!-- ── CAPACITY ── -->
                 <div class="capacity-section">
                     <div class="cap-circle-wrap">
                         <svg class="cap-svg" viewBox="0 0 110 110">
@@ -38,7 +38,6 @@
                             <div class="cap-sub">of {specialistData.maxCapacity} cap.</div>
                         </div>
                     </div>
-
                     <template if:true={isOverCapacity}>
                         <div class="over-cap-banner">
                             <span class="over-cap-icon">⚠️</span>
@@ -53,7 +52,7 @@
                     </template>
                 </div>
 
-                <!-- ── STATS ROW ── -->
+                <!-- ── STATS ── -->
                 <div class="stats-row">
                     <div class="stat-box">
                         <div class="stat-val">{specialistData.activeCount}</div>
@@ -98,26 +97,78 @@
                 <div class="error-msg">{errorMessage}</div>
             </template>
 
-            <!-- ── OPEN INTAKES ── -->
+            <!-- ── INTAKES SECTION ── -->
             <div class="intakes-section">
-                <div class="intakes-header">
-                    <div class="intakes-header-left">
-                        <span class="intakes-title">OPEN INTAKES</span>
-                        <span class="intakes-badge">{openIntakesCount}</span>
+                <!-- Tab row -->
+                <div class="tab-row">
+                    <div class="tab-pills">
+                        <button class={openTabClass} data-tab="open" onclick={handleTabSwitch}>
+                            Open
+                            <span class="tab-count">{openIntakesCount}</span>
+                        </button>
+                        <button class={slipTabClass} data-tab="slipping" onclick={handleTabSwitch}>
+                            Slipping
+                            <template if:true={slippingCount}>
+                                <span class="tab-count tab-count-risk">{slippingCount}</span>
+                            </template>
+                        </button>
                     </div>
-                    <!-- <button class="filter-icon-btn" title="Filter intakes">
-                        <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
-                            <path
-                                d="M2 4h12M4 8h8M6 12h4"
-                                stroke="currentColor"
-                                stroke-width="1.6"
-                                stroke-linecap="round"
-                            />
-                        </svg>
-                    </button> -->
+
+                    <!-- Sort button (Open tab only) -->
+                    <template if:true={isOpenTab}>
+                        <div class="sort-wrap">
+                            <button class={sortBtnClass} onclick={handleSortClick} title="Sort intakes">
+                                <svg viewBox="0 0 16 16" width="13" height="13" fill="none">
+                                    <path
+                                        d="M2 4h12M4 8h8M6 12h4"
+                                        stroke="currentColor"
+                                        stroke-width="1.6"
+                                        stroke-linecap="round"
+                                    />
+                                </svg>
+                            </button>
+                            <!-- Sort dropdown -->
+                            <template if:true={showSortMenu}>
+                                <div class="sort-dropdown">
+                                    <div class="sort-dropdown-title">Sort by</div>
+                                    <button class="sort-opt" data-mode="priority" onclick={handleSortSelect}>
+                                        <span class="sort-opt-icon">★</span>
+                                        Priority
+                                        <template if:true={isRanking}>
+                                            <span class="sort-opt-hint">Ranking…</span>
+                                        </template>
+                                        <template if:true={isPrioritySort}>
+                                            <span class="sort-opt-check">✓</span>
+                                        </template>
+                                    </button>
+                                    <button class="sort-opt" data-mode="urgency" onclick={handleSortSelect}>
+                                        <span class="sort-opt-icon">⏱</span>
+                                        Urgency (oldest first)
+                                        <template if:true={isUrgencySort}>
+                                            <span class="sort-opt-check">✓</span>
+                                        </template>
+                                    </button>
+                                    <template if:false={isDefaultSort}>
+                                        <div class="sort-divider"></div>
+                                        <button
+                                            class="sort-opt sort-opt-reset"
+                                            data-mode="default"
+                                            onclick={handleSortSelect}
+                                        >
+                                            Reset to default
+                                        </button>
+                                        <button class="sort-opt sort-opt-rerank" onclick={handleForceRerank}>
+                                            ↻ Force re-rank
+                                        </button>
+                                    </template>
+                                </div>
+                                <div class="sort-backdrop" onclick={closeSortMenu}></div>
+                            </template>
+                        </div>
+                    </template>
                 </div>
 
-                <!-- Status legend -->
+                <!-- Status legend — always visible -->
                 <template if:true={hasStatusCounts}>
                     <div class="status-legend">
                         <template for:each={statusCountsRow1} for:item="sc">
@@ -144,40 +195,176 @@
                 <!-- Intakes loading -->
                 <template if:true={isIntakesLoading}>
                     <div class="intakes-spinner">
-                        <lightning-spinner alternative-text="Loading intakes" size="x-small"></lightning-spinner>
+                        <lightning-spinner alternative-text="Loading" size="x-small"></lightning-spinner>
                     </div>
                 </template>
 
                 <template if:false={isIntakesLoading}>
-                    <template if:true={hasOpenIntakes}>
-                        <div class="intakes-list">
-                            <template for:each={openIntakes} for:item="intake">
-                                <div key={intake.id} class="intake-row" data-id={intake.id} onclick={handleIntakeClick}>
-                                    <div class="intake-left-bar" style={intake.barStyle}></div>
-                                    <div class="intake-content">
-                                        <div class="intake-row-top">
-                                            <span class="intake-name">{intake.name}</span>
-                                            <template if:true={intake.status}>
-                                                <span class="intake-status-pill" style={intake.badgeStyle}
-                                                    >{intake.status}</span
-                                                >
-                                            </template>
-                                        </div>
-                                        <div class="intake-row-bottom">
-                                            <span class="intake-client">{intake.clientName}</span>
-                                            <template if:true={intake.incidentType}>
-                                                <span class="intake-sep">·</span>
-                                                <span class="intake-type">{intake.incidentType}</span>
-                                            </template>
+                    <!-- ══ OPEN INTAKES TAB ══ -->
+                    <template if:true={isOpenTab}>
+                        <!-- Ranking in progress banner -->
+                        <template if:true={isRanking}>
+                            <div class="ranking-banner">
+                                <lightning-spinner size="x-small" alternative-text="Ranking"></lightning-spinner>
+                                <span>Claude is ranking your leads…</span>
+                            </div>
+                        </template>
+
+                        <!-- Sort mode active indicator -->
+                        <template if:false={isDefaultSort}>
+                            <div class="sort-mode-bar">
+                                <svg viewBox="0 0 14 14" width="11" height="11" fill="none">
+                                    <path
+                                        d="M2 3h10M3.5 7h7M5 11h4"
+                                        stroke="currentColor"
+                                        stroke-width="1.4"
+                                        stroke-linecap="round"
+                                    />
+                                </svg>
+                                <template if:true={isPrioritySort}>Sorted by Priority</template>
+                                <template if:true={isUrgencySort}>Sorted by Urgency</template>
+                            </div>
+                        </template>
+
+                        <template if:true={hasOpenIntakes}>
+                            <div class="intakes-list">
+                                <template for:each={displayedIntakes} for:item="intake">
+                                    <div
+                                        key={intake.id}
+                                        class="intake-row"
+                                        data-id={intake.id}
+                                        onclick={handleIntakeClick}
+                                    >
+                                        <div class="intake-left-bar" style={intake.barStyle}></div>
+                                        <div class="intake-content">
+                                            <div class="intake-row-top">
+                                                <span class="intake-name">{intake.name}</span>
+                                                <template if:true={intake.status}>
+                                                    <span class="intake-status-pill" style={intake.badgeStyle}
+                                                        >{intake.status}</span
+                                                    >
+                                                </template>
+                                            </div>
+                                            <div class="intake-row-bottom">
+                                                <span class="intake-client">{intake.clientName}</span>
+                                                <template if:true={intake.incidentType}>
+                                                    <span class="intake-sep">·</span>
+                                                    <span class="intake-type">{intake.incidentType}</span>
+                                                </template>
+                                                <template if:true={intake.stars}>
+                                                    <span class="intake-sep">·</span>
+                                                    <span class={intake.starClass}>{intake.stars}</span>
+                                                </template>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </template>
-                        </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template if:false={hasOpenIntakes}>
+                            <div class="intakes-empty">No open intakes assigned.</div>
+                        </template>
                     </template>
 
-                    <template if:false={hasOpenIntakes}>
-                        <div class="intakes-empty">No open intakes assigned.</div>
+                    <!-- ══ SLIPPING AWAY TAB ══ -->
+                    <template if:true={isSlippingTab}>
+                        <!-- Ranking in progress -->
+                        <template if:true={isRanking}>
+                            <div class="slip-loading">
+                                <lightning-spinner size="small" alternative-text="Analysing"></lightning-spinner>
+                                <div class="slip-loading-text">
+                                    <div class="slip-loading-title">Analysing your leads…</div>
+                                    <div class="slip-loading-desc">
+                                        Claude is identifying leads at risk of slipping away.
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Has slipping leads -->
+                        <template if:true={hasSlippingIntakes}>
+                            <div class="slip-list">
+                                <template for:each={slippingIntakes} for:item="intake">
+                                    <div
+                                        key={intake.id}
+                                        class="slip-card"
+                                        style={intake.slipCardStyle}
+                                        data-id={intake.id}
+                                        onclick={handleIntakeClick}
+                                    >
+                                        <div class="slip-card-top">
+                                            <div class="slip-card-title">
+                                                <span class="slip-intake-name">{intake.name}</span>
+                                                <span class={intake.slipSevClass}>{intake.slipSevLabel}</span>
+                                            </div>
+                                            <span class="slip-time-ago">{intake.timeAgo}</span>
+                                        </div>
+                                        <div class="slip-card-client">
+                                            {intake.clientName}
+                                            <template if:true={intake.incidentType}>
+                                                <span class="slip-dot">·</span>
+                                                {intake.incidentType}
+                                            </template>
+                                        </div>
+                                        <template if:true={intake.riskReason}>
+                                            <div class="slip-reason">
+                                                <svg
+                                                    viewBox="0 0 12 12"
+                                                    width="10"
+                                                    height="10"
+                                                    fill="none"
+                                                    class="slip-reason-icon"
+                                                >
+                                                    <circle
+                                                        cx="6"
+                                                        cy="6"
+                                                        r="5"
+                                                        stroke="currentColor"
+                                                        stroke-width="1.2"
+                                                    />
+                                                    <path
+                                                        d="M6 4v3M6 8.5v.1"
+                                                        stroke="currentColor"
+                                                        stroke-width="1.2"
+                                                        stroke-linecap="round"
+                                                    />
+                                                </svg>
+                                                {intake.riskReason}
+                                            </div>
+                                        </template>
+                                        <div class="slip-card-footer">
+                                            <span class="slip-status-pill" style={intake.badgeStyle}>
+                                                {intake.status}
+                                            </span>
+                                            <span class="slip-action-hint">Tap to open →</span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Ranked but no leads slipping -->
+                        <template if:true={showSlipEmptyRanked}>
+                            <div class="slip-empty">
+                                <div class="slip-empty-icon">✅</div>
+                                <div class="slip-empty-title">All clear</div>
+                                <div class="slip-empty-desc">No leads are slipping away right now. Keep it up!</div>
+                                <button class="slip-rerank-btn" onclick={handleForceRerank}>↻ Re-check now</button>
+                            </div>
+                        </template>
+
+                        <!-- Not ranked yet -->
+                        <template if:true={showSlipUnranked}>
+                            <div class="slip-empty">
+                                <div class="slip-empty-icon">🔍</div>
+                                <div class="slip-empty-title">No analysis yet</div>
+                                <div class="slip-empty-desc">
+                                    Claude will analyse your leads automatically when you open this tab. Switch away and
+                                    back to trigger it.
+                                </div>
+                            </div>
+                        </template>
                     </template>
                 </template>
 

@@ -5,12 +5,14 @@ import getMyStatus from "@salesforce/apex/UserAvailabilityService.getMyStatus";
 import setStatus from "@salesforce/apex/UserAvailabilityService.setStatus";
 import heartbeat from "@salesforce/apex/UserAvailabilityService.heartbeat";
 import getOpenIntakes from "@salesforce/apex/UserAvailabilityService.getOpenIntakes";
+import triggerPriorityRanking from "@salesforce/apex/UserAvailabilityService.triggerPriorityRanking";
+import forceRefreshPriorityRanking from "@salesforce/apex/UserAvailabilityService.forceRefreshPriorityRanking";
+import isPriorityRankingFresh from "@salesforce/apex/UserAvailabilityService.isPriorityRankingFresh";
 
-const HEARTBEAT_MS = 5 * 60 * 1000; // 5 minutes
-const INTAKE_POLL_MS = 15 * 1000; // 15 seconds
-const STATUS_POLL_MS = 60 * 1000; // 1 minute
+const HEARTBEAT_MS = 5 * 60 * 1000;
+const INTAKE_POLL_MS = 15 * 1000;
+const STATUS_POLL_MS = 60 * 1000;
 
-// Status → colour mapping used in legend, left bar, and badge
 const STATUS_META = {
     New: { color: "#22c55e", short: "New", text: "#14532d" },
     Assigned: { color: "#3b82f6", short: "Assigned", text: "#1e3a8a" },
@@ -35,6 +37,41 @@ function shortFor(status) {
     return (STATUS_META[status] || {}).short || status;
 }
 
+function starsFor(priority) {
+    if (priority === "High") return "★★★";
+    if (priority === "Medium") return "★★";
+    if (priority === "Low") return "★";
+    return "";
+}
+function priorityStarClass(priority) {
+    if (priority === "High") return "priority-stars stars-high";
+    if (priority === "Medium") return "priority-stars stars-medium";
+    if (priority === "Low") return "priority-stars stars-low";
+    return "priority-stars";
+}
+
+function timeAgo(dateVal) {
+    if (!dateVal) return "";
+    const ms = Date.now() - new Date(dateVal).getTime();
+    const hours = Math.floor(ms / 3600000);
+    if (hours < 1) {
+        const m = Math.floor(ms / 60000);
+        return `${m}m ago`;
+    }
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
+}
+
+function slipSeverityClass(severity) {
+    if (severity === "critical") return "slip-sev-badge slip-critical";
+    if (severity === "high") return "slip-sev-badge slip-high";
+    return "slip-sev-badge slip-medium";
+}
+function slipCardStyle(severity) {
+    const c = { critical: "#dc2626", high: "#ea580c", medium: "#eab308" };
+    return `border-left-color:${c[severity] || "#eab308"};`;
+}
+
 export default class IntakeAvailabilityToggle extends NavigationMixin(LightningElement) {
     @api label;
 
@@ -43,8 +80,16 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
     @track isLoading = false;
     @track errorMessage = null;
     @track lastRefreshed = "—";
-    @track isInitialLoad = true; // first-load gate
-    @track isIntakesLoading = true; // intakes list gate
+    @track isInitialLoad = true;
+    @track isIntakesLoading = true;
+
+    // Tabs
+    @track activeTab = "open"; // 'open' | 'slipping'
+
+    // Sort (Open Intakes tab)
+    @track sortMode = "default"; // 'default' | 'priority' | 'urgency'
+    @track showSortMenu = false;
+    @track isRanking = false;
 
     _heartbeatTimer = null;
     _intakePollTimer = null;
@@ -71,7 +116,7 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
         } catch (e) {
             this.errorMessage = e?.body?.message || e?.message || "Could not load status.";
         } finally {
-            this.isInitialLoad = false; // always clear initial load gate
+            this.isInitialLoad = false;
         }
     }
 
@@ -84,7 +129,14 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
                 return {
                     ...i,
                     barStyle: `background:${color};`,
-                    badgeStyle: `background:${color}22;color:${text};border:1px solid ${color}55;`
+                    badgeStyle: `background:${color}22;color:${text};border:1px solid ${color}55;`,
+                    stars: starsFor(i.priority),
+                    starClass: priorityStarClass(i.priority),
+                    isAtRisk: i.isAtRisk === true,
+                    timeAgo: timeAgo(i.createdDate),
+                    slipCardStyle: slipCardStyle(i.riskSeverity),
+                    slipSevClass: slipSeverityClass(i.riskSeverity),
+                    slipSevLabel: (i.riskSeverity || "").toUpperCase() || "AT RISK"
                 };
             });
             const now = new Date();
@@ -103,7 +155,7 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
                     second: "2-digit"
                 }) + " (refresh failed)";
         } finally {
-            this.isIntakesLoading = false; // always clear on first load
+            this.isIntakesLoading = false;
         }
     }
 
@@ -116,6 +168,7 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
         }
     }
 
+    // ── Status buttons ────────────────────────────────────────────
     async handleGoActive() {
         await this.updateStatus("Active");
     }
@@ -155,7 +208,102 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
         });
     }
 
-    // ── Getters ───────────────────────────────────────────────────────
+    // ── Tab switching ─────────────────────────────────────────────
+    async handleTabSwitch(e) {
+        const tab = e.currentTarget.dataset.tab;
+        if (tab === this.activeTab) return;
+        this.activeTab = tab;
+
+        // Auto-trigger ranking on first open of Slipping tab if cache is stale
+        if (tab === "slipping" && !this.isRanking) {
+            try {
+                const fresh = await isPriorityRankingFresh();
+                if (!fresh) {
+                    this.isRanking = true;
+                    await triggerPriorityRanking();
+                    await this.loadOpenIntakes();
+                }
+            } catch (e2) {
+                console.error("Auto-rank on tab switch failed:", e2);
+            } finally {
+                this.isRanking = false;
+            }
+        }
+    }
+
+    // ── Sort ──────────────────────────────────────────────────────
+    handleSortClick() {
+        this.showSortMenu = !this.showSortMenu;
+    }
+    closeSortMenu() {
+        this.showSortMenu = false;
+    }
+
+    async handleSortSelect(e) {
+        const mode = e.currentTarget.dataset.mode;
+        this.showSortMenu = false;
+
+        if (mode === "default") {
+            this.sortMode = "default";
+            return;
+        }
+        if (mode === this.sortMode) {
+            this.sortMode = "default";
+            return;
+        }
+
+        this.sortMode = mode;
+
+        if (mode === "priority") {
+            try {
+                const fresh = await isPriorityRankingFresh();
+                if (!fresh) {
+                    this.isRanking = true;
+                    await triggerPriorityRanking();
+                    await this.loadOpenIntakes();
+                }
+            } catch (e) {
+                this.sortMode = "default";
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: "Ranking failed",
+                        message: this.errMsg(e),
+                        variant: "error"
+                    })
+                );
+            } finally {
+                this.isRanking = false;
+            }
+        }
+    }
+
+    async handleForceRerank() {
+        this.showSortMenu = false;
+        this.isRanking = true;
+        try {
+            await forceRefreshPriorityRanking();
+            await this.loadOpenIntakes();
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: "Re-ranked",
+                    message: "Leads re-ranked by Claude.",
+                    variant: "success"
+                })
+            );
+        } catch (e) {
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: "Failed",
+                    message: this.errMsg(e),
+                    variant: "error"
+                })
+            );
+        } finally {
+            this.isRanking = false;
+        }
+    }
+
+    // ── Getters ───────────────────────────────────────────────────
     get isActive() {
         return this.specialistData?.isActive === true;
     }
@@ -200,13 +348,9 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
         const active = this.specialistData?.activeCount || 0;
         return active > max;
     }
-
     get overBy() {
-        const max = this.specialistData?.maxCapacity || 0;
-        const active = this.specialistData?.activeCount || 0;
-        return Math.max(0, active - max);
+        return Math.max(0, (this.specialistData?.activeCount || 0) - (this.specialistData?.maxCapacity || 0));
     }
-
     get overByDisplay() {
         const ob = this.overBy;
         return ob > 0 ? `+${ob}` : "—";
@@ -217,7 +361,6 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
     get overByValClass() {
         return this.isOverCapacity ? "stat-val stat-val-alert" : "stat-val";
     }
-
     get capNumberClass() {
         return this.isOverCapacity ? "cap-number cap-number-alert" : "cap-number";
     }
@@ -233,6 +376,70 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
         return `stroke-dasharray:${circ.toFixed(1)};stroke-dashoffset:${offset.toFixed(1)};stroke:${color};`;
     }
 
+    // Sort
+    get isDefaultSort() {
+        return this.sortMode === "default";
+    }
+    get isPrioritySort() {
+        return this.sortMode === "priority";
+    }
+    get isUrgencySort() {
+        return this.sortMode === "urgency";
+    }
+    get sortBtnClass() {
+        return this.sortMode !== "default" ? "filter-icon-btn sort-active" : "filter-icon-btn";
+    }
+
+    get displayedIntakes() {
+        const list = [...(this.openIntakes || [])];
+        if (this.sortMode === "priority") {
+            const O = { High: 0, Medium: 1, Low: 2 };
+            list.sort((a, b) => {
+                const pa = O[a.priority] ?? 3,
+                    pb = O[b.priority] ?? 3;
+                if (pa !== pb) return pa - pb;
+                return (b.priorityRank || 0) - (a.priorityRank || 0);
+            });
+        } else if (this.sortMode === "urgency") {
+            list.sort((a, b) => new Date(a.createdDate) - new Date(b.createdDate));
+        }
+        return list;
+    }
+
+    // Tabs
+    get isOpenTab() {
+        return this.activeTab === "open";
+    }
+    get isSlippingTab() {
+        return this.activeTab === "slipping";
+    }
+    get openTabClass() {
+        return this.activeTab === "open" ? "tab-pill tab-active" : "tab-pill";
+    }
+    get slipTabClass() {
+        return this.activeTab === "slipping" ? "tab-pill tab-active" : "tab-pill";
+    }
+
+    // Slipping
+    get slippingIntakes() {
+        return (this.openIntakes || []).filter((i) => i.isAtRisk);
+    }
+    get hasSlippingIntakes() {
+        return this.slippingIntakes.length > 0;
+    }
+    get slippingCount() {
+        return this.slippingIntakes.length;
+    }
+    get showSlipEmptyRanked() {
+        // Ranking was done (at least one intake has priority set) but none are at risk
+        return !this.hasSlippingIntakes && !this.isRanking && (this.openIntakes || []).some((i) => i.priority);
+    }
+    get showSlipUnranked() {
+        // No ranking done yet and not currently ranking
+        return !this.hasSlippingIntakes && !this.isRanking && !(this.openIntakes || []).some((i) => i.priority);
+    }
+
+    // Status legend
     get statusCountItems() {
         const counts = {};
         (this.openIntakes || []).forEach((i) => {
@@ -245,7 +452,6 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
             dotStyle: `background:${colorFor(status)};`
         }));
     }
-
     get statusCountsRow1() {
         return this.statusCountItems.slice(0, 4);
     }
@@ -257,5 +463,9 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
     }
     get hasStatusCountsRow2() {
         return this.statusCountItems.length > 4;
+    }
+
+    errMsg(e) {
+        return e?.body?.message || e?.message || "Unknown error";
     }
 }

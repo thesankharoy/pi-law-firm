@@ -54,7 +54,17 @@ public with sharing class UserAvailabilityService {
         List<Map<String, Object>> result = new List<Map<String, Object>>();
 
         for (Intake__c i : [
-            SELECT Id, Name, Status__c, Incident_Type__c, CreatedDate, Client__r.Name
+            SELECT
+                Id,
+                Name,
+                Status__c,
+                Incident_Type__c,
+                CreatedDate,
+                Priority__c,
+                Priority_Rank__c,
+                Is_At_Risk__c,
+                Risk_Reason__c,
+                Client__r.Name
             FROM Intake__c
             WHERE OwnerId = :userId AND Status__c NOT IN ('Converted', 'Referred Out', 'Turned Down')
             ORDER BY CreatedDate DESC
@@ -67,7 +77,11 @@ public with sharing class UserAvailabilityService {
                     'status' => i.Status__c,
                     'incidentType' => i.Incident_Type__c,
                     'clientName' => (i.Client__r != null && i.Client__r.Name != null) ? i.Client__r.Name : '—',
-                    'createdDate' => i.CreatedDate
+                    'createdDate' => i.CreatedDate,
+                    'priority' => i.Priority__c,
+                    'priorityRank' => i.Priority_Rank__c,
+                    'isAtRisk' => i.Is_At_Risk__c,
+                    'riskReason' => i.Risk_Reason__c
                 }
             );
         }
@@ -130,6 +144,22 @@ public with sharing class UserAvailabilityService {
             specs[0].Last_Heartbeat__c = System.now();
             update specs[0];
         }
+    }
+
+    @AuraEnabled
+    public static void triggerPriorityRanking() {
+        // Callout — no DML before this
+        LeadPriorityService.rankIntakes(UserInfo.getUserId());
+    }
+
+    @AuraEnabled
+    public static void forceRefreshPriorityRanking() {
+        LeadPriorityService.forceRankIntakes(UserInfo.getUserId());
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static Boolean isPriorityRankingFresh() {
+        return LeadPriorityService.isCacheFresh(UserInfo.getUserId());
     }
 
     // ── Scheduled cleanup — marks stale specialists as Inactive ──
