@@ -1,0 +1,208 @@
+<template>
+    <div class="ids-root">
+        <template if:true={isLoading}>
+            <div class="ids-loading">
+                <lightning-spinner size="small" alternative-text="Loading"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <!-- ═══════════════════════════════════ -->
+            <!-- NOT ENROLLED                       -->
+            <!-- ═══════════════════════════════════ -->
+            <template if:false={enrollment.isEnrolled}>
+                <div class="ids-card ids-card-empty">
+                    <div class="ids-empty-icon">
+                        <svg viewBox="0 0 40 40" width="40" height="40" fill="none">
+                            <circle cx="20" cy="20" r="19" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="5 3" />
+                            <path d="M14 20h12M20 14v12" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                    </div>
+                    <div class="ids-empty-text">
+                        <div class="ids-empty-title">No drip campaign active</div>
+                        <div class="ids-empty-desc">
+                            Defer this lead or wait — if it reaches Dead status, a re-activation campaign starts
+                            automatically.
+                        </div>
+                    </div>
+                    <button class="ids-defer-btn" onclick={handleOpenDeferModal}>
+                        <svg viewBox="0 0 14 14" width="12" height="12" fill="none">
+                            <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3" />
+                            <path
+                                d="M7 4.5v3l1.5 1.5"
+                                stroke="currentColor"
+                                stroke-width="1.3"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                        Defer Lead
+                    </button>
+                </div>
+            </template>
+
+            <!-- ═══════════════════════════════════ -->
+            <!-- DEFERRED ENROLLMENT                -->
+            <!-- ═══════════════════════════════════ -->
+            <template if:true={isDeferredEnrollment}>
+                <div class="ids-card ids-card-deferred">
+                    <div class="ids-card-header">
+                        <span class="enroll-type-badge badge-deferred">
+                            <svg viewBox="0 0 12 12" width="10" height="10" fill="none">
+                                <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2" />
+                                <path
+                                    d="M6 3.5v2.8l1.5 1.5"
+                                    stroke="currentColor"
+                                    stroke-width="1.2"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                            Deferred
+                        </span>
+                        <span class="enroll-campaign-name">{enrollment.campaignName}</span>
+                    </div>
+
+                    <div class="ids-reactivate-info">
+                        <div class="reactivate-date-label">Re-activates on</div>
+                        <div class="reactivate-date-value">{enrollment.reactivateLabel}</div>
+                        <div class="reactivate-countdown">{deferredCountdownLabel}</div>
+                    </div>
+
+                    <div class="ids-card-footer">
+                        <span class="enrolled-since"> Enrolled {enrollment.enrolledAt} </span>
+                        <button class="ids-cancel-btn" onclick={handleCancelEnrollment}>Cancel deferral</button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- ═══════════════════════════════════ -->
+            <!-- RE-ACTIVATION ENROLLMENT           -->
+            <!-- ═══════════════════════════════════ -->
+            <template if:true={isReactivationEnrollment}>
+                <div class="ids-card ids-card-reactivation">
+                    <div class="ids-card-header">
+                        <span class="enroll-type-badge badge-reactivation">
+                            <svg viewBox="0 0 12 12" width="10" height="10" fill="none">
+                                <path
+                                    d="M10 2v3H7"
+                                    stroke="currentColor"
+                                    stroke-width="1.2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                                <path
+                                    d="M1.5 6A4.5 4.5 0 009 3.5"
+                                    stroke="currentColor"
+                                    stroke-width="1.2"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                            Re-activation
+                        </span>
+                        <span class="enroll-campaign-name"> {enrollment.campaignName} </span>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="ids-progress-wrap">
+                        <div class="ids-progress-track">
+                            <div class="ids-progress-fill" style={progressBarStyle}></div>
+                        </div>
+                        <div class="ids-progress-labels">
+                            <span>Day {enrollment.daysElapsed}</span>
+                            <span>{enrollment.progressPct}%</span>
+                            <span>Day {enrollment.totalDays}</span>
+                        </div>
+                    </div>
+
+                    <div class="ids-card-footer">
+                        <span class="enrolled-since"> Started {enrollment.enrolledAt} </span>
+                        <button class="ids-cancel-btn" onclick={handleCancelEnrollment}>Cancel campaign</button>
+                    </div>
+                </div>
+            </template> </template
+        ><!-- end if:false isLoading -->
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- DEFER MODAL                            -->
+        <!-- ═══════════════════════════════════════ -->
+        <template if:true={showDeferModal}>
+            <div class="modal-backdrop" onclick={closeDeferModal}>
+                <div class="modal" onclick={stopProp}>
+                    <div class="modal-header">
+                        <h2 class="modal-title">Defer Lead</h2>
+                        <button class="modal-close-btn" onclick={closeDeferModal}>
+                            <svg viewBox="0 0 14 14" width="14" height="14" fill="none">
+                                <path
+                                    d="M2 2l10 10M12 2L2 12"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="defer-intro">
+                            The lead will be parked until the selected date. On that date, a task is created for you and
+                            a warm re-engagement email is sent to the client automatically.
+                        </p>
+
+                        <!-- Quick select chips -->
+                        <div class="field-group">
+                            <label class="field-label">Quick select</label>
+                            <div class="quick-chips">
+                                <button class="chip" data-days="7" onclick={handleQuickSelect}>1 Week</button>
+                                <button class="chip" data-days="14" onclick={handleQuickSelect}>2 Weeks</button>
+                                <button class="chip" data-days="28" onclick={handleQuickSelect}>4 Weeks</button>
+                                <button class="chip" data-days="42" onclick={handleQuickSelect}>6 Weeks</button>
+                                <button class="chip" data-days="60" onclick={handleQuickSelect}>2 Months</button>
+                            </div>
+                        </div>
+
+                        <!-- Custom date -->
+                        <div class="field-group">
+                            <label class="field-label"> Or pick a specific date </label>
+                            <input
+                                class="field-input"
+                                type="date"
+                                value={deferDate}
+                                min={todayIso}
+                                onchange={handleDeferDateChange}
+                            />
+                        </div>
+
+                        <template if:true={deferDate}>
+                            <div class="defer-summary">
+                                <svg viewBox="0 0 14 14" width="12" height="12" fill="none">
+                                    <circle cx="7" cy="7" r="5.5" stroke="#16a34a" stroke-width="1.2" />
+                                    <path
+                                        d="M4.5 7l2 2 3-3"
+                                        stroke="#16a34a"
+                                        stroke-width="1.3"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                                Will re-activate on {deferDateLabel}
+                            </div>
+                        </template>
+
+                        <template if:true={deferError}>
+                            <div class="form-error">{deferError}</div>
+                        </template>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick={closeDeferModal}>Cancel</button>
+                        <button class="btn-primary" onclick={handleConfirmDefer} disabled={isDeferring}>
+                            <template if:false={isDeferring}>Defer Lead</template>
+                            <template if:true={isDeferring}>
+                                <lightning-spinner size="x-small" alternative-text="Deferring"></lightning-spinner>
+                                Deferring…
+                            </template>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

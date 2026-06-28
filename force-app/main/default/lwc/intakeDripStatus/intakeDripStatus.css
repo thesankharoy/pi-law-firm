@@ -1,0 +1,346 @@
+:host {
+    display: block;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.ids-root {
+}
+.ids-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+}
+
+/* ── Base card ── */
+.ids-card {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    background: #fff;
+}
+
+/* ── Empty state ── */
+.ids-card-empty {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.ids-empty-icon {
+    flex-shrink: 0;
+}
+.ids-empty-text {
+    flex: 1;
+}
+.ids-empty-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 3px;
+}
+.ids-empty-desc {
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.5;
+}
+.ids-defer-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    padding: 7px 12px;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.12s;
+}
+.ids-defer-btn:hover {
+    background: #dbeafe;
+}
+
+/* ── Deferred card ── */
+.ids-card-deferred {
+    border-color: #bfdbfe;
+    background: #f8fbff;
+}
+
+/* ── Re-activation card ── */
+.ids-card-reactivation {
+    border-color: #ddd6fe;
+    background: #faf8ff;
+}
+
+/* ── Card header ── */
+.ids-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.enroll-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 9px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.badge-deferred {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+.badge-reactivation {
+    background: #f5f3ff;
+    color: #6d28d9;
+}
+.enroll-campaign-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* ── Deferred info ── */
+.ids-reactivate-info {
+    margin-bottom: 12px;
+}
+.reactivate-date-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.reactivate-date-value {
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 2px 0;
+}
+.reactivate-countdown {
+    font-size: 12px;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+/* ── Progress ── */
+.ids-progress-wrap {
+    margin-bottom: 12px;
+}
+.ids-progress-track {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+.ids-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #a855f7);
+    border-radius: 6px;
+    transition: width 0.4s ease;
+}
+.ids-progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+/* ── Card footer ── */
+.ids-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.enrolled-since {
+    font-size: 11px;
+    color: #94a3b8;
+    font-style: italic;
+}
+.ids-cancel-btn {
+    background: none;
+    border: none;
+    font-size: 11px;
+    font-weight: 700;
+    color: #dc2626;
+    cursor: pointer;
+    padding: 0;
+}
+.ids-cancel-btn:hover {
+    text-decoration: underline;
+}
+
+/* ── Defer modal ── */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+.modal {
+    background: #fff;
+    border-radius: 14px;
+    width: 420px;
+    max-width: 100%;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 22px 0;
+}
+.modal-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+.modal-close-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-close-btn:hover {
+    background: #e2e8f0;
+}
+.modal-body {
+    padding: 18px 22px;
+}
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 22px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.defer-intro {
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.6;
+    margin: 0 0 16px;
+}
+
+.field-group {
+    margin-bottom: 14px;
+}
+.field-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 5px;
+}
+.field-input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #0f172a;
+    font-family: inherit;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+}
+.field-input:focus {
+    border-color: #2563eb;
+}
+
+.quick-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+.chip {
+    padding: 5px 12px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 20px;
+    background: #f8fafc;
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.12s;
+}
+.chip:hover {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.defer-summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
+    background: #f0fdf4;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #15803d;
+    margin-top: -4px;
+}
+
+.form-error {
+    padding: 10px 12px;
+    background: #fef2f2;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #dc2626;
+    margin-top: 4px;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.btn-primary:hover:not(:disabled) {
+    background: #1d4ed8;
+}
+.btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+.btn-secondary {
+    padding: 9px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+}
+.btn-secondary:hover {
+    background: #f8fafc;
+}

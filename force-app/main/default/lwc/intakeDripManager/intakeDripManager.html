@@ -1,0 +1,583 @@
+<template>
+    <div class="dm-root">
+        <!-- ── HEADER ── -->
+        <div class="dm-header">
+            <div class="dm-header-left">
+                <div class="dm-brand-icon">
+                    <svg viewBox="0 0 36 36" fill="none" width="36" height="36">
+                        <rect width="36" height="36" rx="8" fill="#0f1f3d" />
+                        <path
+                            d="M10 10h16M10 14h10M10 18h13M10 22h8M10 26h16"
+                            stroke="white"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                </div>
+                <div>
+                    <div class="dm-brand-sub">DELIPAT INTAKE</div>
+                    <div class="dm-brand-title">
+                        <template if:false={isDetailView}>Drip Campaigns</template>
+                        <template if:true={isDetailView}>
+                            <button class="back-btn" onclick={handleBackToList}>
+                                <svg viewBox="0 0 14 14" width="12" height="12" fill="none">
+                                    <path
+                                        d="M9 2L4 7l5 5"
+                                        stroke="currentColor"
+                                        stroke-width="1.6"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                            </button>
+                            {selectedCampaign.name}
+                        </template>
+                    </div>
+                </div>
+            </div>
+            <template if:false={isDetailView}>
+                <button class="btn-primary" onclick={handleNewCampaign}>+ New Campaign</button>
+            </template>
+            <template if:true={isDetailView}>
+                <button class="btn-primary" onclick={handleNewStep}>+ Add Step</button>
+            </template>
+        </div>
+
+        <div class="dm-body">
+            <!-- ══════════════════════════════════════ -->
+            <!-- CAMPAIGN LIST VIEW                    -->
+            <!-- ══════════════════════════════════════ -->
+            <template if:false={isDetailView}>
+                <template if:true={isLoading}>
+                    <div class="dm-loading">
+                        <lightning-spinner size="medium" alternative-text="Loading"></lightning-spinner>
+                    </div>
+                </template>
+
+                <template if:false={isLoading}>
+                    <template if:true={hasCampaigns}>
+                        <div class="campaign-list">
+                            <template for:each={campaigns} for:item="c">
+                                <div key={c.id} class={c.cardClass}>
+                                    <div class="camp-accent" style={c.barStyle}></div>
+                                    <div class="camp-card-body">
+                                        <div class="camp-card-top">
+                                            <div class="camp-card-top-left">
+                                                <span class="camp-name">{c.name}</span>
+                                                <span class={c.typeBadgeClass}>{c.type}</span>
+                                            </div>
+                                            <div class="camp-card-top-right">
+                                                <label class="toggle-switch" title={c.toggleLabel}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={c.isActive}
+                                                        data-id={c.id}
+                                                        onchange={handleToggleActive}
+                                                    />
+                                                    <span class="toggle-slider-sm"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="camp-card-meta">
+                                            <span class="meta-item">
+                                                <svg viewBox="0 0 12 12" width="10" height="10" fill="none">
+                                                    <circle
+                                                        cx="6"
+                                                        cy="6"
+                                                        r="5"
+                                                        stroke="currentColor"
+                                                        stroke-width="1.2"
+                                                    />
+                                                    <path
+                                                        d="M6 3.5v2.8l1.5 1.5"
+                                                        stroke="currentColor"
+                                                        stroke-width="1.2"
+                                                        stroke-linecap="round"
+                                                    />
+                                                </svg>
+                                                {c.totalDays} days
+                                            </span>
+                                            <span class="meta-item">
+                                                <svg viewBox="0 0 12 12" width="10" height="10" fill="none">
+                                                    <rect
+                                                        x="1.5"
+                                                        y="2"
+                                                        width="9"
+                                                        height="8.5"
+                                                        rx="1.5"
+                                                        stroke="currentColor"
+                                                        stroke-width="1.2"
+                                                    />
+                                                    <path d="M1.5 5h9" stroke="currentColor" stroke-width="1.2" />
+                                                </svg>
+                                                {c.stepCount} steps
+                                            </span>
+                                            <template if:true={c.description}>
+                                                <span class="camp-desc">{c.description}</span>
+                                            </template>
+                                        </div>
+
+                                        <div class="camp-card-footer">
+                                            <!-- View steps — styled button -->
+                                            <button class="camp-steps-btn" data-id={c.id} onclick={handleViewSteps}>
+                                                <svg viewBox="0 0 14 14" width="11" height="11" fill="none">
+                                                    <path
+                                                        d="M1.5 3.5h11M1.5 7h8M1.5 10.5h9.5"
+                                                        stroke="currentColor"
+                                                        stroke-width="1.3"
+                                                        stroke-linecap="round"
+                                                    />
+                                                </svg>
+                                                View &amp; edit steps
+                                                <svg viewBox="0 0 10 10" width="9" height="9" fill="none">
+                                                    <path
+                                                        d="M3 2l4 3-4 3"
+                                                        stroke="currentColor"
+                                                        stroke-width="1.4"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                    />
+                                                </svg>
+                                            </button>
+
+                                            <!-- Icon-only edit + delete -->
+                                            <div class="camp-icon-btns">
+                                                <button
+                                                    class="icon-btn"
+                                                    data-id={c.id}
+                                                    onclick={handleEditCampaign}
+                                                    title="Edit campaign"
+                                                >
+                                                    <svg viewBox="0 0 14 14" width="13" height="13" fill="none">
+                                                        <path
+                                                            d="M9.5 2l2.5 2.5L5 11.5H2.5V9z"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.2"
+                                                            stroke-linejoin="round"
+                                                        />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    class="icon-btn icon-btn-danger"
+                                                    data-id={c.id}
+                                                    onclick={handleDeleteCampaign}
+                                                    title="Delete campaign"
+                                                >
+                                                    <svg viewBox="0 0 14 14" width="13" height="13" fill="none">
+                                                        <path
+                                                            d="M2 4h10M5 4V2.5h4V4M6 6.5v4M8 6.5v4"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.2"
+                                                            stroke-linecap="round"
+                                                        />
+                                                        <rect
+                                                            x="2.5"
+                                                            y="4"
+                                                            width="9"
+                                                            height="8"
+                                                            rx="1"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.2"
+                                                        />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template if:false={hasCampaigns}>
+                        <div class="dm-empty">
+                            <svg viewBox="0 0 80 60" width="80" height="60" fill="none">
+                                <rect
+                                    x="4"
+                                    y="8"
+                                    width="72"
+                                    height="44"
+                                    rx="6"
+                                    fill="#f1f5f9"
+                                    stroke="#e2e8f0"
+                                    stroke-width="1.5"
+                                />
+                                <rect x="12" y="18" width="56" height="6" rx="2" fill="#e2e8f0" />
+                                <rect x="12" y="28" width="40" height="6" rx="2" fill="#e2e8f0" />
+                                <rect x="12" y="38" width="48" height="6" rx="2" fill="#e2e8f0" />
+                            </svg>
+                            <div class="dm-empty-title">No campaigns yet</div>
+                            <div class="dm-empty-desc">
+                                Create a Deferred campaign for "call me later" leads and a Re-activation campaign for
+                                Dead leads.
+                            </div>
+                            <button class="btn-primary" onclick={handleNewCampaign}>+ Create First Campaign</button>
+                        </div>
+                    </template>
+                </template>
+            </template>
+
+            <!-- ══════════════════════════════════════ -->
+            <!-- STEP DETAIL VIEW                      -->
+            <!-- ══════════════════════════════════════ -->
+            <template if:true={isDetailView}>
+                <!-- Campaign info strip -->
+                <div class="camp-detail-strip">
+                    <span class={selectedCampaign.typeBadgeClass}> {selectedCampaign.type} </span>
+                    <span class="strip-sep">·</span>
+                    <span class="strip-item">{selectedCampaign.totalDays} day campaign</span>
+                    <template if:true={selectedCampaign.description}>
+                        <span class="strip-sep">·</span>
+                        <span class="strip-desc">{selectedCampaign.description}</span>
+                    </template>
+                </div>
+
+                <!-- Merge field info bar -->
+                <div class="merge-info-bar">
+                    <svg viewBox="0 0 14 14" width="12" height="12" fill="none">
+                        <circle cx="7" cy="7" r="5.5" stroke="#2563eb" stroke-width="1.2" />
+                        <path d="M7 6.5v4M7 4.5v.5" stroke="#2563eb" stroke-width="1.3" stroke-linecap="round" />
+                    </svg>
+                    Available merge fields — click to insert when editing a step:
+                    <template for:each={mergeFields} for:item="mf">
+                        <code key={mf.token}>{mf.display}</code>
+                    </template>
+                </div>
+
+                <template if:true={isStepsLoading}>
+                    <div class="dm-loading">
+                        <lightning-spinner size="small" alternative-text="Loading steps"></lightning-spinner>
+                    </div>
+                </template>
+
+                <template if:false={isStepsLoading}>
+                    <template if:true={hasSteps}>
+                        <div class="steps-list">
+                            <template for:each={steps} for:item="step">
+                                <div key={step.id} class="step-row">
+                                    <div class="step-day-col">
+                                        <div class="step-day-badge">Day {step.dayNumber}</div>
+                                    </div>
+                                    <div class="step-channel-col">
+                                        <span class={step.channelBadgeClass}> {step.channel} </span>
+                                        <!-- Only show task type for Specialist Task steps -->
+                                        <template if:true={step.showTaskType}>
+                                            <span class="step-task-type">{step.taskType}</span>
+                                        </template>
+                                    </div>
+                                    <div class="step-subject-col">
+                                        <div class="step-subject">{step.subject}</div>
+                                        <template if:true={step.bodyPreview}>
+                                            <div class="step-body-preview">{step.bodyPreview}</div>
+                                        </template>
+                                    </div>
+                                    <div class="step-actions-col">
+                                        <button
+                                            class="icon-btn"
+                                            data-id={step.id}
+                                            onclick={handleEditStep}
+                                            title="Edit step"
+                                        >
+                                            <svg viewBox="0 0 14 14" width="13" height="13" fill="none">
+                                                <path
+                                                    d="M9.5 2l2.5 2.5L5 11.5H2.5V9z"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.2"
+                                                    stroke-linejoin="round"
+                                                />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            class="icon-btn icon-btn-danger"
+                                            data-id={step.id}
+                                            onclick={handleDeleteStep}
+                                            title="Delete step"
+                                        >
+                                            <svg viewBox="0 0 14 14" width="13" height="13" fill="none">
+                                                <path
+                                                    d="M2 4h10M5 4V2.5h4V4M6 6.5v4M8 6.5v4"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.2"
+                                                    stroke-linecap="round"
+                                                />
+                                                <rect
+                                                    x="2.5"
+                                                    y="4"
+                                                    width="9"
+                                                    height="8"
+                                                    rx="1"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.2"
+                                                />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template if:false={hasSteps}>
+                        <div class="dm-empty steps-empty">
+                            <div class="dm-empty-title">No steps yet</div>
+                            <div class="dm-empty-desc">
+                                Add steps to define when emails are sent and when specialist tasks are created.
+                            </div>
+                        </div>
+                    </template>
+                </template>
+            </template>
+        </div>
+        <!-- end dm-body -->
+
+        <!-- ══════════════════════════════════════════ -->
+        <!-- CAMPAIGN MODAL                            -->
+        <!-- ══════════════════════════════════════════ -->
+        <template if:true={showCampaignModal}>
+            <div class="modal-backdrop" onclick={closeCampaignModal}>
+                <div class="modal" onclick={stopProp}>
+                    <div class="modal-header">
+                        <h2 class="modal-title">{campaignModalTitle}</h2>
+                        <button class="modal-close-btn" onclick={closeCampaignModal}>
+                            <svg viewBox="0 0 14 14" width="14" height="14" fill="none">
+                                <path
+                                    d="M2 2l10 10M12 2L2 12"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="field-group">
+                            <label class="field-label">Campaign Name</label>
+                            <input
+                                class="field-input"
+                                type="text"
+                                placeholder="e.g. 90-Day Re-activation"
+                                value={campaignForm.name}
+                                data-field="name"
+                                oninput={handleCampaignFormInput}
+                            />
+                        </div>
+                        <div class="field-row-two">
+                            <div class="field-group">
+                                <label class="field-label">Type</label>
+                                <div class="select-wrap">
+                                    <select class="field-select" data-field="type" onchange={handleCampaignFormSelect}>
+                                        <option value="Deferred" selected={campaignTypeIsDeferred}>Deferred</option>
+                                        <option value="Re-activation" selected={campaignTypeIsReactivation}>
+                                            Re-activation
+                                        </option>
+                                    </select>
+                                    <svg class="select-chevron" viewBox="0 0 16 16" width="14" height="14" fill="none">
+                                        <path
+                                            d="M4 6l4 4 4-4"
+                                            stroke="currentColor"
+                                            stroke-width="1.4"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Total Duration (days)</label>
+                                <input
+                                    class="field-input"
+                                    type="number"
+                                    min="1"
+                                    max="365"
+                                    value={campaignForm.totalDays}
+                                    data-field="totalDays"
+                                    oninput={handleCampaignFormInput}
+                                />
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label">
+                                Description
+                                <span class="field-optional">optional</span>
+                            </label>
+                            <input
+                                class="field-input"
+                                type="text"
+                                placeholder="Internal note about this campaign"
+                                value={campaignForm.description}
+                                data-field="description"
+                                oninput={handleCampaignFormInput}
+                            />
+                        </div>
+                        <template if:true={campaignFormError}>
+                            <div class="form-error">{campaignFormError}</div>
+                        </template>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick={closeCampaignModal}>Cancel</button>
+                        <button class="btn-primary" onclick={handleSaveCampaign} disabled={isSavingCampaign}>
+                            {saveCampaignLabel}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ══════════════════════════════════════════ -->
+        <!-- STEP MODAL                                -->
+        <!-- ══════════════════════════════════════════ -->
+        <template if:true={showStepModal}>
+            <div class="modal-backdrop" onclick={closeStepModal}>
+                <div class="modal modal-lg" onclick={stopProp}>
+                    <div class="modal-header">
+                        <h2 class="modal-title">{stepModalTitle}</h2>
+                        <button class="modal-close-btn" onclick={closeStepModal}>
+                            <svg viewBox="0 0 14 14" width="14" height="14" fill="none">
+                                <path
+                                    d="M2 2l10 10M12 2L2 12"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Row: Day + Channel + Task Type -->
+                        <div class="field-row-three">
+                            <div class="field-group">
+                                <label class="field-label">Day Number</label>
+                                <input
+                                    class="field-input"
+                                    type="number"
+                                    min="1"
+                                    value={stepForm.dayNumber}
+                                    data-field="dayNumber"
+                                    oninput={handleStepFormInput}
+                                />
+                                <div class="field-hint">Days since enrollment</div>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Channel</label>
+                                <div class="type-toggle">
+                                    <button
+                                        class={emailChannelClass}
+                                        data-channel="Email"
+                                        onclick={handleChannelSelect}
+                                    >
+                                        Email
+                                    </button>
+                                    <button
+                                        class={taskChannelClass}
+                                        data-channel="Specialist Task"
+                                        onclick={handleChannelSelect}
+                                    >
+                                        Specialist Task
+                                    </button>
+                                </div>
+                            </div>
+                            <template if:true={showTaskType}>
+                                <div class="field-group">
+                                    <label class="field-label">Task Type</label>
+                                    <div class="select-wrap">
+                                        <select
+                                            class="field-select"
+                                            data-field="taskType"
+                                            onchange={handleStepFormSelect}
+                                        >
+                                            <option value="Call" selected={taskTypeIsCall}>Call</option>
+                                            <option value="Email" selected={taskTypeIsEmail}>Email</option>
+                                            <option value="SMS" selected={taskTypeIsSms}>SMS</option>
+                                        </select>
+                                        <svg
+                                            class="select-chevron"
+                                            viewBox="0 0 16 16"
+                                            width="14"
+                                            height="14"
+                                            fill="none"
+                                        >
+                                            <path
+                                                d="M4 6l4 4 4-4"
+                                                stroke="currentColor"
+                                                stroke-width="1.4"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                            />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Subject with merge chips -->
+                        <div class="field-group">
+                            <label class="field-label">Subject / Task Title</label>
+                            <div class="merge-chips-row">
+                                <span class="merge-chips-label">Insert:</span>
+                                <template for:each={mergeFields} for:item="mf">
+                                    <button
+                                        key={mf.token}
+                                        class="merge-chip"
+                                        data-field="subject"
+                                        data-token={mf.token}
+                                        onclick={handleInsertMergeField}
+                                    >
+                                        + {mf.label}
+                                    </button>
+                                </template>
+                            </div>
+                            <input
+                                class="field-input"
+                                type="text"
+                                placeholder="e.g. Still thinking about your {IncidentType}?"
+                                value={stepForm.subject}
+                                data-field="subject"
+                                oninput={handleStepFormInput}
+                            />
+                        </div>
+
+                        <!-- Body with merge chips -->
+                        <div class="field-group">
+                            <label class="field-label">
+                                Body
+                                <span class="field-optional">email content or task description</span>
+                            </label>
+                            <div class="merge-chips-row">
+                                <span class="merge-chips-label">Insert:</span>
+                                <template for:each={mergeFields} for:item="mf">
+                                    <button
+                                        key={mf.token}
+                                        class="merge-chip"
+                                        data-field="body"
+                                        data-token={mf.token}
+                                        onclick={handleInsertMergeField}
+                                    >
+                                        + {mf.label}
+                                    </button>
+                                </template>
+                            </div>
+                            <textarea
+                                class="field-textarea body-textarea"
+                                rows="6"
+                                placeholder="Hi {ClientFirstName},&#10;&#10;We wanted to check in regarding your {IncidentType}..."
+                                data-field="body"
+                                oninput={handleBodyInput}
+                            ></textarea>
+                        </div>
+
+                        <template if:true={stepFormError}>
+                            <div class="form-error">{stepFormError}</div>
+                        </template>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick={closeStepModal}>Cancel</button>
+                        <button class="btn-primary" onclick={handleSaveStep} disabled={isSavingStep}>
+                            {saveStepLabel}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>
