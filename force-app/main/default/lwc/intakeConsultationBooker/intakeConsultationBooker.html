@@ -1,0 +1,773 @@
+<template>
+    <div class="icb-root">
+        <!-- ── INITIAL LOADING ── -->
+        <template if:true={isLoading}>
+            <div class="icb-loading">
+                <lightning-spinner size="medium" alternative-text="Loading"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <!-- ════════════════════════════════════════ -->
+            <!-- GUARD: QUEUE OWNED — NO SPECIALIST      -->
+            <!-- ════════════════════════════════════════ -->
+            <template if:true={isQueueOwned}>
+                <div class="guard-screen">
+                    <div class="guard-illustration">
+                        <svg viewBox="0 0 120 100" width="120" height="100" fill="none">
+                            <!-- Queue/inbox base -->
+                            <rect
+                                x="10"
+                                y="40"
+                                width="100"
+                                height="50"
+                                rx="8"
+                                fill="#f1f5f9"
+                                stroke="#e2e8f0"
+                                stroke-width="1.5"
+                            />
+                            <!-- Inbox stack lines -->
+                            <rect x="22" y="52" width="76" height="8" rx="3" fill="#e2e8f0" />
+                            <rect x="22" y="64" width="56" height="8" rx="3" fill="#e2e8f0" />
+                            <rect x="22" y="76" width="66" height="8" rx="3" fill="#e2e8f0" />
+                            <!-- Person silhouette (unassigned) -->
+                            <circle
+                                cx="60"
+                                cy="16"
+                                r="10"
+                                fill="#f8fafc"
+                                stroke="#cbd5e1"
+                                stroke-width="1.5"
+                                stroke-dasharray="3 2"
+                            />
+                            <!-- Question mark inside circle -->
+                            <text
+                                x="56.5"
+                                y="21"
+                                font-size="13"
+                                fill="#94a3b8"
+                                font-family="Helvetica Neue, sans-serif"
+                                font-weight="700"
+                            >
+                                ?
+                            </text>
+                            <!-- Arrow pointing down from person to inbox -->
+                            <path
+                                d="M60 27v10"
+                                stroke="#cbd5e1"
+                                stroke-width="1.5"
+                                stroke-dasharray="3 2"
+                                stroke-linecap="round"
+                            />
+                            <path
+                                d="M56 34l4 4 4-4"
+                                stroke="#cbd5e1"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </div>
+                    <div class="guard-title">Not Assigned to a Specialist</div>
+                    <div class="guard-desc">
+                        This intake is currently sitting in a queue. A consultation can only be booked once it's
+                        assigned to a specific intake specialist. Assign the intake first, then return here to schedule
+                        the meeting.
+                    </div>
+                    <div class="guard-tag">
+                        <svg viewBox="0 0 14 14" width="12" height="12" fill="none">
+                            <path
+                                d="M3 4h8M3 7h6M3 10h4"
+                                stroke="currentColor"
+                                stroke-width="1.3"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                        Queue Owned
+                    </div>
+                </div>
+            </template>
+
+            <!-- ════════════════════════════════════════ -->
+            <!-- GUARD: NO CLIENT ON INTAKE              -->
+            <!-- ════════════════════════════════════════ -->
+            <template if:true={showNoClientGuard}>
+                <div class="guard-screen guard-screen-client">
+                    <div class="guard-illustration">
+                        <svg viewBox="0 0 120 100" width="120" height="100" fill="none">
+                            <!-- Person outline — empty/dashed -->
+                            <circle
+                                cx="60"
+                                cy="28"
+                                r="16"
+                                fill="#fef9c3"
+                                stroke="#fbbf24"
+                                stroke-width="1.5"
+                                stroke-dasharray="4 2"
+                            />
+                            <!-- Person body arc — dashed -->
+                            <path
+                                d="M28 88c0-17.673 14.327-32 32-32s32 14.327 32 32"
+                                fill="#fef9c3"
+                                stroke="#fbbf24"
+                                stroke-width="1.5"
+                                stroke-dasharray="4 2"
+                                stroke-linecap="round"
+                            />
+                            <!-- Missing/warning icon centre of head -->
+                            <path d="M60 21v9M60 33v1.5" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" />
+                            <!-- Calendar with X — to show booking not possible -->
+                            <rect
+                                x="76"
+                                y="56"
+                                width="34"
+                                height="32"
+                                rx="5"
+                                fill="#fff"
+                                stroke="#fbbf24"
+                                stroke-width="1.5"
+                            />
+                            <path d="M76 65h34" stroke="#fbbf24" stroke-width="1.5" />
+                            <rect x="82" y="50" width="4" height="8" rx="2" fill="#fbbf24" />
+                            <rect x="100" y="50" width="4" height="8" rx="2" fill="#fbbf24" />
+                            <path
+                                d="M84 73l14 10M98 73l-14 10"
+                                stroke="#fbbf24"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </div>
+                    <div class="guard-title guard-title-warn">No Client on This Intake</div>
+                    <div class="guard-desc">
+                        A client contact is required before a consultation can be booked. There's no one to invite to
+                        the meeting. Link a client contact to this intake record, then come back to schedule.
+                    </div>
+                    <div class="guard-tag guard-tag-warn">
+                        <svg viewBox="0 0 14 14" width="12" height="12" fill="none">
+                            <circle cx="7" cy="5.5" r="3" stroke="currentColor" stroke-width="1.3" />
+                            <path
+                                d="M2 13c0-2.761 2.239-5 5-5s5 2.239 5 5"
+                                stroke="currentColor"
+                                stroke-width="1.3"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                        Client Required
+                    </div>
+                </div>
+            </template>
+
+            <!-- ════════════════════════════════════════ -->
+            <!-- MAIN BOOKING UI (both guards passed)    -->
+            <!-- ════════════════════════════════════════ -->
+            <template if:true={showBookingUI}>
+                <!-- ── HEADER ── -->
+                <div class="icb-header">
+                    <div class="icb-header-left">
+                        <div class="icb-header-icon">
+                            <svg viewBox="0 0 20 20" width="16" height="16" fill="none">
+                                <rect
+                                    x="3"
+                                    y="4"
+                                    width="14"
+                                    height="13"
+                                    rx="2"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                />
+                                <path
+                                    d="M7 2v4M13 2v4M3 9h14"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="icb-header-title">Consultation Scheduling</div>
+                            <div class="icb-header-sub">Book a meeting or callback — syncs to attorney's calendar</div>
+                        </div>
+                    </div>
+                    <template if:true={upcomingConsultation}>
+                        <span class={upcomingStatusBadge}> {upcomingConsultation.status} </span>
+                    </template>
+                </div>
+
+                <!-- ════════════════════════════════════════ -->
+                <!-- UPCOMING CONSULTATION CARD              -->
+                <!-- ════════════════════════════════════════ -->
+                <template if:true={upcomingConsultation}>
+                    <div class={upcomingCardClass}>
+                        <div class="uc-top">
+                            <div class="uc-type-row">
+                                <span class={upcomingTypeBadge}> {upcomingConsultation.consultationType} </span>
+                                <span class="uc-countdown">{countdown}</span>
+                            </div>
+                        </div>
+
+                        <div class="uc-time-block">
+                            <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
+                                <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3" />
+                                <path
+                                    d="M8 5v3.5l2 2"
+                                    stroke="currentColor"
+                                    stroke-width="1.3"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                            <span class="uc-time-label"> {upcomingConsultation.scheduledStartLabel} </span>
+                        </div>
+
+                        <div class="uc-attorney-row">
+                            <template if:true={upcomingConsultation.attorneyPhoto}>
+                                <img
+                                    class="uc-attorney-avatar"
+                                    src={upcomingConsultation.attorneyPhoto}
+                                    alt={upcomingConsultation.attorneyName}
+                                />
+                            </template>
+                            <template if:false={upcomingConsultation.attorneyPhoto}>
+                                <div class="uc-attorney-avatar uc-avatar-initials">{upcomingAttorneyInitials}</div>
+                            </template>
+                            <div class="uc-attorney-info">
+                                <div class="uc-attorney-name">{upcomingConsultation.attorneyName}</div>
+                                <div class="uc-attorney-role">Attorney</div>
+                            </div>
+                            <template if:true={upcomingConsultation.meetingLink}>
+                                <a
+                                    class="uc-join-btn"
+                                    href={upcomingConsultation.meetingLink}
+                                    target="_blank"
+                                    rel="noopener"
+                                >
+                                    <svg viewBox="0 0 14 14" width="12" height="12" fill="none">
+                                        <path
+                                            d="M7 1h6v6M13 1L7 7"
+                                            stroke="currentColor"
+                                            stroke-width="1.3"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                        <path
+                                            d="M6 3H3a1 1 0 00-1 1v7a1 1 0 001 1h7a1 1 0 001-1V8"
+                                            stroke="currentColor"
+                                            stroke-width="1.3"
+                                            stroke-linecap="round"
+                                        />
+                                    </svg>
+                                    Join Meeting
+                                </a>
+                            </template>
+                        </div>
+
+                        <template if:true={upcomingConsultation.notes}>
+                            <div class="uc-notes">{upcomingConsultation.notes}</div>
+                        </template>
+
+                        <div class="uc-actions">
+                            <button class="uc-action-btn" onclick={handleReschedule}>
+                                <svg viewBox="0 0 14 14" width="12" height="12" fill="none">
+                                    <path
+                                        d="M11 2v3H8"
+                                        stroke="currentColor"
+                                        stroke-width="1.3"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                    <path
+                                        d="M1.5 7A5.5 5.5 0 0011 4.5"
+                                        stroke="currentColor"
+                                        stroke-width="1.3"
+                                        stroke-linecap="round"
+                                    />
+                                    <path
+                                        d="M3 12v-3h3"
+                                        stroke="currentColor"
+                                        stroke-width="1.3"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                    <path
+                                        d="M12.5 7A5.5 5.5 0 013 9.5"
+                                        stroke="currentColor"
+                                        stroke-width="1.3"
+                                        stroke-linecap="round"
+                                    />
+                                </svg>
+                                Reschedule
+                            </button>
+                            <button class="uc-action-btn" onclick={handleMarkComplete}>
+                                <svg viewBox="0 0 14 14" width="12" height="12" fill="none">
+                                    <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3" />
+                                    <path
+                                        d="M4.5 7l2 2 3-3"
+                                        stroke="currentColor"
+                                        stroke-width="1.3"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                                Complete
+                            </button>
+                            <button class="uc-action-btn" onclick={handleMarkNoShow}>
+                                <svg viewBox="0 0 14 14" width="12" height="12" fill="none">
+                                    <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3" />
+                                    <path
+                                        d="M9 5L5 9M5 5l4 4"
+                                        stroke="currentColor"
+                                        stroke-width="1.3"
+                                        stroke-linecap="round"
+                                    />
+                                </svg>
+                                No Show
+                            </button>
+                            <button class="uc-action-btn uc-action-danger" onclick={handleCancelClick}>
+                                <svg viewBox="0 0 14 14" width="12" height="12" fill="none">
+                                    <path
+                                        d="M3 4h8M5 4V3h4v1M6 6.5v3M8 6.5v3"
+                                        stroke="currentColor"
+                                        stroke-width="1.3"
+                                        stroke-linecap="round"
+                                    />
+                                    <rect
+                                        x="2.5"
+                                        y="4"
+                                        width="9"
+                                        height="8"
+                                        rx="1"
+                                        stroke="currentColor"
+                                        stroke-width="1.3"
+                                    />
+                                </svg>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- ════════════════════════════════════════ -->
+                <!-- EMPTY STATE — no upcoming consultation  -->
+                <!-- ════════════════════════════════════════ -->
+                <template if:false={upcomingConsultation}>
+                    <div class="icb-empty">
+                        <div class="icb-empty-icon">
+                            <svg viewBox="0 0 64 64" width="64" height="64" fill="none">
+                                <rect
+                                    x="8"
+                                    y="10"
+                                    width="48"
+                                    height="44"
+                                    rx="6"
+                                    fill="#f1f5f9"
+                                    stroke="#e2e8f0"
+                                    stroke-width="1.5"
+                                />
+                                <path d="M8 22h48" stroke="#e2e8f0" stroke-width="1.5" />
+                                <rect x="20" y="2" width="4" height="12" rx="2" fill="#94a3b8" />
+                                <rect x="40" y="2" width="4" height="12" rx="2" fill="#94a3b8" />
+                                <rect x="18" y="30" width="10" height="10" rx="2" fill="#dbeafe" />
+                                <rect x="33" y="30" width="10" height="10" rx="2" fill="#f0fdf4" />
+                                <path
+                                    d="M21 35l2 2 4-4"
+                                    stroke="#2563eb"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                        </div>
+                        <div class="icb-empty-title">No meeting scheduled</div>
+                        <div class="icb-empty-desc">
+                            Book a sign-up consultation or attorney callback. A calendar invite with a .ics attachment
+                            is sent automatically.
+                        </div>
+                        <div class="icb-book-actions">
+                            <button
+                                class="icb-book-btn consultation"
+                                data-type="Sign-up Consultation"
+                                onclick={handleBookClick}
+                            >
+                                <svg viewBox="0 0 20 20" width="18" height="18" fill="none">
+                                    <rect
+                                        x="3"
+                                        y="4"
+                                        width="14"
+                                        height="13"
+                                        rx="2"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                    />
+                                    <path
+                                        d="M7 2v4M13 2v4M3 9h14"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                        stroke-linecap="round"
+                                    />
+                                    <path
+                                        d="M10 12v3M8.5 13.5h3"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                        stroke-linecap="round"
+                                    />
+                                </svg>
+                                <div>
+                                    <div class="icb-book-btn-title">Sign-up Consultation</div>
+                                    <div class="icb-book-btn-sub">In-person or video to sign the retainer</div>
+                                </div>
+                            </button>
+                            <button
+                                class="icb-book-btn callback"
+                                data-type="Attorney Callback"
+                                onclick={handleBookClick}
+                            >
+                                <svg viewBox="0 0 20 20" width="18" height="18" fill="none">
+                                    <path
+                                        d="M6.5 3.5C5.7 5.1 5.3 6.9 5.3 8.8c0 1.9.4 3.7 1.2 5.3"
+                                        stroke="currentColor"
+                                        stroke-width="1.4"
+                                        stroke-linecap="round"
+                                    />
+                                    <path
+                                        d="M8.5 6a7.5 7.5 0 010 8"
+                                        stroke="currentColor"
+                                        stroke-width="1.4"
+                                        stroke-linecap="round"
+                                    />
+                                    <circle
+                                        cx="13.5"
+                                        cy="10"
+                                        r="3"
+                                        fill="currentColor"
+                                        opacity=".15"
+                                        stroke="currentColor"
+                                        stroke-width="1.4"
+                                    />
+                                    <path
+                                        d="M13.5 8.5v1.7l1 1"
+                                        stroke="currentColor"
+                                        stroke-width="1.4"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                                <div>
+                                    <div class="icb-book-btn-title">Attorney Callback</div>
+                                    <div class="icb-book-btn-sub">Attorney calls the client at a scheduled time</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- ════════════════════════════════════════ -->
+                <!-- PAST CONSULTATIONS                      -->
+                <!-- ════════════════════════════════════════ -->
+                <template if:true={hasPastConsultations}>
+                    <div class="past-section">
+                        <div class="past-header">Past consultations</div>
+                        <div class="past-list">
+                            <template for:each={pastConsultations} for:item="c">
+                                <div key={c.id} class="past-row">
+                                    <div class="past-row-left">
+                                        <span class={c.pastStatusClass}>{c.status}</span>
+                                        <span class="past-type">{c.consultationType}</span>
+                                    </div>
+                                    <div class="past-row-right">
+                                        <span class="past-attorney">{c.attorneyName}</span>
+                                        <span class="past-date">{c.scheduledStartLabel}</span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template> </template
+            ><!-- end showBookingUI --> </template
+        ><!-- end if:false isLoading -->
+
+        <!-- ════════════════════════════════════════════ -->
+        <!-- BOOKING / RESCHEDULE MODAL                  -->
+        <!-- ════════════════════════════════════════════ -->
+        <template if:true={showModal}>
+            <div class="modal-backdrop" onclick={handleModalBackdropClick}>
+                <div class="modal" onclick={stopProp}>
+                    <div class="modal-header">
+                        <h2 class="modal-title">{modalTitle}</h2>
+                        <button class="modal-close-btn" onclick={closeModal}>
+                            <svg viewBox="0 0 14 14" width="14" height="14" fill="none">
+                                <path
+                                    d="M2 2l10 10M12 2L2 12"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <template if:false={isRescheduleMode}>
+                            <div class="field-group">
+                                <label class="field-label">Meeting Type</label>
+                                <div class="type-toggle">
+                                    <button
+                                        class={consultationBtnClass}
+                                        data-type="Sign-up Consultation"
+                                        onclick={handleTypeSelect}
+                                    >
+                                        Sign-up Consultation
+                                    </button>
+                                    <button
+                                        class={callbackBtnClass}
+                                        data-type="Attorney Callback"
+                                        onclick={handleTypeSelect}
+                                    >
+                                        Attorney Callback
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="field-group">
+                                <label class="field-label">Attorney</label>
+                                <template if:true={hasAttorneys}>
+                                    <div class="attorney-grid">
+                                        <template for:each={enrichedAttorneys} for:item="a">
+                                            <div
+                                                key={a.id}
+                                                class={a.cardClass}
+                                                data-id={a.id}
+                                                onclick={handleAttorneySelect}
+                                            >
+                                                <template if:true={a.photoUrl}>
+                                                    <img class="attorney-card-avatar" src={a.photoUrl} alt={a.name} />
+                                                </template>
+                                                <template if:false={a.photoUrl}>
+                                                    <div class="attorney-card-avatar attorney-card-initials">
+                                                        {a.initials}
+                                                    </div>
+                                                </template>
+                                                <div class="attorney-card-name">{a.name}</div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                                <template if:false={hasAttorneys}>
+                                    <div class="no-attorneys">
+                                        No attorneys found with the Delipat Attorney Portal profile.
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <div class="field-row">
+                            <div class="field-group">
+                                <label class="field-label">Date</label>
+                                <input
+                                    class="field-input"
+                                    type="date"
+                                    value={modalDate}
+                                    min={todayIso}
+                                    onchange={handleDateChange}
+                                />
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Time</label>
+                                <div class="select-wrap">
+                                    <select class="field-select" onchange={handleTimeChange}>
+                                        <option value="">Select time…</option>
+                                        <template for:each={timeSlots} for:item="slot">
+                                            <option key={slot.value} value={slot.value}>{slot.label}</option>
+                                        </template>
+                                    </select>
+                                    <svg class="select-chevron" viewBox="0 0 16 16" width="14" height="14" fill="none">
+                                        <path
+                                            d="M4 6l4 4 4-4"
+                                            stroke="currentColor"
+                                            stroke-width="1.4"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Duration</label>
+                                <div class="select-wrap">
+                                    <select class="field-select" onchange={handleDurationChange}>
+                                        <option value="30">30 minutes</option>
+                                        <option value="45">45 minutes</option>
+                                        <option value="60" selected>60 minutes</option>
+                                        <option value="90">90 minutes</option>
+                                    </select>
+                                    <svg class="select-chevron" viewBox="0 0 16 16" width="14" height="14" fill="none">
+                                        <path
+                                            d="M4 6l4 4 4-4"
+                                            stroke="currentColor"
+                                            stroke-width="1.4"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <template if:true={conflictWarning}>
+                            <div class="conflict-warning">
+                                <svg viewBox="0 0 14 14" width="13" height="13" fill="none">
+                                    <path
+                                        d="M7 1L13 12H1L7 1z"
+                                        stroke="#b45309"
+                                        stroke-width="1.3"
+                                        stroke-linejoin="round"
+                                    />
+                                    <path
+                                        d="M7 5.5v3M7 10v.5"
+                                        stroke="#b45309"
+                                        stroke-width="1.3"
+                                        stroke-linecap="round"
+                                    />
+                                </svg>
+                                {conflictWarning}
+                            </div>
+                        </template>
+
+                        <div class="field-group">
+                            <label class="field-label">
+                                Meeting Link
+                                <span class="field-optional">optional</span>
+                            </label>
+                            <input
+                                class="field-input"
+                                type="url"
+                                placeholder="https://meet.google.com/… or Zoom link"
+                                value={modalMeetingLink}
+                                oninput={handleMeetingLinkInput}
+                            />
+                        </div>
+
+                        <template if:true={showLocation}>
+                            <div class="field-group">
+                                <label class="field-label">
+                                    Location
+                                    <span class="field-optional">optional</span>
+                                </label>
+                                <lightning-input-address
+                                    street-label="Street"
+                                    city-label="City"
+                                    province-label="State"
+                                    postal-code-label="Postal Code"
+                                    country-label="Country"
+                                    street={modalLocationStreet}
+                                    city={modalLocationCity}
+                                    province={modalLocationState}
+                                    postal-code={modalLocationPostalCode}
+                                    country={modalLocationCountry}
+                                    onchange={handleLocationChange}
+                                >
+                                </lightning-input-address>
+                            </div>
+                        </template>
+
+                        <div class="field-group">
+                            <label class="field-label">
+                                Notes
+                                <span class="field-optional">optional</span>
+                            </label>
+                            <textarea
+                                class="field-textarea"
+                                rows="3"
+                                placeholder="Internal notes for the specialist / attorney"
+                                value={modalNotes}
+                                oninput={handleNotesInput}
+                            ></textarea>
+                        </div>
+
+                        <template if:true={modalError}>
+                            <div class="modal-error">{modalError}</div>
+                        </template>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick={closeModal}>Cancel</button>
+                        <button class="btn-primary" onclick={handleConfirmBooking} disabled={isSaving}>
+                            <template if:false={isSaving}>
+                                <svg viewBox="0 0 14 14" width="13" height="13" fill="none">
+                                    <path
+                                        d="M2 7l4 4 6-6"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                                {confirmLabel}
+                            </template>
+                            <template if:true={isSaving}>
+                                <lightning-spinner size="x-small" alternative-text="Saving"></lightning-spinner>
+                                Saving…
+                            </template>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ════════════════════════════════════════════ -->
+        <!-- CANCEL MODAL                                -->
+        <!-- ════════════════════════════════════════════ -->
+        <template if:true={showCancelModal}>
+            <div class="modal-backdrop" onclick={closeCancelModal}>
+                <div class="modal modal-sm" onclick={stopProp}>
+                    <div class="modal-header">
+                        <h2 class="modal-title">Cancel Consultation</h2>
+                        <button class="modal-close-btn" onclick={closeCancelModal}>
+                            <svg viewBox="0 0 14 14" width="14" height="14" fill="none">
+                                <path
+                                    d="M2 2l10 10M12 2L2 12"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="field-group">
+                            <label class="field-label">Reason for cancellation</label>
+                            <div class="select-wrap">
+                                <select class="field-select" onchange={handleCancelReasonChange}>
+                                    <option value="">Select reason…</option>
+                                    <option value="Client requested cancellation">Client requested cancellation</option>
+                                    <option value="Attorney unavailable">Attorney unavailable</option>
+                                    <option value="Lead no longer qualified">Lead no longer qualified</option>
+                                    <option value="Scheduling conflict">Scheduling conflict</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <svg class="select-chevron" viewBox="0 0 16 16" width="14" height="14" fill="none">
+                                    <path
+                                        d="M4 6l4 4 4-4"
+                                        stroke="currentColor"
+                                        stroke-width="1.4"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="cancel-warning-text">
+                            A cancellation notice will be sent to the client and attorney.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick={closeCancelModal}>Keep Meeting</button>
+                        <button class="btn-danger" onclick={handleConfirmCancel} disabled={isSaving}>
+                            Cancel Meeting
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>
