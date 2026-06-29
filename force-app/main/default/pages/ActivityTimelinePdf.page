@@ -1,0 +1,54 @@
+<apex:page controller="ActivityTimelinePdfController"
+           renderAs="pdf"
+           showHeader="false"
+           sidebar="false">
+
+<!-- HEADER -->
+<div style="
+    text-align:center;
+    font-size:18px;
+    font-weight:bold;
+    padding:10px;
+    background-color:#1b96ff;
+    color:white;
+    margin-bottom:15px;">
+    Activity Timeline Report
+</div>
+
+<!-- TABLE -->
+<table style="width:100%; border-collapse:collapse; font-family:Arial; font-size:12px;">
+
+    <tr style="background-color:#eef4ff;">
+        <th style="border:1px solid #d8dde6; padding:8px;">Subject</th>
+        <th style="border:1px solid #d8dde6; padding:8px;">Status</th>
+        <th style="border:1px solid #d8dde6; padding:8px;">Type</th>
+        <th style="border:1px solid #d8dde6; padding:8px;">Date</th>
+    </tr>
+
+    <apex:repeat value="{!pdfActivities}" var="a">
+
+        <tr>
+
+            <td style="border:1px solid #d8dde6; padding:8px;">
+                <b>{!a.subject}</b>
+            </td>
+
+            <td style="border:1px solid #d8dde6; padding:8px;">
+                {!a.status}
+            </td>
+
+            <td style="border:1px solid #d8dde6; padding:8px; color:#1b96ff; font-weight:bold;">
+                {!a.type}
+            </td>
+
+            <td style="border:1px solid #d8dde6; padding:8px; color:#666;">
+                {!a.displayDate}
+            </td>
+
+        </tr>
+
+    </apex:repeat>
+
+</table>
+
+</apex:page>

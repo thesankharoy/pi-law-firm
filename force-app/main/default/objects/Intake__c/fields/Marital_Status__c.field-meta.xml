@@ -3,6 +3,7 @@
     <fullName>Marital_Status__c</fullName>
     <label>Marital Status</label>
     <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>

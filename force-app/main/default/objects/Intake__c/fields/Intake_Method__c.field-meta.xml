@@ -3,6 +3,7 @@
     <fullName>Intake_Method__c</fullName>
     <label>Intake Method</label>
     <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Prevent_Backward_Stage</fullName>
+    <active>false</active>
+    <errorConditionFormula>AND(
+  NOT(ISNEW()),
+  ISCHANGED(Status__c),
+  CASE(TEXT(Status__c),
+    &quot;New&quot;, 1,
+    &quot;Open&quot;, 2,
+    &quot;Working&quot;, 3,
+    &quot;Under Review&quot;, 4,
+    &quot;Qualified&quot;, 5,
+    &quot;Retainer Agreement Sent&quot;, 6,
+    &quot;Retainer Agreement Signed&quot;, 7,
+    &quot;Turned Down&quot;, 8,
+    &quot;Referred Out&quot;, 8,
+    &quot;Converted&quot;, 8,
+    0
+  )
+  &lt; 
+  CASE(TEXT(PRIORVALUE(Status__c)),
+    &quot;New&quot;, 1,
+    &quot;Open&quot;, 2,
+    &quot;Working&quot;, 3,
+    &quot;Under Review&quot;, 4,
+    &quot;Qualified&quot;, 5,
+    &quot;Retainer Agreement Sent&quot;, 6,
+    &quot;Retainer Agreement Signed&quot;, 7,
+    &quot;Turned Down&quot;, 8,
+    &quot;Referred Out&quot;, 8,
+    &quot;Converted&quot;, 8,
+    0
+  )
+)</errorConditionFormula>
+    <errorMessage>Stage cannot be moved backward.</errorMessage>
+</ValidationRule>

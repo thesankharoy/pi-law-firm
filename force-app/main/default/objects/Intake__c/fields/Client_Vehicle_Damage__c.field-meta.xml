@@ -3,6 +3,7 @@
     <fullName>Client_Vehicle_Damage__c</fullName>
     <label>Client Vehicle Damage</label>
     <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>

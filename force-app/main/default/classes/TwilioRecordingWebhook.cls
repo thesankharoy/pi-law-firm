@@ -1,70 +1,50 @@
-@RestResource(urlMapping='/twilio/recording/*')
+@RestResource(urlMapping='/twilio/recording')
 global without sharing class TwilioRecordingWebhook {
 
     @HttpPost
-    global static void handleRecording() {
-        RestRequest req = RestContext.request;
+    global static void handlePost() {
+        RestRequest  req = RestContext.request;
         RestResponse res = RestContext.response;
 
-        String body = req.requestBody.toString();
-        Map<String, String> params = parseFormBody(body);
+        String callSid           = req.params.get('CallSid');
+        String recordingSid      = req.params.get('RecordingSid');
+        String recordingUrl      = req.params.get('RecordingUrl');     // legacy Twilio URL (reference only)
+        String recordingS3Key    = req.params.get('RecordingS3Key');   // playback source (S3)
+        String recordingDuration = req.params.get('RecordingDuration');
 
-        String callSid = params.get('CallSid');
-        String recordingSid = params.get('RecordingSid');
-        String recordingUrl = params.get('RecordingUrl');
-        String durationStr = params.get('RecordingDuration');
+        if (String.isBlank(callSid)) { res.statusCode = 400; return; }
 
-        System.debug('===== TWILIO RECORDING CALLBACK =====');
-        System.debug('CallSid=' + callSid);
-        System.debug('RecordingSid=' + recordingSid);
-        System.debug('RecordingUrl=' + recordingUrl);
-        System.debug('Duration=' + durationStr);
+        // Reconcile on CallObject — the SAME key TwilioCallLogWebhook and the
+        // transcription webhook use. Previously this matched on Call_SID__c, which
+        // call-log never sets, so recordings landed on orphan "Twilio Call" tasks.
+        List<Task> tasks = [SELECT Id FROM Task WHERE CallObject = :callSid LIMIT 1];
 
-        if (String.isBlank(callSid)) {
-            res.statusCode = 400;
-            res.responseBody = Blob.valueOf('Missing CallSid');
+        if (tasks.isEmpty()) {
+            // Do NOT create a new task (that orphaning was the original bug).
+            // 404 so Twilio retries — covers the rare case the recording callback
+            // beats the call-log webhook.
+            res.statusCode   = 404;
+            res.responseBody = Blob.valueOf('No Task for CallSid ' + callSid);
             return;
         }
 
-        Task t;
-        List<Task> existing = [
-            SELECT Id FROM Task WHERE Call_Sid__c = :callSid LIMIT 1
-        ];
-
-        if (!existing.isEmpty()) {
-            t = existing[0];
-        } else {
-            // Fallback: callstart webhook may not have fired
-            t = new Task();
-            t.Call_Sid__c = callSid;
-            t.Subject = 'Twilio Call';
-            t.ActivityDate = System.today();
-            t.TaskSubtype = 'Call';
+        Task t = tasks[0];
+        t.Call_SID__c      = callSid;
+        t.Recording_SID__c = recordingSid;
+        if (String.isNotBlank(recordingUrl))   t.Recording_URL__c     = recordingUrl;
+        if (String.isNotBlank(recordingS3Key)) t.Recording_S3_Key__c  = recordingS3Key;
+        if (String.isNotBlank(recordingDuration) && recordingDuration.isNumeric()) {
+            t.CallDurationInSeconds = Integer.valueOf(recordingDuration);
         }
 
-        t.Recording_Url__c = recordingUrl;
-        t.CallDurationInSeconds = String.isBlank(durationStr) ? null : Integer.valueOf(durationStr);
-        t.Status = 'Completed';
-
-        upsert t;
-
-        TwilioRecordingHelper.attachRecording(t.Id, recordingUrl);
-
-        res.statusCode = 200;
-        res.responseBody = Blob.valueOf('OK');
-    }
-
-    private static Map<String, String> parseFormBody(String body) {
-        Map<String, String> result = new Map<String, String>();
-        for (String pair : body.split('&')) {
-            List<String> kv = pair.split('=', 2);
-            if (kv.size() == 2) {
-                result.put(
-                    EncodingUtil.urlDecode(kv[0], 'UTF-8'),
-                    EncodingUtil.urlDecode(kv[1], 'UTF-8')
-                );
-            }
+        try {
+            update t;
+            res.statusCode   = 200;
+            res.responseBody = Blob.valueOf('OK');
+        } catch (Exception e) {
+            res.statusCode   = 500;
+            res.responseBody = Blob.valueOf('ERROR: ' + e.getMessage());
+            System.debug('TwilioRecordingWebhook error: ' + e.getMessage());
         }
-        return result;
     }
 }

@@ -3,6 +3,7 @@
     <fullName>Injury_at_Scene__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Injury at Scene</label>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>

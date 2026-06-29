@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Accident_Priority</label>
+    <protected>false</protected>
+    <values>
+        <field>Active__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>Assign_To_Id__c</field>
+        <value xsi:type="xsd:string">00Gfj00000BzR8DEAV</value>
+    </values>
+    <values>
+        <field>Assign_To_Name__c</field>
+        <value xsi:type="xsd:string">MVA Priority Queue</value>
+    </values>
+    <values>
+        <field>Assign_To_Type__c</field>
+        <value xsi:type="xsd:string">Queue</value>
+    </values>
+    <values>
+        <field>Condition_Logic__c</field>
+        <value xsi:type="xsd:string">OR</value>
+    </values>
+    <values>
+        <field>Order__c</field>
+        <value xsi:type="xsd:double">3.0</value>
+    </values>
+    <values>
+        <field>Stop_On_Match__c</field>
+        <value xsi:type="xsd:boolean">false</value>
+    </values>
+</CustomMetadata>

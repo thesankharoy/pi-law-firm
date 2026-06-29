@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Intake__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Denormalized link to the parent Intake for easy reporting and roll-ups across all of a matter&apos;s documents.</description>
+    <label>Intake</label>
+    <referenceTo>Intake__c</referenceTo>
+    <relationshipLabel>Document Analyses</relationshipLabel>
+    <relationshipName>Document_Analyses</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

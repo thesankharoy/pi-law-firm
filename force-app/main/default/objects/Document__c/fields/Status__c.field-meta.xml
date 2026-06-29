@@ -11,49 +11,24 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Requested</fullName>
+                <fullName>Pending Upload</fullName>
                 <default>false</default>
-                <label>Requested</label>
+                <label>Pending Upload</label>
             </value>
             <value>
-                <fullName>Authorization Sent</fullName>
+                <fullName>Active</fullName>
                 <default>false</default>
-                <label>Authorization Sent</label>
+                <label>Active</label>
             </value>
             <value>
-                <fullName>Pending Receipt</fullName>
+                <fullName>Failed</fullName>
                 <default>false</default>
-                <label>Pending Receipt</label>
+                <label>Failed</label>
             </value>
             <value>
-                <fullName>Received</fullName>
+                <fullName>Deleted</fullName>
                 <default>false</default>
-                <label>Received</label>
-            </value>
-            <value>
-                <fullName>Under Review</fullName>
-                <default>false</default>
-                <label>Under Review</label>
-            </value>
-            <value>
-                <fullName>Reviewed</fullName>
-                <default>false</default>
-                <label>Reviewed</label>
-            </value>
-            <value>
-                <fullName>Filed</fullName>
-                <default>false</default>
-                <label>Filed</label>
-            </value>
-            <value>
-                <fullName>Uploaded to Portal</fullName>
-                <default>false</default>
-                <label>Uploaded to Portal</label>
-            </value>
-            <value>
-                <fullName>Archived</fullName>
-                <default>false</default>
-                <label>Archived</label>
+                <label>Deleted</label>
             </value>
         </valueSetDefinition>
     </valueSet>

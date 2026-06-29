@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Intake__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>The call this question/objection was mined from.</description>
+    <label>Intake</label>
+    <referenceTo>Intake__c</referenceTo>
+    <relationshipLabel>FAQ Candidates</relationshipLabel>
+    <relationshipName>FAQ_Candidates</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

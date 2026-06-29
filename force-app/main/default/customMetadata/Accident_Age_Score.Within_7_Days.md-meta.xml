@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Within 7 Days</label>
+    <protected>false</protected>
+    <values>
+        <field>Accident_Age__c</field>
+        <value xsi:type="xsd:string">Within 7 Days</value>
+    </values>
+    <values>
+        <field>Score__c</field>
+        <value xsi:type="xsd:double">10.0</value>
+    </values>
+</CustomMetadata>

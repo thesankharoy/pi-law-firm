@@ -1,0 +1,114 @@
+<apex:page controller="HipaaAuthorizationController" renderAs="pdf" applyHtmlTag="false" applyBodyTag="false" showHeader="false" standardStylesheets="false">
+<html>
+<head>
+<style type="text/css">
+    @page {
+        size: letter;
+        margin: 1in;
+        @bottom-center { content: "Page " counter(page) " of " counter(pages); font-size: 9px; color: #666; }
+    }
+    body { font-family: 'Times New Roman', serif; font-size: 11.5pt; color: #1a1a1a; line-height: 1.5; }
+    .firm-header { text-align: center; margin-bottom: 20px; }
+    .firm-header .firm-name { font-size: 16pt; font-weight: bold; letter-spacing: 0.5px; }
+    .doc-title { text-align: center; font-size: 13pt; font-weight: bold; text-decoration: underline; margin: 16px 0 20px 0; text-transform: uppercase; }
+    .section-title { font-weight: bold; margin: 16px 0 6px 0; font-size: 11.5pt; }
+    p { margin: 0 0 10px 0; text-align: justify; }
+    table.info-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+    table.info-table td { border: 1px solid #999; padding: 5px 8px; vertical-align: top; }
+    table.info-table td.label { font-weight: bold; width: 35%; background-color: #f3f3f3; }
+    .sig-block { margin-top: 38px; }
+    .sig-line { border-top: 1px solid #1a1a1a; width: 320px; margin-top: 34px; padding-top: 4px; }
+    .sig-caption { font-size: 10pt; color: #444; }
+    .date-line { width: 200px; }
+    ul { margin: 0 0 10px 18px; padding: 0; }
+    li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+    <div class="firm-header">
+        <div class="firm-name">{!packet.firmName}</div>
+    </div>
+
+    <div class="doc-title">Authorization for Release of Protected Health Information<br/>(HIPAA Authorization)</div>
+
+    <table class="info-table">
+        <tr>
+            <td class="label">Patient / Client Name</td>
+            <td>{!packet.clientFullName}</td>
+        </tr>
+        <tr>
+            <td class="label">Date of Birth</td>
+            <td>{!dobFormatted}</td>
+        </tr>
+        <tr>
+            <td class="label">Intake / Matter #</td>
+            <td>{!packet.intakeNumber}</td>
+        </tr>
+        <tr>
+            <td class="label">Address</td>
+            <td>{!packet.clientAddressLine}, {!packet.clientCity}, {!packet.clientState} {!packet.clientPostalCode}</td>
+        </tr>
+    </table>
+
+    <p>
+        I, the undersigned, hereby authorize any physician, hospital, clinic, pharmacy,
+        insurance carrier, employer, or other healthcare or record-holding entity that has
+        provided treatment, care, or services to me to release and disclose any and all
+        medical records, billing records, and other protected health information ("PHI")
+        relating to my care — including but not limited to records concerning the incident
+        that occurred on or about <b>{!incidentDateFormatted}</b> — to:
+    </p>
+
+    <p style="margin-left:18px;"><b>{!packet.firmName}</b><br/>Attn: {!packet.attorneyName}, Esq.</p>
+
+    <div class="section-title">Purpose of Disclosure</div>
+    <p>
+        This information is being requested solely in connection with the evaluation,
+        investigation, and prosecution of a personal injury claim on my behalf arising
+        from the above-referenced incident.
+    </p>
+
+    <div class="section-title">Information Authorized for Release</div>
+    <ul>
+        <li>Complete medical records, including history, examination notes, diagnoses, and treatment plans</li>
+        <li>Billing and itemized statement records</li>
+        <li>Diagnostic imaging, laboratory, and test results</li>
+        <li>Prescription and pharmacy records</li>
+        <li>Any other records relevant to the injuries sustained in the above incident</li>
+    </ul>
+
+    <div class="section-title">Right to Revoke</div>
+    <p>
+        I understand that I have the right to revoke this authorization in writing at any
+        time, except to the extent that action has already been taken in reliance on it.
+        I understand that a revocation must be submitted in writing to the firm listed
+        above.
+    </p>
+
+    <div class="section-title">Expiration</div>
+    <p>
+        Unless otherwise revoked, this authorization shall remain in effect for one (1)
+        year from the date of signature below, or until the conclusion of the
+        above-referenced claim, whichever occurs later.
+    </p>
+
+    <p>
+        I understand that information disclosed pursuant to this authorization may be
+        subject to re-disclosure and may no longer be protected by federal privacy
+        regulations once received by the firm named above. A photocopy or electronic copy
+        of this authorization shall be considered as valid as the original.
+    </p>
+
+    <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-caption">Signature of Patient / Client or Authorized Representative</div>
+    </div>
+
+    <div class="sig-block">
+        <div class="sig-line date-line"></div>
+        <div class="sig-caption">Date Signed</div>
+    </div>
+
+</body>
+</html>
+</apex:page>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Dial_Phone__c</fullName>
+    <externalId>false</externalId>
+    <formula>IF(
+  ISBLANK( MobilePhone ),
+  &quot;&quot;,
+  HYPERLINK(
+    &quot;/apex/TwilioSoftphone?contactId=&quot; &amp; Id &amp;
+      &quot;&amp;number=&quot; &amp; SUBSTITUTE( MobilePhone, &quot;+&quot;, &quot;%2B&quot; ) &amp;
+      &quot;&amp;autodial=1&quot;,
+    &quot;📞 &quot; &amp; MobilePhone,
+    &quot;twilioSoftphone&quot;
+  )
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Dial Phone</label>
+    <required>false</required>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

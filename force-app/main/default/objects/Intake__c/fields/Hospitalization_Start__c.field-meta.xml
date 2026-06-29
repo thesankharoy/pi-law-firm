@@ -3,6 +3,7 @@
     <fullName>Hospitalization_Start__c</fullName>
     <label>Hospitalization Start</label>
     <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Date</type>

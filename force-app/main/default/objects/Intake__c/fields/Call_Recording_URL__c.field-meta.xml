@@ -3,6 +3,7 @@
     <fullName>Call_Recording_URL__c</fullName>
     <label>Call Recording URL</label>
     <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Url</type>

@@ -3,6 +3,7 @@
     <fullName>Police_Report_Filed__c</fullName>
     <label>Police Report Filed</label>
     <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
@@ -17,7 +18,7 @@
             </value>
             <value>
                 <fullName>No</fullName>
-                <default>false</default>
+                <default>true</default>
                 <label>No</label>
             </value>
         </valueSetDefinition>

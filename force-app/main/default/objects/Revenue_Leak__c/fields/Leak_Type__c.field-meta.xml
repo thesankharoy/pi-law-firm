@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Leak_Type__c</fullName>
+    <description>Which leak detector produced this row. Maps to a Leak_Rule__mdt DeveloperName.</description>
+    <label>Leak Type</label>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Unsigned Retainer</fullName>
+                <default>true</default>
+                <label>Unsigned Retainer</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

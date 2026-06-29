@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Default</label>
+    <protected>false</protected>
+    <values>
+        <field>Account_SID__c</field>
+        <value xsi:type="xsd:string">ACb91c223e0d83baadfa2c2d69c4fd329c</value>
+    </values>
+    <values>
+        <field>Auth_Token__c</field>
+        <value xsi:type="xsd:string">6ef2e16aebc77a4eb652ad17d0b14146</value>
+    </values>
+</CustomMetadata>

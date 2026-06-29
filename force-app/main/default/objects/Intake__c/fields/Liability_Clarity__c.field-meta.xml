@@ -3,6 +3,7 @@
     <fullName>Liability_Clarity__c</fullName>
     <label>Liability Clarity</label>
     <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>

@@ -1,5 +1,5 @@
 public with sharing class ActivityTimelineController {
-
+    
     public class ActivityItem {
         @AuraEnabled public Id recordId;
         @AuraEnabled public String subject;
@@ -11,7 +11,9 @@ public with sharing class ActivityTimelineController {
         @AuraEnabled public String iconName;
         @AuraEnabled public Id ownerId;
         @AuraEnabled public String description;
-    }
+        
+    } 
+    
 
     public class MonthGroup {
         @AuraEnabled public String monthYear;
@@ -196,7 +198,8 @@ public with sharing class ActivityTimelineController {
 
         return result;
     }
-
+    
+    
     /* SORTER */
 
     public class ActivityDateSorter
@@ -218,4 +221,5 @@ public with sharing class ActivityTimelineController {
             return 1;
         }
     }
+    
 }

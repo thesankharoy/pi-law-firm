@@ -2,8 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Age__c</fullName>
     <externalId>false</externalId>
-    <formula>FLOOR((TODAY() - Date_of_Birth__c) / 365)</formula>
-    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <formula>FLOOR((TODAY() - Birthdate) / 365)</formula>
     <label>Age</label>
     <precision>18</precision>
     <required>false</required>

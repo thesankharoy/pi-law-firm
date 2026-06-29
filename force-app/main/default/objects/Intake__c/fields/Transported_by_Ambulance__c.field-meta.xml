@@ -3,6 +3,7 @@
     <fullName>Transported_by_Ambulance__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Transported by Ambulance</label>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>

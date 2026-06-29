@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Retainer_Sent_At__c</fullName>
+    <description>Timestamp the retainer agreement was sent. The leak clock for the Unsigned Retainer detector. Stamp this in IntakeLifecycleService when Status changes to &quot;Retainer Agreement Sent&quot;.</description>
+    <label>Retainer Sent At</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>DateTime</type>
+</CustomField>

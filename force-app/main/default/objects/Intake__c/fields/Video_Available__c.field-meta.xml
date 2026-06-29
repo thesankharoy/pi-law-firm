@@ -3,6 +3,7 @@
     <fullName>Video_Available__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Video Available</label>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>

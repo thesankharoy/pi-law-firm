@@ -85,6 +85,15 @@ public class IntakeLifecycleService {
                     i.Status__c.addError('An Intake must be in the Active Intake stage before it can be Converted.');
                 }
             }
+
+            // ── 4. Stamp the retainer clock for the revenue-leak detector ───
+            // First time Status becomes "Retainer Agreement Sent", record when —
+            // this is the leak clock RevenueLeakDetector measures the SLA against.
+            if (i.Status__c == 'Retainer Agreement Sent'
+                && old.Status__c != 'Retainer Agreement Sent'
+                && i.Retainer_Sent_At__c == null) {
+                i.Retainer_Sent_At__c = Datetime.now();
+            }
         }
     }
 

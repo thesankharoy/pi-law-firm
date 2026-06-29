@@ -3,6 +3,7 @@
     <fullName>Client_At_Fault__c</fullName>
     <label>Client At Fault</label>
     <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>

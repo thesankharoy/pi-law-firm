@@ -1,8 +1,8 @@
 <apex:page controller="TwilioTokenServiceVF"
-    showHeader="false" 
-    sidebar="false" 
-    standardStylesheets="false" 
-    applyBodyTag="false" 
+    showHeader="false"
+    sidebar="false"
+    standardStylesheets="false"
+    applyBodyTag="false"
     docType="html-5.0">
 <html>
 <head>
@@ -11,180 +11,57 @@
     <title>Twilio Softphone</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-
         body { background: #fff; padding: 12px; }
-
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
+        .header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
         .header-icon { font-size: 18px; }
         .header-title { font-size: 15px; font-weight: 600; color: #1a1a1a; }
-
-        .status-bar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #f3fdf3;
-            border: 1px solid #d4edda;
-            border-radius: 6px;
-            padding: 6px 12px;
-            margin-bottom: 12px;
-            font-size: 13px;
-        }
-
-        .status-dot {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            background: #28a745;
-            flex-shrink: 0;
-        }
-
-        .status-dot.error { background: #dc3545; }
+        .status-bar { display: flex; align-items: center; gap: 8px; background: #f3fdf3; border: 1px solid #d4edda; border-radius: 6px; padding: 6px 12px; margin-bottom: 12px; font-size: 13px; }
+        .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #28a745; flex-shrink: 0; }
+        .status-dot.error   { background: #dc3545; }
         .status-dot.loading { background: #ffc107; }
-
         .status-text { color: #1a1a1a; font-weight: 500; }
-        .status-sub { color: #666; margin-left: 2px; }
-
-        .mic-banner {
-            display: none;
-            align-items: center;
-            gap: 8px;
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            border-radius: 6px;
-            padding: 8px 12px;
-            margin-bottom: 12px;
-            font-size: 12px;
-            color: #856404;
-        }
-
-        .mic-banner.visible { display: flex; }
-
-        .mic-btn {
-            background: #ffc107;
-            border: none;
-            border-radius: 4px;
-            padding: 4px 10px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            color: #000;
-            white-space: nowrap;
-        }
-
-        .input-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 12px;
-        }
-
-        .phone-input {
-            flex: 1;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 8px 12px;
-            font-size: 16px;
-            outline: none;
-            letter-spacing: 1px;
-        }
-
+        .status-sub  { color: #666; margin-left: 2px; }
+        .incoming-banner { display: none; flex-direction: column; align-items: center; background: #e8f5e9; border: 2px solid #43a047; border-radius: 10px; padding: 14px 12px; margin-bottom: 12px; animation: pulse-border 1.2s infinite; }
+        @keyframes pulse-border { 0%, 100% { border-color: #43a047; } 50% { border-color: #a5d6a7; } }
+        .incoming-label  { font-size: 12px; color: #388e3c; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+        .incoming-number { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 12px; }
+        .incoming-actions { display: flex; gap: 12px; width: 100%; }
+        .accept-btn { flex: 1; background: #2e7d32; color: white; border: none; border-radius: 8px; padding: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .accept-btn:hover { background: #256427; }
+        .reject-btn { flex: 1; background: #c62828; color: white; border: none; border-radius: 8px; padding: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .reject-btn:hover { background: #b71c1c; }
+        .input-row { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+        .phone-input { flex: 1; border: 1px solid #ddd; border-radius: 6px; padding: 8px 12px; font-size: 16px; outline: none; letter-spacing: 1px; }
         .phone-input:focus { border-color: #0070d2; }
-
-        .clear-btn {
-            width: 34px;
-            height: 34px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            background: #fff;
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-        }
-
+        .clear-btn { width: 34px; height: 34px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; color: #666; }
         .clear-btn:hover { background: #f5f5f5; }
-
-        .dialpad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .dial-btn {
-            border: 1px solid #e0e0e0;
-            border-radius: 50%;
-            background: #fff;
-            cursor: pointer;
-            padding: 10px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            line-height: 1.2;
-            transition: background 0.1s;
-            -webkit-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
-        }
-
-        .dial-btn:hover { background: #f0f0f0; }
+        .dialpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+        .dial-btn { border: 1px solid #e0e0e0; border-radius: 50%; background: #fff; cursor: pointer; padding: 10px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; transition: background 0.1s; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+        .dial-btn:hover  { background: #f0f0f0; }
         .dial-btn:active { background: #e0e0e0; }
-
         .dial-num { font-size: 18px; font-weight: 500; color: #1a1a1a; }
         .dial-sub { font-size: 9px; color: #999; letter-spacing: 1px; }
-
-        .action-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .call-btn {
-            background: #2e7d32;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: background 0.15s;
-        }
-
-        .call-btn:hover { background: #256427; }
-        .call-btn:disabled { background: #a5d6a7; cursor: not-allowed; }
-
-        .hangup-btn {
-            background: #c62828;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: background 0.15s;
-        }
-
-        .hangup-btn:hover { background: #b71c1c; }
+        .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .call-btn { background: #2e7d32; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.15s; }
+        .call-btn:hover     { background: #256427; }
+        .call-btn:disabled  { background: #a5d6a7; cursor: not-allowed; }
+        .hangup-btn { background: #c62828; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.15s; }
+        .hangup-btn:hover    { background: #b71c1c; }
         .hangup-btn:disabled { background: #ef9a9a; cursor: not-allowed; }
+        .mute-btn { background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.15s; width: 100%; margin-top: 8px; }
+        .mute-btn:hover    { background: #e8e8e8; }
+        .mute-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .mute-btn.muted    { background: #fff3e0; border-color: #ff9800; color: #e65100; }
+
+        /* live caller lookup card */
+        .caller-card { display: none; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 13px; }
+        .caller-card.known   { background: #eef7ff; border: 1px solid #cfe3fb; }
+        .caller-card.unknown { background: #fff7e6; border: 1px solid #ffe0a3; }
+        .caller-flag { font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .caller-flag.known   { color: #1b5297; }
+        .caller-flag.unknown { color: #8a6100; }
+        .caller-row { color: #444; margin-top: 2px; }
+        .caller-row b { color: #1a1a1a; }
     </style>
 </head>
 <body>
@@ -197,7 +74,20 @@
     <div class="status-bar">
         <div class="status-dot loading" id="statusDot"></div>
         <span class="status-text" id="statusText">Initializing</span>
-        <span class="status-sub" id="statusSub"></span>
+        <span class="status-sub"  id="statusSub"></span>
+    </div>
+
+    <!-- live caller lookup -->
+    <div class="caller-card" id="callerCard"></div>
+
+    <!-- Incoming Call Banner -->
+    <div class="incoming-banner" id="incomingBanner">
+        <div class="incoming-label">📲 Incoming Call</div>
+        <div class="incoming-number" id="incomingNumber"></div>
+        <div class="incoming-actions">
+            <button class="accept-btn" onclick="acceptCall()">✅ Accept</button>
+            <button class="reject-btn" onclick="rejectCall()">❌ Reject</button>
+        </div>
     </div>
 
     <div class="input-row">
@@ -217,652 +107,505 @@
         <button class="dial-btn" onclick="pressKey('9')"><span class="dial-num">9</span><span class="dial-sub">WXYZ</span></button>
         <button class="dial-btn" onclick="pressKey('*')"><span class="dial-num">*</span><span class="dial-sub">&nbsp;</span></button>
         <button class="dial-btn"
-            onmousedown="startPress('0')"
-            onmouseup="endPress('0')"
-            onmouseleave="cancelPress()"
-            ontouchstart="startPress('0')"
-            ontouchend="endPress('0')"
-            ontouchcancel="cancelPress()">
+            onmousedown="startPress('0')" onmouseup="endPress('0')" onmouseleave="cancelPress()"
+            ontouchstart="startPress('0')" ontouchend="endPress('0')" ontouchcancel="cancelPress()">
             <span class="dial-num">0</span><span class="dial-sub">+</span>
         </button>
         <button class="dial-btn" onclick="pressKey('#')"><span class="dial-num">#</span><span class="dial-sub">&nbsp;</span></button>
     </div>
 
     <div class="action-row">
-        <button class="call-btn" id="callBtn" onclick="makeCall()">📞 Call</button>
+        <button class="call-btn"   id="callBtn"   onclick="makeCall()">📞 Call</button>
         <button class="hangup-btn" id="hangupBtn" onclick="hangUp()">📵 Hang Up</button>
     </div>
+
+    <button class="mute-btn" id="muteBtn" onclick="toggleMute()" disabled="disabled">🎙️ Mute</button>
 
     <script src="{!URLFOR($Resource.TwilioVoiceSDK)}"></script>
 
     <script>
-        if (navigator.mediaDevices &&
-            navigator.mediaDevices.getUserMedia) {
-        
-            const originalGetUserMedia =
-                navigator.mediaDevices.getUserMedia.bind(
-                    navigator.mediaDevices
-                );
-        
-            navigator.mediaDevices.getUserMedia =
-                function(constraints) {
-        
-                    console.log(
-                        'TWILIO REQUESTED GUM:',
-                        JSON.stringify(constraints)
-                    );
-        
-                    return originalGetUserMedia(constraints)
-        
-                        .then(function(stream) {
-        
-                            console.log(
-                                'GUM SUCCESS'
-                            );
-        
-                            return stream;
-                        })
-        
-                        .catch(function(err) {
-        
-                            console.error(
-                                'GUM FAILURE'
-                            );
-        
-                            console.error(err);
-        
-                            throw err;
-                        });
-                };
+        function getQueryParam(name) {
+            return new URLSearchParams(window.location.search).get(name);
         }
-        var device = null;
-        var activeCall = null;
-        var token = null;
-        var tokenExpiry = null;
-        var isRegistered = false;
+        var intakeId = getQueryParam('intakeId') || '';
+        console.log('Intake ID from URL:', intakeId);
 
-        // ── Status helpers ───────────────────────────────────────────
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+            navigator.mediaDevices.getUserMedia = function(constraints) {
+                console.log('TWILIO REQUESTED GUM:', JSON.stringify(constraints));
+                return originalGetUserMedia(constraints)
+                    .then(function(stream) { console.log('GUM SUCCESS'); return stream; })
+                    .catch(function(err)   { console.error('GUM FAILURE', err); throw err; });
+            };
+        }
+
+        var device = null, activeCall = null, incomingCallObj = null;
+        var token = null, tokenExpiry = null, isRegistered = false, isMuted = false;
+
         function setStatus(text, sub, state) {
             document.getElementById('statusText').textContent = text;
-            document.getElementById('statusSub').textContent = sub ? '| ' + sub : '';
+            document.getElementById('statusSub').textContent  = sub ? '| ' + sub : '';
             var dot = document.getElementById('statusDot');
-            dot.className = 'status-dot' +
-                (state === 'error' ? ' error' : state === 'loading' ? ' loading' : '');
+            dot.className = 'status-dot' + (state === 'error' ? ' error' : state === 'loading' ? ' loading' : '');
         }
 
-        // ── postMessage to opener window ─────────────────────────────
         function notifyParent(type, payload) {
             if (window.opener && !window.opener.closed) {
-                window.opener.postMessage(
-                    { source: 'twilio-softphone', type: type, payload: payload || {} },
-                    '*'
-                );
+                window.opener.postMessage({ source: 'twilio-softphone', type: type, payload: payload || {} }, '*');
             }
         }
 
-        // ── Dialpad ──────────────────────────────────────────────────
+        // ===== Live caller lookup (existing-client flag + intake snapshot) =====
+        function escapeHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, function (ch) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+            });
+        }
+
+        function lookupCaller(number) {
+            if (!number) return;
+            Visualforce.remoting.Manager.invokeAction(
+                'TwilioTokenServiceVF.lookupCaller', number,
+                function (info, event) {
+                    if (!event.status) { console.error('lookupCaller failed', event && event.message); return; }
+                    renderCallerCard(info, number);
+                    notifyParent('caller-info', info || {});
+                }
+            );
+        }
+
+        function renderCallerCard(info, number) {
+            var card = document.getElementById('callerCard');
+            if (!card) return;
+            if (info && info.found) {
+                var html = '<div class="caller-flag known">⭐ Existing client</div>';
+                html += '<div class="caller-row"><b>' + escapeHtml(info.name) + '</b></div>';
+                if (info.intakeName) {
+                    var line = escapeHtml(info.intakeName);
+                    if (info.incidentType) line += ' &middot; ' + escapeHtml(info.incidentType);
+                    if (info.status)       line += ' &middot; ' + escapeHtml(info.status);
+                    html += '<div class="caller-row">' + line + '</div>';
+                }
+                if (info.intakeCount > 1) {
+                    html += '<div class="caller-row">' + info.intakeCount + ' intakes on file</div>';
+                }
+                card.className = 'caller-card known';
+                card.innerHTML = html;
+            } else {
+                card.className = 'caller-card unknown';
+                card.innerHTML = '<div class="caller-flag unknown">🆕 New caller</div>' +
+                    '<div class="caller-row">' + escapeHtml(number) + ' is not in the system yet.</div>';
+            }
+            card.style.display = 'block';
+        }
+
+        function hideCallerCard() {
+            var card = document.getElementById('callerCard');
+            if (card) { card.style.display = 'none'; card.innerHTML = ''; }
+        }
+
+        // ===== Intake Co-Pilot: tap remote audio → Deepgram → postMessage =====
+        var coPilotWs = null;
+        var coPilotRecorder = null;
+
+        function getCallRemoteStream(call) {
+            try {
+                if (call && typeof call.getRemoteStream === 'function') {
+                    var s = call.getRemoteStream();
+                    if (s && s.getAudioTracks && s.getAudioTracks().length) {
+                        console.log('[CoPilot] capture via getRemoteStream()'); return s;
+                    }
+                }
+            } catch (e) { console.warn('[CoPilot] getRemoteStream threw', e); }
+            try {
+                var audios = document.querySelectorAll('audio');
+                for (var i = 0; i < audios.length; i++) {
+                    var a = audios[i];
+                    if (a.srcObject && a.srcObject.getAudioTracks && a.srcObject.getAudioTracks().length) {
+                        console.log('[CoPilot] capture via <audio>.srcObject'); return a.srcObject;
+                    }
+                }
+            } catch (e) { console.warn('[CoPilot] audio-element capture threw', e); }
+            try {
+                var mh = call && call._mediaHandler;
+                var pc = mh && ((mh.version && mh.version.pc) || mh._pc || mh.pc);
+                if (pc && pc.getReceivers) {
+                    var ms = new MediaStream();
+                    pc.getReceivers().forEach(function (r) {
+                        if (r.track && r.track.kind === 'audio') ms.addTrack(r.track);
+                    });
+                    if (ms.getAudioTracks().length) {
+                        console.log('[CoPilot] capture via peerConnection receivers'); return ms;
+                    }
+                }
+            } catch (e) { console.warn('[CoPilot] pc-receiver capture threw', e); }
+            return null;
+        }
+
+        function startCoPilot(call) {
+            try {
+                console.log('[CoPilot] startCoPilot called');
+                if (!call) { console.warn('[CoPilot] no call object'); return; }
+                try {
+                    console.log('[CoPilot] call methods:',
+                        Object.getOwnPropertyNames(Object.getPrototypeOf(call)).join(', '));
+                } catch (e) { /* noop */ }
+                startCoPilotWithRetry(call, 0);
+            } catch (e) { console.error('[CoPilot] startCoPilot error', e); }
+        }
+
+        function startCoPilotWithRetry(call, attempt) {
+            var remote = getCallRemoteStream(call);
+            if (!remote) {
+                if (attempt < 8) {
+                    console.log('[CoPilot] no remote stream yet, retry', attempt + 1);
+                    setTimeout(function () { startCoPilotWithRetry(call, attempt + 1); }, 600);
+                } else {
+                    console.error('[CoPilot] GAVE UP — could not get caller audio from this SDK');
+                }
+                return;
+            }
+            console.log('[CoPilot] got remote stream, audio tracks:', remote.getAudioTracks().length);
+            Visualforce.remoting.Manager.invokeAction(
+                'TwilioTokenServiceVF.getDeepgramToken',
+                function (dgToken, event) {
+                    if (!event.status || !dgToken) {
+                        console.error('[CoPilot] Deepgram token FAILED', event && event.message); return;
+                    }
+                    console.log('[CoPilot] Deepgram token OK (len ' + dgToken.length + ')');
+                    openCoPilotDeepgram(remote, dgToken);
+                }
+            );
+        }
+
+        function openCoPilotDeepgram(stream, dgToken) {
+            try {
+                var url = 'wss://api.deepgram.com/v1/listen'
+                    + '?model=nova-3&smart_format=true&language=multi'
+                    + '&punctuate=true&interim_results=false&endpointing=400';
+
+                coPilotWs = new WebSocket(url, ['token', dgToken]);
+
+                coPilotWs.onopen = function () {
+                    console.log('[CoPilot] Deepgram WS OPEN');
+                    try {
+                        coPilotRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+                        coPilotRecorder.ondataavailable = function (e) {
+                            if (e.data && e.data.size > 0 && coPilotWs && coPilotWs.readyState === 1) {
+                                coPilotWs.send(e.data);
+                            }
+                        };
+                        coPilotRecorder.start(250);
+                        console.log('[CoPilot] MediaRecorder started');
+                    } catch (err) { console.error('[CoPilot] recorder error', err); }
+                };
+
+                coPilotWs.onmessage = function (evt) {
+                    try {
+                        var d = JSON.parse(evt.data);
+                        if (d.type && d.type !== 'Results') { console.log('[CoPilot] DG event:', d.type); return; }
+                        var alt = d.channel && d.channel.alternatives && d.channel.alternatives[0];
+                        var text = alt && alt.transcript ? alt.transcript.trim() : '';
+                        console.log('[CoPilot] DG transcript:', JSON.stringify(text), 'speech_final=', d.speech_final);
+                        if (text && d.speech_final) {
+                            notifyParent('copilot-transcript', {
+                                transcript: text,
+                                language: (d.channel && d.channel.detected_language) || '',
+                                turnType: 'client'
+                            });
+                            console.log('[CoPilot] posted transcript to opener');
+                        }
+                    } catch (err) { /* keepalive frame */ }
+                };
+
+                coPilotWs.onerror = function (e) { console.error('[CoPilot] Deepgram WS ERROR', e); };
+                coPilotWs.onclose = function (e) {
+                    console.warn('[CoPilot] Deepgram WS CLOSED code=', e && e.code, 'reason=', e && e.reason);
+                    coPilotWs = null;
+                };
+            } catch (e) { console.error('[CoPilot] openCoPilotDeepgram error', e); }
+        }
+
+        function stopCoPilot() {
+            try { if (coPilotRecorder && coPilotRecorder.state !== 'inactive') coPilotRecorder.stop(); } catch (e) {}
+            coPilotRecorder = null;
+            try {
+                if (coPilotWs && coPilotWs.readyState === 1) {
+                    coPilotWs.send(JSON.stringify({ type: 'CloseStream' }));
+                    coPilotWs.close();
+                }
+            } catch (e) {}
+            coPilotWs = null;
+            console.log('[CoPilot] stopped');
+        }
+
+        function toggleMute() {
+            if (!activeCall) return;
+            isMuted = !isMuted;
+            activeCall.mute(isMuted);
+            var btn = document.getElementById('muteBtn');
+            if (isMuted) { btn.textContent = '🔇 Unmute'; btn.classList.add('muted'); }
+            else { btn.textContent = '🎙️ Mute'; btn.classList.remove('muted'); }
+        }
+        function resetMuteBtn() {
+            isMuted = false;
+            var btn = document.getElementById('muteBtn');
+            btn.disabled = true; btn.textContent = '🎙️ Mute'; btn.classList.remove('muted');
+        }
+        function enableMuteBtn() { document.getElementById('muteBtn').disabled = false; }
+
+        function showIncomingBanner(from) {
+            document.getElementById('incomingNumber').textContent = from;
+            document.getElementById('incomingBanner').style.display = 'flex';
+        }
+        function hideIncomingBanner() {
+            document.getElementById('incomingBanner').style.display = 'none';
+            document.getElementById('incomingNumber').textContent   = '';
+        }
+        function handleIncomingCall(call) {
+            incomingCallObj = call;
+            var from = call.parameters.From || 'Unknown';
+            showIncomingBanner(from);
+            setStatus('Incoming Call', from, 'loading');
+            notifyParent('incoming', { from: from });
+            lookupCaller(from);                 // <-- LIVE CALLER FLAG
+            call.on('cancel', function() {
+                hideIncomingBanner();
+                hideCallerCard();
+                incomingCallObj = null;
+                setStatus('Ready', 'Registered', 'ready');
+            });
+        }
+
+        function acceptCall() {
+            if (!incomingCallObj) return;
+            activeCall = incomingCallObj; incomingCallObj = null;
+            hideIncomingBanner();
+            activeCall.accept();
+            startCoPilot(activeCall);                 // <-- CO-PILOT
+            document.getElementById('callBtn').disabled = true;
+            enableMuteBtn();
+            setStatus('Connected', activeCall.parameters.From || '', 'ready');
+            notifyParent('connected', { from: activeCall.parameters.From || '' });
+            activeCall.on('disconnect', function() {
+                stopCoPilot();                        // <-- CO-PILOT
+                hideCallerCard();
+                setStatus('Ready', 'Registered', 'ready');
+                document.getElementById('callBtn').disabled = false;
+                resetMuteBtn(); activeCall = null;
+                notifyParent('disconnected');
+            });
+            activeCall.on('error', function(err) { console.error('INBOUND CALL ERROR', err); });
+        }
+
+        function rejectCall() {
+            if (!incomingCallObj) return;
+            incomingCallObj.reject(); incomingCallObj = null;
+            hideIncomingBanner();
+            hideCallerCard();
+            resetMuteBtn();
+            setStatus('Ready', 'Registered', 'ready');
+            notifyParent('rejected');
+        }
+
         function pressKey(val) {
             var input = document.getElementById('phoneInput');
-            if (input.value.replace('+', '').length < 15) {
-                input.value += val;
-            }
+            if (input.value.replace('+', '').length < 15) input.value += val;
         }
-
-        // ── Long-press "0" for "+" support ────────────────────────────
-        var longPressTimer = null;
-        var longPressTriggered = false;
-        var LONG_PRESS_MS = 500;
-
+        var longPressTimer = null, longPressTriggered = false, LONG_PRESS_MS = 500;
         function startPress(val) {
             longPressTriggered = false;
             longPressTimer = setTimeout(function() {
                 longPressTriggered = true;
                 var input = document.getElementById('phoneInput');
-                if (input.value.indexOf('+') === -1) {
-                    input.value = '+' + input.value;
-                } else if (input.value.replace('+', '').length < 15) {
-                    // already has a +, fall back to inserting the digit
-                    input.value += val;
-                }
+                if (input.value.indexOf('+') === -1) { input.value = '+' + input.value; }
+                else if (input.value.replace('+', '').length < 15) { input.value += val; }
             }, LONG_PRESS_MS);
         }
+        function endPress(val) { clearTimeout(longPressTimer); if (!longPressTriggered) pressKey(val); longPressTriggered = false; }
+        function cancelPress() { clearTimeout(longPressTimer); longPressTriggered = false; }
+        function clearNumber() { document.getElementById('phoneInput').value = '+'; }
 
-        function endPress(val) {
-            clearTimeout(longPressTimer);
-            if (!longPressTriggered) {
-                pressKey(val);
-            }
-            longPressTriggered = false;
-        }
-
-        function cancelPress() {
-            clearTimeout(longPressTimer);
-            longPressTriggered = false;
-        }
-
-        function clearNumber() {
-            document.getElementById('phoneInput').value = '+';
-        }
-
-        // ── HTML entity decoder ──────────────────────────────────────
         function decodeHtmlEntities(str) {
             var txt = document.createElement('textarea');
-            txt.innerHTML = str;
-            return txt.value;
+            txt.innerHTML = str; return txt.value;
         }
 
-        
-
-        // ── Token fetch via VF Remote Action ─────────────────────────
         function fetchToken() {
             return new Promise(function(resolve, reject) {
                 Visualforce.remoting.Manager.invokeAction(
                     'TwilioTokenServiceVF.getToken',
                     function(result, event) {
-
-                        if (!event.status) {
-                            reject(new Error(event.message || 'Remote action failed'));
-                            return;
-                        }
-
+                        if (!event.status) { reject(new Error(event.message || 'Remote action failed')); return; }
                         try {
-                            var rawToken;
-                            var resultStr = result;
-
-                            if (typeof resultStr === 'string') {
-                                resultStr = decodeHtmlEntities(resultStr);
-                            }
-
-                            if (typeof resultStr === 'string' && resultStr.trim().startsWith('eyJ')) {
-                                rawToken = resultStr.trim();
-                            } else if (typeof resultStr === 'string') {
-                                var parsed = JSON.parse(resultStr);
-                                rawToken = parsed.token || parsed;
-                            } else if (resultStr && typeof resultStr === 'object' && resultStr.token) {
-                                rawToken = resultStr.token;
-                            } else {
-                                reject(new Error('Unrecognized token format: ' + JSON.stringify(resultStr)));
-                                return;
-                            }
-
+                            var rawToken; var resultStr = result;
+                            if (typeof resultStr === 'string') resultStr = decodeHtmlEntities(resultStr);
+                            if (typeof resultStr === 'string' && resultStr.trim().startsWith('eyJ')) { rawToken = resultStr.trim(); }
+                            else if (typeof resultStr === 'string') { rawToken = JSON.parse(resultStr).token || resultStr; }
+                            else if (resultStr && typeof resultStr === 'object' && resultStr.token) { rawToken = resultStr.token; }
+                            else { reject(new Error('Unrecognized token format')); return; }
                             token = rawToken;
-
                             try {
                                 var parts = token.split('.');
                                 var jwtPayload = JSON.parse(atob(parts[1]));
                                 tokenExpiry = jwtPayload.exp * 1000;
-                            } catch(e) {
-                                tokenExpiry = Date.now() + (50 * 60 * 1000);
-                            }
-
+                            } catch(e) { tokenExpiry = Date.now() + (50 * 60 * 1000); }
                             resolve(token);
-
-                        } catch(e) {
-                            reject(new Error('Token parse failed: ' + e.message + ' | raw: ' + JSON.stringify(result)));
-                        }
+                        } catch(e) { reject(new Error('Token parse failed: ' + e.message)); }
                     }
                 );
             });
         }
 
         function getToken() {
-            var buffer = 30 * 1000; // 30s safety buffer before expiry
-            if (token && tokenExpiry && Date.now() < (tokenExpiry - buffer)) {
-                return Promise.resolve(token);
-            }
+            var buffer = 30 * 1000;
+            if (token && tokenExpiry && Date.now() < (tokenExpiry - buffer)) return Promise.resolve(token);
             return fetchToken();
         }
 
-        // ── Device init ───────────────────────────────────────────────
         function initDevice() {
-
-            console.log('====================================');
             console.log('INIT DEVICE START');
-            console.log('====================================');
-        
             setStatus('Initializing', '', 'loading');
-        
             return getToken()
-        
                 .then(function(t) {
-        
-                    console.log('TOKEN RECEIVED');
-                    console.log('Token Length:', t ? t.length : 0);
-                    console.log('Token Preview:', t ? t.substring(0, 30) + '...' : 'NULL');
-        
-                    if (!window.Twilio) {
-                        throw new Error('Twilio SDK not loaded');
-                    }
-        
-                    console.log('Twilio SDK Loaded');
-                    console.log(window.Twilio);
-        
-                    device = new Twilio.Device(t, {
-                        logLevel: 5,
-                        edge: 'ashburn'
+                    if (!window.Twilio) throw new Error('Twilio SDK not loaded');
+                    device = new Twilio.Device(t, { logLevel: 5, edge: 'ashburn' });
+                    device.on('registering', function() { setStatus('Registering', '', 'loading'); });
+                    device.on('registered',  function() {
+                        isRegistered = true; setStatus('Ready', 'Registered', 'ready'); notifyParent('registered');
                     });
-                    
-                    console.log('====================================');
-                    console.log('TWILIO VERSION');
-                    console.log('====================================');
-                    
-                    try {
-                        console.log(Twilio.Device.version);
-                    } catch(e) {
-                        console.log('VERSION NOT AVAILABLE');
-                    }
-        
-                    console.log('DEVICE CREATED');
-                    console.log(device);
-        
-                    device.on('registering', function() {
-                        console.log('DEVICE REGISTERING...');
-                        setStatus('Registering', '', 'loading');
-                    });
-        
-                    device.on('registered', function() {
-        
-                        console.log('====================================');
-                        console.log('DEVICE REGISTERED SUCCESSFULLY');
-                        console.log('====================================');
-        
-                        isRegistered = true;
-        
-                        setStatus(
-                            'Ready',
-                            'Registered',
-                            'ready'
-                        );
-        
-                        notifyParent('registered');
-                    });
-        
-                    device.on('unregistered', function() {
-        
-                        console.log('DEVICE UNREGISTERED');
-        
-                        isRegistered = false;
-        
-                        setStatus(
-                            'Unregistered',
-                            '',
-                            'error'
-                        );
-                    });
-        
+                    device.on('unregistered', function() { isRegistered = false; setStatus('Unregistered', '', 'error'); });
                     device.on('error', function(err) {
-        
-                        console.log('====================================');
-                        console.log('TWILIO DEVICE ERROR');
-                        console.log('====================================');
-        
-                        console.error(err);
-        
-                        if (err) {
-                            console.log('Code:', err.code);
-                            console.log('Message:', err.message);
-                            console.log('Explanation:', err.explanation);
-                            console.log('Original Error:', err.originalError);
-                        }
-        
-                        setStatus(
-                            'Error',
-                            err && err.message ? err.message : 'Unknown Error',
-                            'error'
-                        );
-        
-                        notifyParent('error', {
-                            code: err ? err.code : null,
-                            message: err ? err.message : 'Unknown Error'
-                        });
+                        console.error('TWILIO DEVICE ERROR', err);
+                        setStatus('Error', err && err.message ? err.message : 'Unknown Error', 'error');
+                        notifyParent('error', { message: err ? err.message : 'Unknown Error' });
                     });
-        
-                    console.log('CALLING DEVICE.REGISTER()');
-        
+                    device.on('incoming', function(call) {
+                        console.log('INCOMING CALL from:', call.parameters.From);
+                        handleIncomingCall(call);
+                    });
                     return device.register();
                 })
-        
-                .then(function() {
-        
-                    console.log('DEVICE.REGISTER() PROMISE RESOLVED');
-        
-                })
-        
                 .catch(function(err) {
-        
-                    console.log('====================================');
-                    console.log('INIT DEVICE FAILED');
-                    console.log('====================================');
-        
-                    console.error(err);
-        
-                    setStatus(
-                        'Failed to initialize',
-                        err.message || 'Unknown Error',
-                        'error'
-                    );
-        
-                    notifyParent('error', {
-                        message: err.message || 'Unknown Error'
-                    });
-        
+                    console.error('INIT DEVICE FAILED', err);
+                    setStatus('Failed to initialize', err.message || 'Unknown Error', 'error');
+                    notifyParent('error', { message: err.message });
                     throw err;
                 });
         }
 
-        // ── Make Call ─────────────────────────────────────────────────
         function makeCall() {
-
-            var phoneNumber =
-                document.getElementById(
-                    'phoneInput'
-                ).value.trim();
-        
-            if (!phoneNumber) {
-                return;
-            }
-        
-            document.getElementById(
-                'callBtn'
-            ).disabled = true;
-        
-            setStatus(
-                'Calling',
-                phoneNumber,
-                'loading'
-            );
-        
-            notifyParent(
-                'calling',
-                { to: phoneNumber }
-            );
-        
-            var setupPromise =
-                (device && isRegistered)
-                    ? Promise.resolve()
-                    : initDevice();
-        
+            var phoneNumber = document.getElementById('phoneInput').value.trim();
+            if (!phoneNumber) return;
+            document.getElementById('callBtn').disabled = true;
+            setStatus('Calling', phoneNumber, 'loading');
+            notifyParent('calling', { to: phoneNumber });
+            var setupPromise = (device && isRegistered) ? Promise.resolve() : initDevice();
             setupPromise
-        
-                .then(function() {
-        
-                    console.log(
-                        '===================================='
-                    );
-                    console.log(
-                        'MANUAL MIC TEST BEFORE CALL'
-                    );
-                    console.log(
-                        '===================================='
-                    );
-        
-                    return navigator.mediaDevices
-                        .getUserMedia({
-                            audio: true
-                        });
-                })
-        
-                .then(function(stream) {
-        
-                    console.log(
-                        'PRE-CALL MIC TEST PASSED'
-                    );
-        
-                    stream.getTracks()
-                        .forEach(function(track) {
-                            track.stop();
-                        });
-        
-                    return getToken();
-                })
-        
+                .then(function() { return navigator.mediaDevices.getUserMedia({ audio: true }); })
+                .then(function(stream) { stream.getTracks().forEach(function(t) { t.stop(); }); return getToken(); })
                 .then(function(t) {
-        
-                    if (
-                        device &&
-                        isRegistered
-                    ) {
-                        device.updateToken(t);
-                    }
-
-                    if (!device || !isRegistered) {
-                        throw new Error('Device not registered');
-                    }
-        
-                    console.log(
-                        '===================================='
-                    );
-                    console.log(
-                        'ABOUT TO CALL DEVICE.CONNECT'
-                    );
-                    console.log(
-                        '===================================='
-                    );
-        
-                    console.log(
-                        'PHONE:',
-                        phoneNumber
-                    );
-        
-                    console.log(
-                        'REGISTERED:',
-                        isRegistered
-                    );
-        
-                    console.log(
-                        'DEVICE:',
-                        device
-                    );
-        
-                    return device.connect({
-                        params: {
-                            To: phoneNumber
-                        }
-                    });
+                    if (device && isRegistered) device.updateToken(t);
+                    if (!device || !isRegistered) throw new Error('Device not registered');
+                    return device.connect({ params: { To: phoneNumber, IntakeId: intakeId } });
                 })
-        
                 .then(function(call) {
-        
-                    console.log(
-                        'DEVICE.CONNECT SUCCESS'
-                    );
-        
                     activeCall = call;
-        
-                    call.on(
-                        'accept',
-                        function() {
-        
-                            console.log(
-                                'CALL ACCEPTED'
-                            );
-        
-                            setStatus(
-                                'Connected',
-                                phoneNumber,
-                                'ready'
-                            );
-        
-                            notifyParent(
-                                'connected',
-                                {
-                                    to: phoneNumber
-                                }
-                            );
-                        }
-                    );
-        
-                    call.on(
-                        'disconnect',
-                        function() {
-        
-                            console.log(
-                                'CALL DISCONNECTED'
-                            );
-        
-                            setStatus(
-                                'Ready',
-                                'Registered',
-                                'ready'
-                            );
-        
-                            document
-                                .getElementById(
-                                    'callBtn'
-                                )
-                                .disabled = false;
-        
-                            activeCall = null;
-        
-                            notifyParent(
-                                'disconnected'
-                            );
-                        }
-                    );
-        
-                    call.on(
-                        'cancel',
-                        function() {
-        
-                            console.log(
-                                'CALL CANCELLED'
-                            );
-        
-                            setStatus(
-                                'Ready',
-                                'Registered',
-                                'ready'
-                            );
-        
-                            document
-                                .getElementById(
-                                    'callBtn'
-                                )
-                                .disabled = false;
-        
-                            activeCall = null;
-        
-                            notifyParent(
-                                'cancelled'
-                            );
-                        }
-                    );
-        
-                    call.on(
-                        'error',
-                        function(err) {
-        
-                            console.log(
-                                'CALL ERROR'
-                            );
-        
-                            console.error(
-                                err
-                            );
-                        }
-                    );
+                    call.on('accept', function() {
+                        setStatus('Connected', phoneNumber, 'ready');
+                        enableMuteBtn();
+                        notifyParent('connected', { to: phoneNumber });
+                        startCoPilot(activeCall);     // <-- CO-PILOT
+                    });
+                    call.on('disconnect', function() {
+                        stopCoPilot();                // <-- CO-PILOT
+                        setStatus('Ready', 'Registered', 'ready');
+                        document.getElementById('callBtn').disabled = false;
+                        resetMuteBtn(); activeCall = null;
+                        notifyParent('disconnected');
+                    });
+                    call.on('cancel', function() {
+                        stopCoPilot();                // <-- CO-PILOT
+                        setStatus('Ready', 'Registered', 'ready');
+                        document.getElementById('callBtn').disabled = false;
+                        resetMuteBtn(); activeCall = null;
+                        notifyParent('cancelled');
+                    });
+                    call.on('error', function(err) { console.error('CALL ERROR', err); });
                 })
-        
                 .catch(function(err) {
-        
-                    console.log(
-                        '===================================='
-                    );
-                    console.log(
-                        'CALL FAILED'
-                    );
-                    console.log(
-                        '===================================='
-                    );
-        
-                    console.error(
-                        err
-                    );
-        
-                    setStatus(
-                        'Call Failed',
-                        err.message ||
-                        'Unknown Error',
-                        'error'
-                    );
-        
-                    document
-                        .getElementById(
-                            'callBtn'
-                        )
-                        .disabled = false;
-        
-                    notifyParent(
-                        'error',
-                        {
-                            message:
-                                err.message
-                        }
-                    );
+                    console.error('CALL FAILED', err);
+                    setStatus('Call Failed', err.message || 'Unknown Error', 'error');
+                    document.getElementById('callBtn').disabled = false;
+                    resetMuteBtn();
+                    notifyParent('error', { message: err.message });
                 });
         }
 
-        // ── Hang Up ───────────────────────────────────────────────────
         function hangUp() {
-            if (activeCall) {
-                activeCall.disconnect();
-            } else if (device) {
-                device.disconnectAll();
-            }
-
+            stopCoPilot();                            // <-- CO-PILOT
+            hideCallerCard();
+            if (activeCall) { activeCall.disconnect(); }
+            else if (device) { device.disconnectAll(); }
             document.getElementById('callBtn').disabled = false;
-            activeCall = null;
-
-            if (device && isRegistered) {
-                setStatus('Ready', 'Registered', 'ready');
-            } else {
-                setStatus('Not Registered', '', 'error');
-            }
-
+            resetMuteBtn(); activeCall = null;
+            setStatus(
+                device && isRegistered ? 'Ready' : 'Not Registered',
+                device && isRegistered ? 'Registered' : '',
+                device && isRegistered ? 'ready' : 'error'
+            );
             notifyParent('disconnected');
         }
 
-        // ── Listen for commands from opener ────────────────────────────
+        function fetchPhoneNumber(id) {
+            if (!id) return;
+            Visualforce.remoting.Manager.invokeAction(
+                'TwilioTokenServiceVF.getIntakePhone', id,
+                function(result, event) {
+                    if (event.status && result) {
+                        document.getElementById('phoneInput').value = result;
+                        console.log('Phone number fetched from Intake:', result);
+                    }
+                }
+            );
+        }
+
         window.addEventListener('message', function(event) {
             if (!event.data || event.data.target !== 'twilio-softphone') return;
             var cmd = event.data.command;
+            if (cmd === 'setIntakeId' && event.data.intakeId) {
+                intakeId = event.data.intakeId;
+                console.log('IntakeId updated from parent:', intakeId);
+                fetchPhoneNumber(intakeId);
+                return;
+            }
             if (cmd === 'call' && event.data.number) {
                 document.getElementById('phoneInput').value = event.data.number;
                 makeCall();
-            } else if (cmd === 'hangup') {
-                hangUp();
-            }
+            } else if (cmd === 'hangup') { hangUp(); }
         });
 
         // ── Auto-init on load ─────────────────────────────────────────
         window.addEventListener('load', function() {
+            console.log('VF PAGE LOADED — IntakeId:', intakeId);
 
-            console.log('VF PAGE LOADED');
-        
-            if (typeof Twilio === 'undefined') {
-                setStatus('SDK Load Failed', '', 'error');
-                return;
+            if (window.opener && !window.opener.closed) {
+                window.opener.postMessage({ source: 'twilio-softphone', type: 'requestIntakeId' }, '*');
             }
-        
-            console.log('TWILIO SDK FOUND');
-        
-            console.log('========== WEBRTC TEST ==========');
-            console.log('MediaStream:', !!window.MediaStream);
-            console.log('RTCPeerConnection:', !!window.RTCPeerConnection);
-            console.log('mediaDevices:', !!navigator.mediaDevices);
-            console.log(
-                'getUserMedia:',
-                !!(navigator.mediaDevices &&
-                   navigator.mediaDevices.getUserMedia)
-            );
-            console.log(
-                'enumerateDevices:',
-                !!(navigator.mediaDevices &&
-                   navigator.mediaDevices.enumerateDevices)
-            );
-            console.log('=================================');
-        
-            initDevice();
+
+            // Click-to-dial from the LWC call button: ?number=...&autodial=1
+            var autoNumber = getQueryParam('number');
+            var autoDial   = getQueryParam('autodial');
+
+            if (intakeId) fetchPhoneNumber(intakeId);
+
+            initDevice().then(function () {
+                if (autoDial === '1' && autoNumber) {
+                    document.getElementById('phoneInput').value = autoNumber;
+                    makeCall();
+                }
+            }).catch(function () { /* device init already surfaced the error */ });
         });
     </script>
 

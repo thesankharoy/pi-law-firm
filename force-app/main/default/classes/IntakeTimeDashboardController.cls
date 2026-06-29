@@ -7,6 +7,17 @@ public with sharing class IntakeTimeDashboardController {
             .get('Active_Intake')
             .getRecordTypeId();
     }
+    public class IntakePageResult {
+    @AuraEnabled public List<IntakeWrapper> records;
+    @AuraEnabled public Integer totalRecords;
+    @AuraEnabled public Integer pageNumber;
+    @AuraEnabled public Integer pageSize;
+    @AuraEnabled public Integer totalPages;
+
+    public IntakePageResult() {
+        records = new List<IntakeWrapper>();
+    }
+}
 
     // FORMAT FUNCTION (minutes → readable)
     private static String formatTime(Long minutes) {
@@ -21,62 +32,169 @@ public with sharing class IntakeTimeDashboardController {
 
         return days + ' Days ' + hours + ' Hours ' + mins + ' Minutes';
     }
+@AuraEnabled(cacheable=true)
+public static IntakePageResult searchIntakes(
+    String searchKey,
+    Integer pageNumber,
+    Integer pageSize,
+    String selectedMonth,
+    String dateFilter
+) {
 
-    // SEARCH INTAKES
-    @AuraEnabled(cacheable=true)
-    public static List<IntakeWrapper> searchIntakes(String searchKey) {
+    if(pageNumber == null || pageNumber < 1){
+        pageNumber = 1;
+    }
 
-        String key = '%' + (searchKey == null ? '' : searchKey) + '%';
-        Id rtId = getActiveIntakeRT();
+    if(pageSize == null || pageSize < 1){
+        pageSize = 5;
+    }
 
-        List<Intake__c> records = [
-            SELECT Id, Name, Status__c,
-                   Time_in_New__c,
-                   Time_in_Open__c,
-                   Time_in_Working__c,
-                   Time_in_Under_Review__c,
-                   Time_in_Qualified__c,
-                   Time_in_Retainer_Sent__c,
-                   Time_in_Retainer_Signed__c,
-                   Time_in_Turned_Down__c,
-                   Time_in_Converted__c
-            FROM Intake__c
-            WHERE RecordTypeId = :rtId
-            AND Name LIKE :key
-            ORDER BY CreatedDate DESC
-            LIMIT 10
-        ];
+    String key = '%' + (searchKey == null ? '' : searchKey.trim()) + '%';
 
-        List<IntakeWrapper> result = new List<IntakeWrapper>();
+    Id rtId = getActiveIntakeRT();
 
-        for (Intake__c i : records) {
+    Integer offsetRows = (pageNumber - 1) * pageSize;
 
-            Decimal totalDays =
-                (i.Time_in_New__c == null ? 0 : i.Time_in_New__c) +
-                (i.Time_in_Open__c == null ? 0 : i.Time_in_Open__c) +
-                (i.Time_in_Working__c == null ? 0 : i.Time_in_Working__c) +
-                (i.Time_in_Under_Review__c == null ? 0 : i.Time_in_Under_Review__c) +
-                (i.Time_in_Qualified__c == null ? 0 : i.Time_in_Qualified__c) +
-                (i.Time_in_Retainer_Sent__c == null ? 0 : i.Time_in_Retainer_Sent__c) +
-                (i.Time_in_Retainer_Signed__c == null ? 0 : i.Time_in_Retainer_Signed__c) +
-                (i.Time_in_Turned_Down__c == null ? 0 : i.Time_in_Turned_Down__c) +
-                (i.Time_in_Converted__c == null ? 0 : i.Time_in_Converted__c);
+    List<String> conditions = new List<String>();
+    conditions.add('RecordTypeId = :rtId');
+    conditions.add('Name LIKE :key');
 
-            Long totalMinutes = (Long)(totalDays * 1440);
+    /* Month Filter */
 
-            result.add(new IntakeWrapper(
+    if(String.isNotBlank(selectedMonth)){
+        Integer monthNum = Integer.valueOf(selectedMonth);
+        conditions.add(
+            'CALENDAR_MONTH(CreatedDate) = ' + monthNum
+        );
+    }
+
+    /* Date Filter */
+
+    if(String.isNotBlank(dateFilter)){
+
+        if(dateFilter == 'TODAY'){
+            conditions.add('CreatedDate = TODAY');
+        }
+        else if(dateFilter == 'YESTERDAY'){
+            conditions.add('CreatedDate = YESTERDAY');
+        }
+        else if(dateFilter == 'TOMORROW'){
+            conditions.add('CreatedDate = TOMORROW');
+        }
+        else if(dateFilter == 'THIS_WEEK'){
+            conditions.add('CreatedDate = THIS_WEEK');
+        }
+        else if(dateFilter == 'LAST_WEEK'){
+            conditions.add('CreatedDate = LAST_WEEK');
+        }
+        else if(dateFilter == 'NEXT_WEEK'){
+            conditions.add('CreatedDate = NEXT_WEEK');
+        }
+        else if(dateFilter == 'THIS_MONTH'){
+            conditions.add('CreatedDate = THIS_MONTH');
+        }
+        else if(dateFilter == 'LAST_MONTH'){
+            conditions.add('CreatedDate = LAST_MONTH');
+        }
+        else if(dateFilter == 'NEXT_MONTH'){
+            conditions.add('CreatedDate = NEXT_MONTH');
+        }
+        else if(dateFilter == 'THIS_QUARTER'){
+            conditions.add('CreatedDate = THIS_QUARTER');
+        }
+        else if(dateFilter == 'LAST_QUARTER'){
+            conditions.add('CreatedDate = LAST_QUARTER');
+        }
+        else if(dateFilter == 'NEXT_QUARTER'){
+            conditions.add('CreatedDate = NEXT_QUARTER');
+        }
+        else if(dateFilter == 'THIS_YEAR'){
+            conditions.add('CreatedDate = THIS_YEAR');
+        }
+        else if(dateFilter == 'LAST_YEAR'){
+            conditions.add('CreatedDate = LAST_YEAR');
+        }
+    }
+
+    String whereClause =
+        ' WHERE ' + String.join(conditions, ' AND ');
+
+    /* Count Query */
+
+    String countQuery =
+        'SELECT COUNT() FROM Intake__c' +
+        whereClause;
+
+    Integer totalRecords =
+        Database.countQuery(countQuery);
+
+    /* Data Query */
+
+    String dataQuery =
+        'SELECT Id,' +
+        ' Name,' +
+        ' Status__c,' +
+        ' Time_in_New__c,' +
+        ' Time_in_Open__c,' +
+        ' Time_in_Working__c,' +
+        ' Time_in_Under_Review__c,' +
+        ' Time_in_Qualified__c,' +
+        ' Time_in_Retainer_Sent__c,' +
+        ' Time_in_Retainer_Signed__c,' +
+        ' Time_in_Turned_Down__c,' +
+        ' Time_in_Converted__c ' +
+        'FROM Intake__c ' +
+        whereClause +
+        ' ORDER BY CreatedDate DESC ' +
+        ' LIMIT ' + pageSize +
+        ' OFFSET ' + offsetRows;
+
+    List<Intake__c> records =
+        Database.query(dataQuery);
+
+    IntakePageResult response = new IntakePageResult();
+
+    response.records = new List<IntakeWrapper>();
+    response.totalRecords = totalRecords;
+    response.pageNumber = pageNumber;
+    response.pageSize = pageSize;
+    response.totalPages =
+        totalRecords == 0
+        ? 1
+        : (Integer)Math.ceil(
+            (Decimal)totalRecords / pageSize
+        );
+
+    for(Intake__c i : records){
+
+        Decimal totalDays =
+            (i.Time_in_New__c == null ? 0 : i.Time_in_New__c) +
+            (i.Time_in_Open__c == null ? 0 : i.Time_in_Open__c) +
+            (i.Time_in_Working__c == null ? 0 : i.Time_in_Working__c) +
+            (i.Time_in_Under_Review__c == null ? 0 : i.Time_in_Under_Review__c) +
+            (i.Time_in_Qualified__c == null ? 0 : i.Time_in_Qualified__c) +
+            (i.Time_in_Retainer_Sent__c == null ? 0 : i.Time_in_Retainer_Sent__c) +
+            (i.Time_in_Retainer_Signed__c == null ? 0 : i.Time_in_Retainer_Signed__c) +
+            (i.Time_in_Turned_Down__c == null ? 0 : i.Time_in_Turned_Down__c) +
+            (i.Time_in_Converted__c == null ? 0 : i.Time_in_Converted__c);
+
+        Long totalMinutes =
+            (Long)(totalDays * 1440);
+
+        response.records.add(
+            new IntakeWrapper(
                 i.Id,
                 i.Name,
                 i.Status__c,
                 totalDays,
                 totalMinutes,
                 formatTime(totalMinutes)
-            ));
-        }
-
-        return result;
+            )
+        );
     }
 
+    return response;
+}
     // AVERAGE TIME
     @AuraEnabled(cacheable=true)
     public static String getAverageIntakeTime() {

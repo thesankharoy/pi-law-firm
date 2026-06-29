@@ -3,64 +3,70 @@ global without sharing class TwilioCallStart {
 
     @HttpPost
     global static void handlePost() {
-        RestRequest req = RestContext.request;
+        RestRequest  req = RestContext.request;
         RestResponse res = RestContext.response;
 
-        String body = req.requestBody.toString();
-        Map<String, String> params = parseFormBody(body);
+        String callSid  = req.params.get('CallSid');
+        String toNumber = req.params.get('To');
+        String intakeId = req.params.get('IntakeId');
 
-        String callSid = params.get('CallSid');
-        String toNumber = params.get('To');
-        String intakeId = params.get('IntakeId');
-
-        System.debug('===== TWILIO CALL START =====');
-        System.debug('CallSid=' + callSid);
-        System.debug('To=' + toNumber);
-        System.debug('IntakeId=' + intakeId);
+        if (String.isBlank(callSid) && req.requestBody != null) {
+            Map<String, String> bodyParams = parseFormBody(req.requestBody.toString());
+            callSid  = bodyParams.get('CallSid');
+            toNumber = bodyParams.get('To');
+            intakeId = bodyParams.get('IntakeId');
+        }
 
         if (String.isBlank(callSid)) {
-            res.statusCode = 400;
+            res.statusCode   = 400;
             res.responseBody = Blob.valueOf('Missing CallSid');
             return;
         }
 
-        // Avoid duplicate Task if callstart fires more than once for same CallSid
-        List<Task> existing = [
-            SELECT Id FROM Task WHERE Call_Sid__c = :callSid LIMIT 1
-        ];
-
+        // Dedupe by CallObject (standard field — matches TwilioTranscriptionWebhook lookup)
+        List<Task> existing = [SELECT Id FROM Task WHERE CallObject = :callSid LIMIT 1];
         if (!existing.isEmpty()) {
-            res.statusCode = 200;
+            res.statusCode   = 200;
             res.responseBody = Blob.valueOf('Already exists');
             return;
         }
 
-        Task t = new Task();
-        t.Call_Sid__c = callSid;
-        t.Subject = 'Twilio Call to ' + toNumber;
-        t.Status = 'In Progress';
+        Task t         = new Task();
+        t.CallObject   = callSid;   // standard field — used by TwilioTranscriptionWebhook
+        t.Subject      = 'Outbound Call to ' + toNumber;
+        t.CallType     = 'Outbound';
+        t.CallDisposition = 'Answered';
+        t.Status       = 'Completed';
         t.ActivityDate = System.today();
-        t.TaskSubtype = 'Call';
+        // t.TaskSubtype = 'Call';  ← removed: causes 500 in Salesforce REST API
 
-        if (!String.isBlank(intakeId)) {
+        if (String.isNotBlank(intakeId)) {
             try {
                 t.WhatId = (Id) intakeId;
             } catch (Exception e) {
-                System.debug('Invalid IntakeId received: ' + intakeId + ' | ' + e.getMessage());
+                System.debug('Invalid IntakeId: ' + intakeId + ' | ' + e.getMessage());
             }
+        }
+
+        // Look up Contact by the number being dialled
+        if (String.isNotBlank(toNumber)) {
+            List<Contact> contacts = [
+                SELECT Id FROM Contact
+                WHERE MobilePhone = :toNumber OR Phone = :toNumber
+                LIMIT 1
+            ];
+            if (!contacts.isEmpty()) t.WhoId = contacts[0].Id;
         }
 
         insert t;
 
-        res.statusCode = 200;
+        res.statusCode   = 200;
         res.responseBody = Blob.valueOf('OK');
     }
 
     private static Map<String, String> parseFormBody(String body) {
         Map<String, String> result = new Map<String, String>();
-        if (String.isBlank(body)) {
-            return result;
-        }
+        if (String.isBlank(body)) return result;
         for (String pair : body.split('&')) {
             List<String> kv = pair.split('=', 2);
             if (kv.size() == 2) {

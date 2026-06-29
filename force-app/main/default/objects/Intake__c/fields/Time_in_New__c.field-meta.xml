@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Time_in_New__c</fullName>
+    <externalId>false</externalId>
+    <formula>IF(
+  NOT(ISBLANK(New_Entered_At__c)),
+  IF(NOT(ISBLANK(Assigned_Entered_At__c)), Assigned_Entered_At__c - New_Entered_At__c,
+  IF(NOT(ISBLANK(Working_Entered_At__c)), Working_Entered_At__c - New_Entered_At__c,
+  IF(NOT(ISBLANK(Under_Review_Entered_At__c)), Under_Review_Entered_At__c - New_Entered_At__c,
+  IF(NOT(ISBLANK(Qualified_Entered_At__c)), Qualified_Entered_At__c - New_Entered_At__c,
+  IF(NOT(ISBLANK(Retainer_Agreement_Sent_Entered_At__c)), Retainer_Agreement_Sent_Entered_At__c - New_Entered_At__c,
+  IF(NOT(ISBLANK(Retainer_Agreement_Signed_Entered_At__c)), Retainer_Agreement_Signed_Entered_At__c - New_Entered_At__c,
+  IF(NOT(ISBLANK(Turned_Down_Entered_At__c)), Turned_Down_Entered_At__c - New_Entered_At__c,
+  IF(NOT(ISBLANK(Referred_Out_Entered_At__c)), Referred_Out_Entered_At__c - New_Entered_At__c,
+  IF(NOT(ISBLANK(Converted_Entered_At__c)), Converted_Entered_At__c - New_Entered_At__c,
+  IF(ISPICKVAL(Status__c, &quot;New&quot;), NOW() - New_Entered_At__c,
+  NULL
+  )))))))))),
+  NULL
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Time in New (Days)</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>8</scale>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

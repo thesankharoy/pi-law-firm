@@ -3,6 +3,7 @@
     <fullName>Turn_Down_Reason__c</fullName>
     <label>Turn Down Reason</label>
     <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>

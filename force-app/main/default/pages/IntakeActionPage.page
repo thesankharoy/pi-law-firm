@@ -1,0 +1,129 @@
+<apex:page controller="IntakeStatusUpdateController" showHeader="false" sidebar="false" applyBodyTag="false" applyHtmlTag="false" docType="html-5.0">
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 40px 48px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+        }
+
+        .icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 30px;
+        }
+        .icon-success { background: #e8f5e9; }
+        .icon-error   { background: #fdecea; }
+
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 6px;
+        }
+
+        .badge {
+            display: inline-block;
+            margin: 16px auto;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        /* Color per action */
+        .badge-review   { background: #e3f0fa; color: #1a5c8a; }
+        .badge-approved { background: #e8f5e9; color: #1b5e20; }
+        .badge-rejected { background: #fdecea; color: #b71c1c; }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #eeeeee;
+            margin: 24px 0;
+        }
+
+        .meta {
+            font-size: 12px;
+            color: #999999;
+        }
+
+        .close-btn {
+            display: inline-block;
+            margin-top: 28px;
+            padding: 10px 32px;
+            background: #2d6a9f;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-btn:hover { background: #245580; }
+    </style>
+</head>
+<body>
+    <div class="card">
+
+        <!-- SUCCESS STATE -->
+        <apex:outputPanel rendered="{!isSuccess}">
+            <div class="icon icon-success">✅</div>
+            <div class="title">Action Confirmed</div>
+            <div class="subtitle">Intake <strong><apex:outputText value="{!intakeName}"/></strong> has been updated.</div>
+
+            <apex:outputPanel rendered="{!action == 'Review'}">
+                <div class="badge badge-review">🔍 Under Review</div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!action == 'Approved'}">
+                <div class="badge badge-approved">✔ Retainer Agreement Signed</div>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!action == 'Rejected'}">
+                <div class="badge badge-rejected">✖ Turned Down</div>
+            </apex:outputPanel>
+
+            <hr class="divider"/>
+            <div class="meta">You can close this window now.</div>
+        </apex:outputPanel>
+
+        <!-- ERROR STATE -->
+        <apex:outputPanel rendered="{!isError}">
+            <div class="icon icon-error">❌</div>
+            <div class="title">Something Went Wrong</div>
+            <div class="subtitle"><apex:outputText value="{!message}"/></div>
+            <hr class="divider"/>
+            <div class="meta">Please contact your administrator.</div>
+        </apex:outputPanel>
+
+    </div>
+</body>
+</html>
+</apex:page>

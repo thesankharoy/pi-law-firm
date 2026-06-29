@@ -3,6 +3,7 @@
     <fullName>Incident_Age__c</fullName>
     <label>Incident Age</label>
     <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>

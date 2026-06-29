@@ -9,9 +9,4 @@
         <minorNumber>159</minorNumber>
         <namespace>TwilioSF</namespace>
     </packageVersions>
-    <packageVersions>
-        <majorNumber>2</majorNumber>
-        <minorNumber>35</minorNumber>
-        <namespace>pandadoc</namespace>
-    </packageVersions>
 </ApexPage>

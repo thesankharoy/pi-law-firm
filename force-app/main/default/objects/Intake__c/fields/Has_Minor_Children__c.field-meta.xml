@@ -3,6 +3,7 @@
     <fullName>Has_Minor_Children__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Has Minor Children</label>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>

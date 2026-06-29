@@ -1,0 +1,233 @@
+<apex:page standardController="Intake__c"
+           extensions="ReferralAgreementController"
+           renderAs="pdf"
+           showHeader="false"
+           sidebar="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"
+           contentType="application/pdf">
+<html>
+<head>
+<style>
+  /* VF PDF constraints: no Google Fonts, no grid, tables only for layout */
+  body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 0;
+  }
+  @page {
+    size: letter;
+    margin: 0.75in 0.75in 0.9in 0.75in;
+    @bottom-center {
+      content: "Page " counter(page) " of " counter(pages);
+      font-family: Arial, sans-serif;
+      font-size: 9px;
+      color: #666;
+    }
+  }
+  .header-bar {
+    background-color: #1a3c5e;
+    color: #ffffff;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+  }
+  .header-bar h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+  }
+  .header-bar p {
+    margin: 2px 0 0;
+    font-size: 10px;
+    opacity: 0.85;
+  }
+  .section-title {
+    font-size: 12px;
+    font-weight: bold;
+    color: #1a3c5e;
+    border-bottom: 1.5px solid #1a3c5e;
+    padding-bottom: 3px;
+    margin: 18px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+  }
+  .info-table td {
+    padding: 4px 6px;
+    vertical-align: top;
+    font-size: 11px;
+  }
+  .info-table td.label {
+    font-weight: bold;
+    color: #444;
+    width: 35%;
+    white-space: nowrap;
+  }
+  .info-table td.value {
+    color: #1a1a1a;
+  }
+  .agreement-body {
+    font-size: 10.5px;
+    line-height: 1.6;
+    color: #222;
+    margin: 10px 0;
+  }
+  .agreement-body p {
+    margin: 0 0 10px;
+  }
+  .signature-block {
+    margin-top: 30px;
+    border-top: 1px solid #ccc;
+    padding-top: 12px;
+  }
+  .sig-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .sig-table td {
+    padding: 6px 0;
+    font-size: 10px;
+    vertical-align: bottom;
+  }
+  .sig-line {
+    border-bottom: 1px solid #333;
+    min-width: 200px;
+    display: inline-block;
+    height: 14px;
+  }
+  .disclaimer {
+    margin-top: 20px;
+    padding: 8px 10px;
+    background-color: #f5f5f5;
+    border-left: 3px solid #1a3c5e;
+    font-size: 9.5px;
+    color: #555;
+    line-height: 1.5;
+  }
+  .ref-number {
+    font-size: 10px;
+    color: #666;
+    text-align: right;
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="ref-number">
+    Referral Agreement Ref: <strong>{!intakeName}</strong> &nbsp;|&nbsp; Date: <strong>{!agreementDate}</strong>
+  </div>
+
+  <!-- Header -->
+  <div class="header-bar">
+    <h1>REFERRAL AGREEMENT</h1>
+    <p>{!firmName} &nbsp;|&nbsp; {!firmAddress} &nbsp;|&nbsp; {!firmPhone}</p>
+  </div>
+
+  <!-- Section I: Parties -->
+  <div class="section-title">I. Parties</div>
+  <table class="info-table">
+    <tr>
+      <td class="label">Referring Firm:</td>
+      <td class="value">{!firmName}</td>
+    </tr>
+    <tr>
+      <td class="label">Client Name:</td>
+      <td class="value">{!clientFullName}</td>
+    </tr>
+    <tr>
+      <td class="label">Client Phone:</td>
+      <td class="value">{!clientPhone}</td>
+    </tr>
+    <tr>
+      <td class="label">Client Email:</td>
+      <td class="value">{!clientEmail}</td>
+    </tr>
+  </table>
+
+  <!-- Section II: Matter -->
+  <div class="section-title">II. Matter Description</div>
+  <table class="info-table">
+    <tr>
+      <td class="label">Intake Reference:</td>
+      <td class="value">{!intakeName}</td>
+    </tr>
+    <tr>
+      <td class="label">Type of Incident:</td>
+      <td class="value">{!incidentType}</td>
+    </tr>
+    <tr>
+      <td class="label">Date of Incident:</td>
+      <td class="value">{!incidentDate}</td>
+    </tr>
+    <tr>
+      <td class="label">Incident Location:</td>
+      <td class="value">{!incidentLocation}</td>
+    </tr>
+    <tr>
+      <td class="label">Reason for Referral:</td>
+      <td class="value">{!referralReason}</td>
+    </tr>
+  </table>
+
+  <!-- Section III: Agreement Terms -->
+  <div class="section-title">III. Terms and Conditions of Referral</div>
+  <div class="agreement-body">
+    <p><strong>1. Nature of Referral.</strong> The referring firm ({!firmName}) has reviewed the above-captioned matter and determined that it is unable to represent the Client at this time. With Client's consent, the referring firm is referring this matter to qualified legal counsel better suited to handle the Client's needs.</p>
+
+    <p><strong>2. Client Consent.</strong> By accepting this referral agreement, Client acknowledges and consents to: (a) the transfer of Client's matter to a new attorney or firm; (b) the sharing of intake information and case details collected during the intake process with the receiving attorney or firm; and (c) the referring firm's right to receive a referral fee from any recovery, as permitted under applicable rules of professional conduct.</p>
+
+    <p><strong>3. Fee Arrangement.</strong> The referring firm may receive a referral fee from the receiving attorney or firm in connection with any recovery in this matter. Any such referral fee will be consistent with applicable state bar rules, including but not limited to the requirement that the total fee be reasonable and that the Client provide written informed consent. This referral fee, if any, will not increase the Client's overall contingency fee percentage.</p>
+
+    <p><strong>4. No Guarantee of Representation.</strong> This referral does not guarantee that another attorney or firm will agree to represent Client. The receiving attorney retains full discretion to accept or decline representation after an independent evaluation of the matter.</p>
+
+    <p><strong>5. Confidentiality.</strong> All information shared in connection with this referral will be held in confidence by all parties, consistent with applicable rules of professional conduct governing attorney-client privilege and confidentiality.</p>
+
+    <p><strong>6. Client Records.</strong> The referring firm will cooperate in the transfer of any relevant documents, records, or information in its possession to the receiving attorney upon Client's written request, at no additional charge to the Client.</p>
+
+    <p><strong>7. No Further Representation.</strong> Upon Client's acceptance of this referral agreement, the referring firm's representation of Client in this matter will conclude, except for cooperation obligations described herein. Client is free to seek other counsel if Client declines this referral.</p>
+
+    <p><strong>8. Governing Rules.</strong> This agreement is subject to the professional conduct rules of the state in which the matter arises and the state(s) in which the referring and receiving attorneys are licensed. Where state rules impose additional requirements (e.g., proportionality of referral fee to work performed, joint responsibility), those requirements govern.</p>
+  </div>
+
+  <!-- Section IV: Acknowledgment -->
+  <div class="section-title">IV. Client Acknowledgment</div>
+  <div class="agreement-body">
+    <p>By clicking "Accept Referral" in the email sent to you, Client acknowledges that Client has read, understood, and agrees to the terms of this Referral Agreement. Client understands that this constitutes Client's written consent to the referral and the potential referral fee arrangement described herein.</p>
+  </div>
+
+  <!-- Disclaimer -->
+  <div class="disclaimer">
+    <strong>NOTICE:</strong> This referral agreement is for informational and consent purposes only. It does not constitute legal advice. The specific fee-sharing rules and requirements vary by state. The terms of any referral fee arrangement between attorneys will be disclosed separately to the Client, and Client will have the opportunity to consent in writing before any such arrangement is finalized. This document is generated by {!firmName} and should be retained for your records.
+  </div>
+
+  <!-- Signature Block -->
+  <div class="signature-block">
+    <table class="sig-table">
+      <tr>
+        <td style="width:50%; padding-right:20px;">
+          <div>Referring Firm Representative:</div>
+          <div class="sig-line">&nbsp;</div>
+          <div style="margin-top:4px;">{!firmName}</div>
+          <div style="color:#666;">Date: {!agreementDate}</div>
+        </td>
+        <td style="width:50%;">
+          <div>Client Acknowledgment (Electronic):</div>
+          <div class="sig-line">&nbsp;</div>
+          <div style="margin-top:4px;">{!clientFullName}</div>
+          <div style="color:#666;">Accepted via email link</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+</body>
+</html>
+</apex:page>

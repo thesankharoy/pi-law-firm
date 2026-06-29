@@ -1,0 +1,80 @@
+<apex:page controller="LetterOfRepresentationController" renderAs="pdf" applyHtmlTag="false" applyBodyTag="false" showHeader="false" standardStylesheets="false">
+<html>
+<head>
+<style type="text/css">
+    @page {
+        size: letter;
+        margin: 1in;
+        @bottom-center { content: "Page " counter(page) " of " counter(pages); font-size: 9px; color: #666; }
+    }
+    body { font-family: 'Times New Roman', serif; font-size: 12pt; color: #1a1a1a; line-height: 1.5; }
+    .firm-header { text-align: center; margin-bottom: 24px; }
+    .firm-header .firm-name { font-size: 16pt; font-weight: bold; letter-spacing: 0.5px; }
+    .doc-title { text-align: center; font-size: 13pt; font-weight: bold; text-decoration: underline; margin: 18px 0 22px 0; text-transform: uppercase; }
+    .meta-row { margin-bottom: 4px; }
+    .meta-label { display: inline-block; width: 110px; font-weight: bold; }
+    p { margin: 0 0 12px 0; text-align: justify; }
+    .sig-block { margin-top: 46px; }
+    .sig-line { border-top: 1px solid #1a1a1a; width: 320px; margin-top: 36px; padding-top: 4px; }
+    .sig-caption { font-size: 10pt; color: #444; }
+    .date-line { width: 200px; }
+</style>
+</head>
+<body>
+    <div class="firm-header">
+        <div class="firm-name">{!packet.firmName}</div>
+    </div>
+
+    <div class="doc-title">Letter of Representation</div>
+
+    <div class="meta-row"><span class="meta-label">Date:</span>{!todayFormatted}</div>
+    <div class="meta-row"><span class="meta-label">Re:</span>{!packet.clientFullName} — Intake #{!packet.intakeNumber}</div>
+    <div class="meta-row" style="margin-bottom:16px;"><span class="meta-label">Matter Type:</span>{!packet.caseType}</div>
+
+    <p>To Whom It May Concern:</p>
+
+    <p>
+        Please be advised that {!packet.firmName} has been retained by
+        <b>{!packet.clientFullName}</b> to represent {!himHerThem} in connection with all claims
+        arising from an incident that occurred on or about
+        <b>{!incidentDateFormatted}</b>. This office is now the exclusive point of contact
+        for all matters relating to {!hisHerTheir} claim, including but not limited to
+        settlement negotiations, correspondence, medical billing inquiries, and any
+        litigation that may arise.
+    </p>
+
+    <p>
+        Please direct all future communications, correspondence, settlement offers, and
+        requests for information regarding this matter to the undersigned. Kindly do not
+        contact our client directly. Any prior authorizations granted by our client
+        permitting direct contact are hereby revoked as of the date of this letter.
+    </p>
+
+    <apex:outputPanel rendered="{!showSolNotice}">
+        <p>
+            Please note that the applicable statute of limitations for this matter is
+            <b>{!solFormatted}</b>. We request that all responses and records be provided
+            promptly so that our client's rights are fully preserved.
+        </p>
+    </apex:outputPanel>
+
+    <p>
+        Thank you for your attention to this matter. Please do not hesitate to contact our
+        office with any questions.
+    </p>
+
+    <p>Sincerely,</p>
+
+    <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-caption">{!packet.attorneyName}, Esq.<br/>{!packet.firmName}</div>
+    </div>
+
+    <div class="sig-block">
+        <div class="sig-line date-line"></div>
+        <div class="sig-caption">Client Signature — {!packet.clientFullName}</div>
+    </div>
+
+</body>
+</html>
+</apex:page>

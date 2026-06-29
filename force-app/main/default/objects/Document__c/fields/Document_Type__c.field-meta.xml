@@ -100,6 +100,16 @@
                 <default>false</default>
                 <label>Other</label>
             </value>
+            <value>
+                <fullName>Letter of Representation</fullName>
+                <default>false</default>
+                <label>Letter of Representation</label>
+            </value>
+            <value>
+                <fullName>HIPAA Authorization</fullName>
+                <default>false</default>
+                <label>HIPAA Authorization</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

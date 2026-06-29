@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Loss_Analysis__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>The loss analysis this objection belongs to.</description>
+    <label>Loss Analysis</label>
+    <referenceTo>Loss_Analysis__c</referenceTo>
+    <relationshipLabel>Objections</relationshipLabel>
+    <relationshipName>Objections</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

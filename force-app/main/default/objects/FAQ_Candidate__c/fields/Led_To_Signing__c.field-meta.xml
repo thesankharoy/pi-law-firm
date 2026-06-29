@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Led_To_Signing__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>True if the call this came from ended in a signed retainer — marks a &quot;winning&quot; response.</description>
+    <label>Led To Signing</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

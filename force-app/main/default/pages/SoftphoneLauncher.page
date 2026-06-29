@@ -1,4 +1,4 @@
-<apex:page showHeader="false" sidebar="false" standardStylesheets="false" applyBodyTag="false">
+<apex:page controller="TwilioTokenServiceVF" showHeader="false" sidebar="false" standardStylesheets="false" applyBodyTag="false">
 <html>
 <head>
     <meta charset="UTF-8"/>
@@ -6,21 +6,15 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
         body { padding: 8px; display: flex; align-items: center; justify-content: center; height: 100%; background: #fff; }
         .open-btn {
-            background: #2e7d32;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
+            background: #2e7d32; color: #fff; border: none; border-radius: 8px;
+            padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; white-space: nowrap;
         }
         .open-btn:hover { background: #256427; }
     </style>
+    <!-- Open CTI for Lightning — enables onClickToDial on all phone fields.
+         Adjust the API version (64.0) if your org needs a different one. -->
+    <script src="/support/api/64.0/lightning/opencti_min.js"></script>
 </head>
 <body>
     <button class="open-btn" id="openBtn" onclick="openSoftphone()">📞 Open Softphone</button>
@@ -29,64 +23,95 @@
         var softphoneWin = null;
         var INTAKE_PREFIX = 'a00'; // your Intake__c key prefix
 
+        // ---------- existing: detect intake from the parent record page ----------
         function getCurrentIntakeId() {
             try {
                 var parentUrl = window.parent.location.href;
-                console.log('Parent URL:', parentUrl);
-
-                // Match /lightning/r/Intake__c/<Id>/view or similar
                 var match = parentUrl.match(/\/r\/[A-Za-z0-9_]+\/([a-zA-Z0-9]{15,18})\//);
-                if (match && match[1] && match[1].indexOf(INTAKE_PREFIX) === 0) {
-                    return match[1];
-                }
-
-                // Fallback: scan for any 15/18-char Id starting with prefix anywhere in URL
+                if (match && match[1] && match[1].indexOf(INTAKE_PREFIX) === 0) return match[1];
                 var idMatch = parentUrl.match(new RegExp(INTAKE_PREFIX + '[a-zA-Z0-9]{12,15}'));
-                if (idMatch) {
-                    return idMatch[0];
-                }
+                if (idMatch) return idMatch[0];
             } catch (e) {
                 console.log('Cannot read parent URL (cross-origin):', e.message);
             }
             return null;
         }
 
-        function openSoftphone() {
+        // ---------- open / focus the softphone popup ----------
+        function ensureSoftphone(intakeId) {
             if (softphoneWin && !softphoneWin.closed) {
+                if (intakeId) {
+                    softphoneWin.postMessage({ target: 'twilio-softphone', command: 'setIntakeId', intakeId: intakeId }, '*');
+                }
                 softphoneWin.focus();
-                return;
+                return false; // already open
             }
-
-            var intakeId = getCurrentIntakeId();
-            console.log('Detected Intake ID:', intakeId);
-
-            var url = '{!$Page.TwilioSoftphone}';
-            if (intakeId) {
-                url += '?intakeId=' + intakeId;
-            }
-
-            softphoneWin = window.open(
-                url,
-                'twilioSoftphone',
-                'width=380,height=680,resizable=yes,alwaysRaised=yes'
-            );
+            var url = '{!$Page.TwilioSoftphone}' + (intakeId ? ('?intakeId=' + intakeId) : '');
+            softphoneWin = window.open(url, 'twilioSoftphone', 'width=380,height=680,resizable=yes,alwaysRaised=yes');
 
             var btn = document.getElementById('openBtn');
             btn.textContent = '📞 Softphone Open';
-
-            var checkClosed = setInterval(function() {
+            var checkClosed = setInterval(function () {
                 if (softphoneWin && softphoneWin.closed) {
                     btn.textContent = '📞 Open Softphone';
                     softphoneWin = null;
                     clearInterval(checkClosed);
                 }
             }, 1000);
+            return true; // freshly opened
         }
 
-        window.addEventListener('message', function(event) {
+        function openSoftphone() {
+            ensureSoftphone(getCurrentIntakeId());
+        }
+
+        // ---------- click-to-dial: a phone field was clicked anywhere in the org ----------
+        function dialFromRecord(number, recordId) {
+            // Resolve the intake for the record the number was clicked on.
+            Visualforce.remoting.Manager.invokeAction(
+                'TwilioTokenServiceVF.resolveIntakeId', recordId,
+                function (intakeId, event) {
+                    var iid = (event.status && intakeId) ? intakeId : '';
+                    var freshlyOpened = ensureSoftphone(iid);
+                    // fresh window needs a moment to load before it can receive commands
+                    var delay = freshlyOpened ? 1800 : 50;
+                    setTimeout(function () { commandSoftphone(number, iid); }, delay);
+                }
+            );
+        }
+
+        function commandSoftphone(number, intakeId) {
+            if (!softphoneWin || softphoneWin.closed) return;
+            if (intakeId) {
+                softphoneWin.postMessage({ target: 'twilio-softphone', command: 'setIntakeId', intakeId: intakeId }, '*');
+            }
+            softphoneWin.postMessage({ target: 'twilio-softphone', command: 'call', number: number }, '*');
+        }
+
+        // register the Open CTI click-to-dial listener
+        function registerClickToDial() {
+            if (!window.sforce || !sforce.opencti) {
+                console.warn('Open CTI not available yet, retrying...');
+                setTimeout(registerClickToDial, 800);
+                return;
+            }
+            sforce.opencti.onClickToDial({
+                listener: function (payload) {
+                    console.log('onClickToDial', payload);
+                    if (!payload || !payload.number) return;
+                    dialFromRecord(payload.number, payload.recordId);
+                }
+            });
+            console.log('click-to-dial listener registered');
+        }
+
+        // softphone -> launcher events (status, etc.)
+        window.addEventListener('message', function (event) {
             if (!event.data || event.data.source !== 'twilio-softphone') return;
             console.log('Softphone event:', event.data.type, event.data.payload);
         });
+
+        registerClickToDial();
     </script>
 </body>
 </html>

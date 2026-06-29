@@ -3,6 +3,7 @@
     <fullName>Missing_Active_Email__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Missing Active Email</label>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>

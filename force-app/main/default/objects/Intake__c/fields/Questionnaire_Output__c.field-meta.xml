@@ -3,6 +3,7 @@
     <fullName>Questionnaire_Output__c</fullName>
     <label>Questionnaire Output</label>
     <length>32768</length>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>LongTextArea</type>

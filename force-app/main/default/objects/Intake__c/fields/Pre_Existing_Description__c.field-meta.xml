@@ -3,6 +3,7 @@
     <fullName>Pre_Existing_Description__c</fullName>
     <label>Pre-Existing Description</label>
     <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>TextArea</type>

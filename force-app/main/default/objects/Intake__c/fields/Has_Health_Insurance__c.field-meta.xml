@@ -3,6 +3,7 @@
     <fullName>Has_Health_Insurance__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Has Health Insurance</label>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>

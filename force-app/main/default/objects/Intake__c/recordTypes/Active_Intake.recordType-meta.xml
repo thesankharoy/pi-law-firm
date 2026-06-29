@@ -2,6 +2,7 @@
 <RecordType xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Active_Intake</fullName>
     <active>true</active>
+    <compactLayoutAssignment>Intake_Layout</compactLayoutAssignment>
     <label>Active Intake</label>
     <picklistValues>
         <picklist>Body_Parts_Affected__c</picklist>
@@ -243,6 +244,25 @@
         </values>
     </picklistValues>
     <picklistValues>
+        <picklist>Engagement_Level__c</picklist>
+        <values>
+            <fullName>Cold</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Dead</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Hot</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Warm</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
         <picklist>Gender__c</picklist>
         <values>
             <fullName>Female</fullName>
@@ -440,6 +460,56 @@
         </values>
     </picklistValues>
     <picklistValues>
+        <picklist>Lead_Source_Channel__c</picklist>
+        <values>
+            <fullName>Billboard</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Google</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Other</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Referral</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Social</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>TV</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>Lead_Triage_Status__c</picklist>
+        <values>
+            <fullName>Junk</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Needs Review</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Pending AI Review</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Real</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Spam</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
         <picklist>Liability_Clarity__c</picklist>
         <values>
             <fullName>Other_Party_Fault</fullName>
@@ -582,6 +652,21 @@
         </values>
     </picklistValues>
     <picklistValues>
+        <picklist>Priority__c</picklist>
+        <values>
+            <fullName>High</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Low</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Medium</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
         <picklist>Recommended_Action__c</picklist>
         <values>
             <fullName>Attorney Review</fullName>
@@ -640,32 +725,40 @@
         </values>
     </picklistValues>
     <picklistValues>
-        <picklist>Source_Type__c</picklist>
+        <picklist>Source__c</picklist>
         <values>
-            <fullName>Organic</fullName>
+            <fullName>Advertisement</fullName>
             <default>false</default>
         </values>
         <values>
-            <fullName>Paid</fullName>
+            <fullName>Chatbot</fullName>
             <default>false</default>
         </values>
         <values>
-            <fullName>Referral</fullName>
+            <fullName>Email</fullName>
             <default>false</default>
         </values>
         <values>
-            <fullName>Repeat</fullName>
+            <fullName>Phone</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Web</fullName>
             <default>false</default>
         </values>
     </picklistValues>
     <picklistValues>
         <picklist>Status__c</picklist>
         <values>
+            <fullName>Assigned</fullName>
+            <default>false</default>
+        </values>
+        <values>
             <fullName>Converted</fullName>
             <default>false</default>
         </values>
         <values>
-            <fullName>New</fullName>
+            <fullName>Deferred</fullName>
             <default>false</default>
         </values>
         <values>
@@ -677,7 +770,19 @@
             <default>false</default>
         </values>
         <values>
+            <fullName>Retainer Agreement Sent</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Retainer Agreement Signed</fullName>
+            <default>false</default>
+        </values>
+        <values>
             <fullName>Turned Down</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Under Review</fullName>
             <default>false</default>
         </values>
         <values>

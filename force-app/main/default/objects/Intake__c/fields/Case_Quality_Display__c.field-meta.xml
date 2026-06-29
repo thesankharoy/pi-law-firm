@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Case_Quality_Display__c</fullName>
+    <externalId>false</externalId>
+    <formula>IF(
+    Qualification_Score__c &gt;= 91,
+
+    IMAGE(&quot;/resource/RedStar/red_star.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/RedStar/red_star.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/RedStar/red_star.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/RedStar/red_star.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/RedStar/red_star.png&quot;, &quot;Star&quot;, 25, 25),
+
+IF(
+    Qualification_Score__c &gt;= 76,
+
+    IMAGE(&quot;/resource/RedStar/red_star.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/RedStar/red_star.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/RedStar/red_star.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/RedStar/red_star.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/RedOutlineStar/red_star_outline.png&quot;, &quot;Star&quot;, 25, 25),
+
+IF(
+    Qualification_Score__c &gt;= 51,
+
+    IMAGE(&quot;/resource/OrangeStar/orange_star.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/OrangeStar/orange_star.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/OrangeStar/orange_star.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/OrangeOutlineStar/orange_star_outline.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/OrangeOutlineStar/orange_star_outline.png&quot;, &quot;Star&quot;, 25, 25),
+
+IF(
+    Qualification_Score__c &gt;= 26,
+
+    IMAGE(&quot;/resource/BlueStar/blue_star.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/BlueStar/blue_star.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/BlueOutlineStar/blue_star_outline.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/BlueOutlineStar/blue_star_outline.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/BlueOutlineStar/blue_star_outline.png&quot;, &quot;Star&quot;, 25, 25),
+
+    IMAGE(&quot;/resource/BlueStar/blue_star.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/BlueOutlineStar/blue_star_outline.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/BlueOutlineStar/blue_star_outline.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/BlueOutlineStar/blue_star_outline.png&quot;, &quot;Star&quot;, 25, 25) &amp;
+    IMAGE(&quot;/resource/BlueOutlineStar/blue_star_outline.png&quot;, &quot;Star&quot;, 25, 25)
+))))</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Case Quality Display</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

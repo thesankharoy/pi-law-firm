@@ -3,6 +3,7 @@
     <fullName>Last_Called_At__c</fullName>
     <label>Last Called At</label>
     <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>DateTime</type>

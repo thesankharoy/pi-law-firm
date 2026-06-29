@@ -3,6 +3,7 @@
     <fullName>Turn_Down_Details__c</fullName>
     <label>Turn Down Details</label>
     <length>32768</length>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>LongTextArea</type>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Document__c</fullName>
+    <description>The S3-backed file this analysis was extracted from. Master-detail so the cache is cleaned up automatically when the file is deleted.</description>
+    <label>Document</label>
+    <referenceTo>Document__c</referenceTo>
+    <relationshipLabel>Analyses</relationshipLabel>
+    <relationshipName>Analyses</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

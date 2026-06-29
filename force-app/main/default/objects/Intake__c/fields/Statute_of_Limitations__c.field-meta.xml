@@ -3,6 +3,7 @@
     <fullName>Statute_of_Limitations__c</fullName>
     <label>Statute of Limitations</label>
     <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Date</type>

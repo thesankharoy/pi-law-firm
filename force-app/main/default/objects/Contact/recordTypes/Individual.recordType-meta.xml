@@ -23,21 +23,6 @@
         </values>
     </picklistValues>
     <picklistValues>
-        <picklist>Gender__c</picklist>
-        <values>
-            <fullName>Female</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Male</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Others</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
         <picklist>LeadSource</picklist>
         <values>
             <fullName>Other</fullName>
@@ -168,25 +153,6 @@
         </values>
     </picklistValues>
     <picklistValues>
-        <picklist>Salutation__c</picklist>
-        <values>
-            <fullName>Dr%2E %28Individual%29</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Mr%2E</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Mrs%2E</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Ms%2E</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
         <picklist>TwilioSF__Last_Message_Status__c</picklist>
         <values>
             <fullName>blocked</fullName>
@@ -202,25 +168,6 @@
         </values>
         <values>
             <fullName>undelivered</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
-        <picklist>Type__c</picklist>
-        <values>
-            <fullName>Business</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Government</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Medical Provider</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Person</fullName>
             <default>false</default>
         </values>
     </picklistValues>

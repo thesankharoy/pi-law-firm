@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Rule__c</fullName>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Rule</label>
+    <referenceTo>Intake_Assignment_Rule__mdt</referenceTo>
+    <relationshipLabel>Intake Assignment Conditions</relationshipLabel>
+    <relationshipName>Intake_Assignment_Conditions</relationshipName>
+    <required>true</required>
+    <type>MetadataRelationship</type>
+    <unique>false</unique>
+</CustomField>

@@ -3,6 +3,7 @@
     <fullName>Client_Wearing_Seatbelt__c</fullName>
     <label>Client Wearing Seatbelt</label>
     <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>

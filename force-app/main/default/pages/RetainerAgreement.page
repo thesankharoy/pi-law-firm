@@ -1,5 +1,4 @@
-<apex:page
-    standardController="Intake__c"
+<apex:page standardController="Intake__c"
     extensions="RetainerAgreementController"
     renderAs="pdf"
     applyBodyTag="false"
@@ -883,8 +882,7 @@
 
                             <div class="sig-image-container">
                                 <apex:outputPanel rendered="{!isSigned}">
-                                    <apex:image
-                                        url="{!clientSignatureURL}"
+                                    <apex:image url="{!clientSignatureURL}"
                                         styleClass="sig-image"
                                         alt="Client Signature"
                                     />
@@ -926,8 +924,7 @@
 
                             <div class="sig-image-container">
                                 <apex:outputPanel rendered="{!isSigned}">
-                                    <apex:image
-                                        url="{!attorneySignatureURL}"
+                                    <apex:image url="{!attorneySignatureURL}"
                                         styleClass="sig-image"
                                         alt="Attorney Signature"
                                     />

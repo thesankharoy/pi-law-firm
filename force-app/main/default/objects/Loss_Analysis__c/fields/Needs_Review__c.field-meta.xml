@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Needs_Review__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>True when the evidence quote couldn&apos;t be verified in the transcript or confidence was below threshold. A human should confirm.</description>
+    <label>Needs Review</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Objection_Type__c</fullName>
+    <description>Closed-taxonomy objection raised in the call. Off-taxonomy AI answers snap to Other.</description>
+    <label>Objection Type</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Fee_Percentage</fullName>
+                <default>false</default>
+                <label>Fee Percentage</label>
+            </value>
+            <value>
+                <fullName>Time_To_Resolution</fullName>
+                <default>false</default>
+                <label>Time to Resolution</label>
+            </value>
+            <value>
+                <fullName>Will_I_Owe_Anything</fullName>
+                <default>false</default>
+                <label>Will I Owe Anything</label>
+            </value>
+            <value>
+                <fullName>Why_Your_Firm</fullName>
+                <default>false</default>
+                <label>Why Your Firm</label>
+            </value>
+            <value>
+                <fullName>Case_Worth_Question</fullName>
+                <default>false</default>
+                <label>Case Worth Question</label>
+            </value>
+            <value>
+                <fullName>Need_To_Think</fullName>
+                <default>false</default>
+                <label>Need to Think</label>
+            </value>
+            <value>
+                <fullName>Family_Decision</fullName>
+                <default>false</default>
+                <label>Family Decision</label>
+            </value>
+            <value>
+                <fullName>Distrust</fullName>
+                <default>false</default>
+                <label>Distrust</label>
+            </value>
+            <value>
+                <fullName>Already_Talked_To_Firm</fullName>
+                <default>false</default>
+                <label>Already Talked to Firm</label>
+            </value>
+            <value>
+                <fullName>Process_Confusion</fullName>
+                <default>false</default>
+                <label>Process Confusion</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>true</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
