@@ -1,12 +1,13 @@
 public with sharing class DripCampaignController {
     // ── Campaigns ─────────────────────────────────────────────────
     @AuraEnabled(cacheable=false)
-    public static List<Map<String, Object>> getCampaigns() {
+    public static List<Map<String, Object>> getCampaigns(String type) {
         List<Map<String, Object>> result = new List<Map<String, Object>>();
         for (DripCampaign__c c : [
             SELECT Id, Name, Type__c, Total_Duration_Days__c, Active__c, Description__c, (SELECT Id FROM DripSteps__r)
             FROM DripCampaign__c
-            ORDER BY Type__c ASC, Name ASC
+            WHERE Type__c = :type
+            ORDER BY Name ASC
         ]) {
             result.add(
                 new Map<String, Object>{
@@ -30,13 +31,18 @@ public with sharing class DripCampaignController {
         if (data.get('id') != null)
             c.Id = (Id) data.get('id');
         c.Name = (String) data.get('name');
-        c.Type__c = (String) data.get('type');
-        c.Total_Duration_Days__c = data.get('totalDays') != null
-            ? Decimal.valueOf(String.valueOf(data.get('totalDays')))
-            : 90;
-        c.Active__c = data.get('isActive') != null ? (Boolean) data.get('isActive') : true;
+        c.Type__c = (String) data.get('type'); // fixed by the admin UI's current tab
+        c.Total_Duration_Days__c = c.Type__c == 'Re-activation'
+            ? (data.get('totalDays') != null ? Decimal.valueOf(String.valueOf(data.get('totalDays'))) : 90)
+            : 0; // not used for Deferred
+        c.Active__c = false; // set explicitly below via setCampaignActive
         c.Description__c = (String) data.get('description');
         upsert c;
+
+        Boolean wantsActive = data.get('isActive') != null ? (Boolean) data.get('isActive') : true;
+        if (wantsActive) {
+            DripCampaignService.setCampaignActive(c.Id, true);
+        }
         return c.Id;
     }
 
@@ -47,7 +53,7 @@ public with sharing class DripCampaignController {
 
     @AuraEnabled
     public static void toggleCampaignActive(Id campaignId, Boolean isActive) {
-        update new DripCampaign__c(Id = campaignId, Active__c = isActive);
+        DripCampaignService.setCampaignActive(campaignId, isActive);
     }
 
     // ── Steps ─────────────────────────────────────────────────────
@@ -82,7 +88,7 @@ public with sharing class DripCampaignController {
         if (data.get('id') != null)
             s.Id = (Id) data.get('id');
         s.DripCampaign__c = campaignId;
-        s.Day_Number__c = data.get('dayNumber') != null ? Decimal.valueOf(String.valueOf(data.get('dayNumber'))) : 1;
+        s.Day_Number__c = data.get('dayNumber') != null ? Decimal.valueOf(String.valueOf(data.get('dayNumber'))) : 0;
         s.Channel__c = (String) data.get('channel');
         s.Subject__c = (String) data.get('subject');
         s.Body__c = (String) data.get('body');
@@ -97,15 +103,20 @@ public with sharing class DripCampaignController {
         delete [SELECT Id FROM DripStep__c WHERE Id = :stepId LIMIT 1];
     }
 
-    // ── Enrollment (called from intakeDripStatus LWC) ─────────────
+    // ── Used by intakeDripStatus: specialist selection UI ──────────
+    @AuraEnabled(cacheable=false)
+    public static List<Map<String, Object>> getActiveCampaigns(String type) {
+        return DripCampaignService.getActiveCampaigns(type);
+    }
+
     @AuraEnabled(cacheable=false)
     public static Map<String, Object> getEnrollmentStatus(Id intakeId) {
         return DripCampaignService.getEnrollmentStatus(intakeId);
     }
 
     @AuraEnabled
-    public static void deferIntake(Id intakeId, String reactivateDateStr) {
-        DripCampaignService.deferIntake(intakeId, reactivateDateStr);
+    public static void deferIntake(Id intakeId, Id campaignId, String reactivateDateStr) {
+        DripCampaignService.deferIntake(intakeId, campaignId, reactivateDateStr);
     }
 
     @AuraEnabled

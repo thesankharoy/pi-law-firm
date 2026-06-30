@@ -45,6 +45,59 @@
 
         <div class="dm-body">
             <!-- ══════════════════════════════════════ -->
+            <!-- TAB SWITCHER — two fully separate segments -->
+            <!-- ══════════════════════════════════════ -->
+            <template if:false={isDetailView}>
+                <div class="segment-tabs">
+                    <button class={deferredTabClass} data-tab="deferred" onclick={handleTabSwitch}>
+                        <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
+                            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4" />
+                            <path d="M8 5v3.5l2 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+                        </svg>
+                        Deferred Campaigns
+                    </button>
+                    <button class={reactivationTabClass} data-tab="reactivation" onclick={handleTabSwitch}>
+                        <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
+                            <path
+                                d="M11 2v3H8"
+                                stroke="currentColor"
+                                stroke-width="1.4"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                            <path
+                                d="M1.5 7A6.5 6.5 0 0011 4.5"
+                                stroke="currentColor"
+                                stroke-width="1.4"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                        Re-activation Campaigns
+                    </button>
+                </div>
+
+                <!-- Tab-specific explainer -->
+                <template if:true={isDeferredTab}>
+                    <div class="tab-explainer tab-explainer-deferred">
+                        <strong>Multiple campaigns can be active at once.</strong>
+                        <p>
+                            When a specialist defers a lead, every active campaign here appears as a choice — they pick
+                            the one that fits and a wake-up date.
+                        </p>
+                    </div>
+                </template>
+                <template if:true={isReactivationTab}>
+                    <div class="tab-explainer tab-explainer-reactivation">
+                        <strong>Only one campaign can be active at a time.</strong>
+                        <p>
+                            Activating a campaign here automatically deactivates any other — this is the single campaign
+                            that auto-enrolls leads the moment they go Dead. No specialist is involved.
+                        </p>
+                    </div>
+                </template>
+            </template>
+
+            <!-- ══════════════════════════════════════ -->
             <!-- CAMPAIGN LIST VIEW                    -->
             <!-- ══════════════════════════════════════ -->
             <template if:false={isDetailView}>
@@ -64,40 +117,39 @@
                                         <div class="camp-card-top">
                                             <div class="camp-card-top-left">
                                                 <span class="camp-name">{c.name}</span>
-                                                <span class={c.typeBadgeClass}>{c.type}</span>
                                             </div>
-                                            <div class="camp-card-top-right">
-                                                <label class="toggle-switch" title={c.toggleLabel}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={c.isActive}
-                                                        data-id={c.id}
-                                                        onchange={handleToggleActive}
-                                                    />
-                                                    <span class="toggle-slider-sm"></span>
-                                                </label>
-                                            </div>
+                                            <label class="toggle-switch" title={c.toggleLabel}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={c.isActive}
+                                                    data-id={c.id}
+                                                    onchange={handleToggleActive}
+                                                />
+                                                <span class="toggle-slider-sm"></span>
+                                            </label>
                                         </div>
 
                                         <div class="camp-card-meta">
-                                            <span class="meta-item">
-                                                <svg viewBox="0 0 12 12" width="10" height="10" fill="none">
-                                                    <circle
-                                                        cx="6"
-                                                        cy="6"
-                                                        r="5"
-                                                        stroke="currentColor"
-                                                        stroke-width="1.2"
-                                                    />
-                                                    <path
-                                                        d="M6 3.5v2.8l1.5 1.5"
-                                                        stroke="currentColor"
-                                                        stroke-width="1.2"
-                                                        stroke-linecap="round"
-                                                    />
-                                                </svg>
-                                                {c.totalDays} days
-                                            </span>
+                                            <template if:true={isReactivationTab}>
+                                                <span class="meta-item">
+                                                    <svg viewBox="0 0 12 12" width="10" height="10" fill="none">
+                                                        <circle
+                                                            cx="6"
+                                                            cy="6"
+                                                            r="5"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.2"
+                                                        />
+                                                        <path
+                                                            d="M6 3.5v2.8l1.5 1.5"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.2"
+                                                            stroke-linecap="round"
+                                                        />
+                                                    </svg>
+                                                    {c.totalDays} day sequence
+                                                </span>
+                                            </template>
                                             <span class="meta-item">
                                                 <svg viewBox="0 0 12 12" width="10" height="10" fill="none">
                                                     <rect
@@ -119,7 +171,6 @@
                                         </div>
 
                                         <div class="camp-card-footer">
-                                            <!-- View steps — styled button -->
                                             <button class="camp-steps-btn" data-id={c.id} onclick={handleViewSteps}>
                                                 <svg viewBox="0 0 14 14" width="11" height="11" fill="none">
                                                     <path
@@ -140,8 +191,6 @@
                                                     />
                                                 </svg>
                                             </button>
-
-                                            <!-- Icon-only edit + delete -->
                                             <div class="camp-icon-btns">
                                                 <button
                                                     class="icon-btn"
@@ -207,11 +256,8 @@
                                 <rect x="12" y="28" width="40" height="6" rx="2" fill="#e2e8f0" />
                                 <rect x="12" y="38" width="48" height="6" rx="2" fill="#e2e8f0" />
                             </svg>
-                            <div class="dm-empty-title">No campaigns yet</div>
-                            <div class="dm-empty-desc">
-                                Create a Deferred campaign for "call me later" leads and a Re-activation campaign for
-                                Dead leads.
-                            </div>
+                            <div class="dm-empty-title">{emptyStateTitle}</div>
+                            <div class="dm-empty-desc">{emptyStateDesc}</div>
                             <button class="btn-primary" onclick={handleNewCampaign}>+ Create First Campaign</button>
                         </div>
                     </template>
@@ -222,18 +268,18 @@
             <!-- STEP DETAIL VIEW                      -->
             <!-- ══════════════════════════════════════ -->
             <template if:true={isDetailView}>
-                <!-- Campaign info strip -->
                 <div class="camp-detail-strip">
-                    <span class={selectedCampaign.typeBadgeClass}> {selectedCampaign.type} </span>
-                    <span class="strip-sep">·</span>
-                    <span class="strip-item">{selectedCampaign.totalDays} day campaign</span>
+                    <span class={detailTypeBadgeClass}>{selectedCampaign.type}</span>
+                    <template if:true={isReactivationTab}>
+                        <span class="strip-sep">·</span>
+                        <span class="strip-item">{selectedCampaign.totalDays} day campaign</span>
+                    </template>
                     <template if:true={selectedCampaign.description}>
                         <span class="strip-sep">·</span>
                         <span class="strip-desc">{selectedCampaign.description}</span>
                     </template>
                 </div>
 
-                <!-- Merge field info bar -->
                 <div class="merge-info-bar">
                     <svg viewBox="0 0 14 14" width="12" height="12" fill="none">
                         <circle cx="7" cy="7" r="5.5" stroke="#2563eb" stroke-width="1.2" />
@@ -260,8 +306,7 @@
                                         <div class="step-day-badge">Day {step.dayNumber}</div>
                                     </div>
                                     <div class="step-channel-col">
-                                        <span class={step.channelBadgeClass}> {step.channel} </span>
-                                        <!-- Only show task type for Specialist Task steps -->
+                                        <span class={step.channelBadgeClass}>{step.channel}</span>
                                         <template if:true={step.showTaskType}>
                                             <span class="step-task-type">{step.taskType}</span>
                                         </template>
@@ -351,38 +396,28 @@
                         </button>
                     </div>
                     <div class="modal-body">
+                        <!-- Type indicator — read-only, derived from the active tab -->
+                        <div class="modal-type-indicator">
+                            <template if:true={isDeferredTab}> Creating a <strong>Deferred</strong> campaign </template>
+                            <template if:true={isReactivationTab}>
+                                Creating a <strong>Re-activation</strong> campaign
+                            </template>
+                        </div>
+
                         <div class="field-group">
                             <label class="field-label">Campaign Name</label>
                             <input
                                 class="field-input"
                                 type="text"
-                                placeholder="e.g. 90-Day Re-activation"
+                                placeholder="e.g. 6-Week Follow-up"
                                 value={campaignForm.name}
                                 data-field="name"
                                 oninput={handleCampaignFormInput}
                             />
                         </div>
-                        <div class="field-row-two">
-                            <div class="field-group">
-                                <label class="field-label">Type</label>
-                                <div class="select-wrap">
-                                    <select class="field-select" data-field="type" onchange={handleCampaignFormSelect}>
-                                        <option value="Deferred" selected={campaignTypeIsDeferred}>Deferred</option>
-                                        <option value="Re-activation" selected={campaignTypeIsReactivation}>
-                                            Re-activation
-                                        </option>
-                                    </select>
-                                    <svg class="select-chevron" viewBox="0 0 16 16" width="14" height="14" fill="none">
-                                        <path
-                                            d="M4 6l4 4 4-4"
-                                            stroke="currentColor"
-                                            stroke-width="1.4"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        />
-                                    </svg>
-                                </div>
-                            </div>
+
+                        <!-- Duration ONLY for Re-activation — meaningless for Deferred -->
+                        <template if:true={isReactivationTab}>
                             <div class="field-group">
                                 <label class="field-label">Total Duration (days)</label>
                                 <input
@@ -394,8 +429,10 @@
                                     data-field="totalDays"
                                     oninput={handleCampaignFormInput}
                                 />
+                                <div class="field-hint">How long the re-engagement sequence runs before giving up</div>
                             </div>
-                        </div>
+                        </template>
+
                         <div class="field-group">
                             <label class="field-label">
                                 Description
@@ -410,6 +447,27 @@
                                 oninput={handleCampaignFormInput}
                             />
                         </div>
+
+                        <template if:true={isReactivationTab}>
+                            <div class="exclusivity-warning">
+                                <svg viewBox="0 0 14 14" width="12" height="12" fill="none">
+                                    <path
+                                        d="M7 1L13 12H1L7 1z"
+                                        stroke="#b45309"
+                                        stroke-width="1.3"
+                                        stroke-linejoin="round"
+                                    />
+                                    <path
+                                        d="M7 5.5v3M7 10v.5"
+                                        stroke="#b45309"
+                                        stroke-width="1.3"
+                                        stroke-linecap="round"
+                                    />
+                                </svg>
+                                Activating this will deactivate any other active Re-activation campaign.
+                            </div>
+                        </template>
+
                         <template if:true={campaignFormError}>
                             <div class="form-error">{campaignFormError}</div>
                         </template>
@@ -444,19 +502,18 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <!-- Row: Day + Channel + Task Type -->
                         <div class="field-row-three">
                             <div class="field-group">
                                 <label class="field-label">Day Number</label>
                                 <input
                                     class="field-input"
                                     type="number"
-                                    min="1"
+                                    min="0"
                                     value={stepForm.dayNumber}
                                     data-field="dayNumber"
                                     oninput={handleStepFormInput}
                                 />
-                                <div class="field-hint">Days since enrollment</div>
+                                <div class="field-hint">{dayNumberHint}</div>
                             </div>
                             <div class="field-group">
                                 <label class="field-label">Channel</label>
@@ -510,7 +567,6 @@
                             </template>
                         </div>
 
-                        <!-- Subject with merge chips -->
                         <div class="field-group">
                             <label class="field-label">Subject / Task Title</label>
                             <div class="merge-chips-row">
@@ -537,7 +593,6 @@
                             />
                         </div>
 
-                        <!-- Body with merge chips -->
                         <div class="field-group">
                             <label class="field-label">
                                 Body

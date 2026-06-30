@@ -2,6 +2,7 @@ import { LightningElement, api, track } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import { refreshApex } from "@salesforce/apex";
 import getEnrollmentStatus from "@salesforce/apex/DripCampaignController.getEnrollmentStatus";
+import getActiveCampaigns from "@salesforce/apex/DripCampaignController.getActiveCampaigns";
 import deferIntake from "@salesforce/apex/DripCampaignController.deferIntake";
 import cancelEnrollment from "@salesforce/apex/DripCampaignController.cancelEnrollment";
 
@@ -13,6 +14,9 @@ export default class IntakeDripStatus extends LightningElement {
 
     // Defer modal
     @track showDeferModal = false;
+    @track isCampaignsLoading = false;
+    @track campaigns = []; // raw — no selection state stored here
+    @track selectedCampaignId = null; // scalar — drives enrichedCampaigns getter
     @track deferDate = "";
     @track deferError = null;
     @track isDeferring = false;
@@ -33,7 +37,6 @@ export default class IntakeDripStatus extends LightningElement {
         }
     }
 
-    // ── Computed getters ──────────────────────────────────────────
     get isDeferredEnrollment() {
         return this.enrollment?.isEnrolled && this.enrollment?.type === "Deferred";
     }
@@ -51,10 +54,8 @@ export default class IntakeDripStatus extends LightningElement {
     }
 
     get progressBarStyle() {
-        const pct = this.enrollment?.progressPct || 0;
-        return `width:${pct}%;`;
+        return `width:${this.enrollment?.progressPct || 0}%;`;
     }
-
     get todayIso() {
         return new Date().toISOString().substring(0, 10);
     }
@@ -73,7 +74,35 @@ export default class IntakeDripStatus extends LightningElement {
         }
     }
 
-    // ── Cancel enrollment ─────────────────────────────────────────
+    get hasActiveCampaigns() {
+        return this.campaigns.length > 0;
+    }
+
+    // Computed getter pattern — selectedCampaignId is a scalar @track,
+    // so reassigning it always triggers this getter to recompute.
+    get enrichedCampaigns() {
+        return (this.campaigns || []).map((c) => {
+            const isSelected = c.id === this.selectedCampaignId;
+            const steps = (c.steps || []).map((s, idx) => ({
+                ...s,
+                previewKey: c.id + "-" + idx,
+                icon: s.channel === "Email" ? "✉" : "☎",
+                label: s.channel === "Email" ? s.subject : s.taskType + " — " + s.subject
+            }));
+            return {
+                ...c,
+                isSelected,
+                hasSteps: steps.length > 0,
+                steps,
+                cardClass: isSelected ? "campaign-select-card campaign-select-card-selected" : "campaign-select-card"
+            };
+        });
+    }
+
+    get confirmDeferDisabled() {
+        return this.isDeferring || !this.selectedCampaignId || !this.deferDate;
+    }
+
     async handleCancelEnrollment() {
         if (!confirm("Cancel this campaign? The lead will return to normal tracking.")) return;
         try {
@@ -85,15 +114,29 @@ export default class IntakeDripStatus extends LightningElement {
         }
     }
 
-    // ── Defer modal ───────────────────────────────────────────────
-    handleOpenDeferModal() {
+    async handleOpenDeferModal() {
         this.deferDate = "";
         this.deferError = null;
+        this.selectedCampaignId = null;
         this.showDeferModal = true;
+        this.isCampaignsLoading = true;
+        try {
+            this.campaigns = (await getActiveCampaigns({ type: "Deferred" })) || [];
+        } catch (e) {
+            this.campaigns = [];
+            this.toast("Error", this.errMsg(e), "error");
+        } finally {
+            this.isCampaignsLoading = false;
+        }
     }
 
     closeDeferModal() {
         this.showDeferModal = false;
+    }
+
+    handleSelectCampaign(e) {
+        const id = e.currentTarget.dataset.id;
+        this.selectedCampaignId = this.selectedCampaignId === id ? null : id;
     }
 
     handleQuickSelect(e) {
@@ -108,6 +151,10 @@ export default class IntakeDripStatus extends LightningElement {
     }
 
     async handleConfirmDefer() {
+        if (!this.selectedCampaignId) {
+            this.deferError = "Please choose a campaign.";
+            return;
+        }
         if (!this.deferDate) {
             this.deferError = "Please select a date.";
             return;
@@ -117,10 +164,15 @@ export default class IntakeDripStatus extends LightningElement {
             this.deferError = "Please select a future date.";
             return;
         }
+
         this.isDeferring = true;
         this.deferError = null;
         try {
-            await deferIntake({ intakeId: this.recordId, reactivateDateStr: this.deferDate });
+            await deferIntake({
+                intakeId: this.recordId,
+                campaignId: this.selectedCampaignId,
+                reactivateDateStr: this.deferDate
+            });
             this.showDeferModal = false;
             this.toast("Deferred", `Lead will re-activate on ${this.deferDateLabel}.`, "success");
             await this.loadStatus();

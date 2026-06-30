@@ -1,62 +1,107 @@
 public without sharing class DripCampaignService {
     // ════════════════════════════════════════════════════════════
+    // CAMPAIGN ACTIVATION
+    // Deferred: any number of campaigns may be active simultaneously.
+    //           Specialist picks one explicitly when deferring a lead.
+    // Re-activation: only ONE campaign may be active at a time.
+    //           Activating one auto-deactivates every other active
+    //           Re-activation campaign. This is what makes the
+    //           automatic Dead-lead enrollment deterministic — there
+    //           is no human in that loop to choose.
+    // ════════════════════════════════════════════════════════════
+
+    public static void setCampaignActive(Id campaignId, Boolean isActive) {
+        DripCampaign__c c = [SELECT Id, Type__c FROM DripCampaign__c WHERE Id = :campaignId LIMIT 1];
+
+        List<DripCampaign__c> toUpdate = new List<DripCampaign__c>();
+
+        if (isActive && c.Type__c == 'Re-activation') {
+            // Exclusivity ONLY applies to Re-activation. Deferred is untouched.
+            for (DripCampaign__c other : [
+                SELECT Id
+                FROM DripCampaign__c
+                WHERE Type__c = 'Re-activation' AND Id != :campaignId AND Active__c = TRUE
+            ]) {
+                other.Active__c = false;
+                toUpdate.add(other);
+            }
+        }
+
+        toUpdate.add(new DripCampaign__c(Id = campaignId, Active__c = isActive));
+        update toUpdate;
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // CAMPAIGN LISTING — used by intakeDripStatus selection UI
+    // ════════════════════════════════════════════════════════════
+
+    // Returns ALL active campaigns of a given type with steps embedded,
+    // so the LWC can render a selectable list with inline previews.
+    public static List<Map<String, Object>> getActiveCampaigns(String type) {
+        List<Map<String, Object>> result = new List<Map<String, Object>>();
+
+        List<DripCampaign__c> campaigns = [
+            SELECT Id, Name, Description__c, Total_Duration_Days__c
+            FROM DripCampaign__c
+            WHERE Type__c = :type AND Active__c = TRUE
+            ORDER BY Name ASC
+        ];
+        if (campaigns.isEmpty())
+            return result;
+
+        Set<Id> campaignIds = new Map<Id, DripCampaign__c>(campaigns).keySet();
+        Map<Id, List<DripStep__c>> stepsByCampaign = loadStepsByCampaign(campaignIds);
+
+        for (DripCampaign__c c : campaigns) {
+            List<Map<String, Object>> stepPreviews = new List<Map<String, Object>>();
+            List<DripStep__c> steps = stepsByCampaign.get(c.Id);
+            if (steps != null) {
+                for (DripStep__c s : steps) {
+                    stepPreviews.add(
+                        new Map<String, Object>{
+                            'dayNumber' => s.Day_Number__c,
+                            'channel' => s.Channel__c,
+                            'subject' => s.Subject__c,
+                            'taskType' => s.Task_Type__c
+                        }
+                    );
+                }
+            }
+            result.add(
+                new Map<String, Object>{
+                    'id' => c.Id,
+                    'name' => c.Name,
+                    'description' => c.Description__c,
+                    'totalDays' => c.Total_Duration_Days__c,
+                    'stepCount' => stepPreviews.size(),
+                    'steps' => stepPreviews
+                }
+            );
+        }
+        return result;
+    }
+
+    // ════════════════════════════════════════════════════════════
     // ENROLLMENT ENTRY POINTS
     // ════════════════════════════════════════════════════════════
 
-    // ── Called from IntakeTrigger when Status → Deferred ─────────
-    public static void enrollDeferredBatch(List<Intake__c> intakes) {
-        DripCampaign__c campaign = findActiveCampaign('Deferred');
-        if (campaign == null)
-            return;
-
-        Set<Id> intakeIds = new Map<Id, Intake__c>(intakes).keySet();
-
-        // Guard: don't double-enroll
-        Set<Id> alreadyEnrolled = new Set<Id>();
-        for (DripEnrollment__c e : [
-            SELECT Intake__c
-            FROM DripEnrollment__c
-            WHERE Intake__c IN :intakeIds AND Status__c = 'Active'
-        ])
-            alreadyEnrolled.add(e.Intake__c);
-
-        List<DripEnrollment__c> toInsert = new List<DripEnrollment__c>();
-        for (Intake__c i : intakes) {
-            if (alreadyEnrolled.contains(i.Id))
-                continue;
-            Date reactivateAt = i.Deferred_Until__c != null ? i.Deferred_Until__c : Date.today().addDays(42);
-            toInsert.add(
-                new DripEnrollment__c(
-                    Intake__c = i.Id,
-                    DripCampaign__c = campaign.Id,
-                    Type__c = 'Deferred',
-                    Status__c = 'Active',
-                    Enrolled_At__c = DateTime.now(),
-                    Reactivate_At__c = reactivateAt,
-                    Last_Step_Day__c = 0
-                )
-            );
-        }
-        if (!toInsert.isEmpty())
-            insert toInsert;
-    }
-
-    // ── Called from LWC Defer modal ───────────────────────────────
-    // Sets Status = Deferred, Deferred_Until__c, creates enrollment.
-    // No callouts — all DML.
-    public static void deferIntake(Id intakeId, String reactivateDateStr) {
-        DripCampaign__c campaign = findActiveCampaign('Deferred');
-        if (campaign == null) {
-            throw new AuraHandledException(
-                'No active Deferred campaign found. ' + 'Create one in Firm Settings → Drip Campaigns first.'
-            );
+    // Specialist explicitly picks the campaign in the LWC.
+    public static void deferIntake(Id intakeId, Id campaignId, String reactivateDateStr) {
+        List<DripCampaign__c> campaigns = [
+            SELECT Id
+            FROM DripCampaign__c
+            WHERE Id = :campaignId AND Type__c = 'Deferred' AND Active__c = TRUE
+            LIMIT 1
+        ];
+        if (campaigns.isEmpty()) {
+            throw new AuraHandledException('The selected campaign is no longer active. Please choose another.');
         }
 
         Date reactivateAt;
         try {
             reactivateAt = Date.valueOf(reactivateDateStr);
         } catch (Exception e) {
-            reactivateAt = Date.today().addDays(42);
+            throw new AuraHandledException('Invalid date.');
         }
 
         // Cancel any existing active enrollment first
@@ -67,7 +112,7 @@ public without sharing class DripCampaignService {
             Id = intakeId,
             Status__c = 'Deferred',
             Deferred_Until__c = reactivateAt,
-            Engagement_Level__c = 'Warm', // suppresses cold/dead engine
+            Engagement_Level__c = 'Warm',
             Cold_Notified__c = false,
             Escalated_To_Manager__c = false
         );
@@ -75,7 +120,7 @@ public without sharing class DripCampaignService {
         // ── DML 2: create enrollment ───────────────────────────────
         insert new DripEnrollment__c(
             Intake__c = intakeId,
-            DripCampaign__c = campaign.Id,
+            DripCampaign__c = campaignId,
             Type__c = 'Deferred',
             Status__c = 'Active',
             Enrolled_At__c = DateTime.now(),
@@ -84,7 +129,10 @@ public without sharing class DripCampaignService {
         );
     }
 
-    // ── Called from IntakeEngagementService when level → Dead ─────
+    // Fully automatic — fired by IntakeEngagementService when level → Dead.
+    // Exclusivity on Active__c (enforced in setCampaignActive) guarantees
+    // at most one Re-activation campaign is active, so this query is
+    // always deterministic with no extra flag needed.
     public static void autoEnrollDead(Id intakeId) {
         // Guard: already enrolled
         Integer existing = [
@@ -95,13 +143,26 @@ public without sharing class DripCampaignService {
         if (existing > 0)
             return;
 
-        DripCampaign__c campaign = findActiveCampaign('Re-activation');
-        if (campaign == null)
+        List<DripCampaign__c> activeCampaigns = [
+            SELECT Id
+            FROM DripCampaign__c
+            WHERE Type__c = 'Re-activation' AND Active__c = TRUE
+            LIMIT 1
+        ];
+        if (activeCampaigns.isEmpty()) {
+            System.debug(
+                LoggingLevel.WARN,
+                'No active Re-activation campaign — intake ' +
+                    intakeId +
+                    ' went Dead but was not auto-enrolled. ' +
+                    'Activate a Re-activation campaign in Firm Settings → Drip Campaigns.'
+            );
             return;
+        }
 
         insert new DripEnrollment__c(
             Intake__c = intakeId,
-            DripCampaign__c = campaign.Id,
+            DripCampaign__c = activeCampaigns[0].Id,
             Type__c = 'Re-activation',
             Status__c = 'Active',
             Enrolled_At__c = DateTime.now(),
@@ -152,9 +213,8 @@ public without sharing class DripCampaignService {
             ORDER BY Enrolled_At__c DESC
             LIMIT 1
         ];
-        if (enrollments.isEmpty()) {
+        if (enrollments.isEmpty())
             return new Map<String, Object>{ 'isEnrolled' => false };
-        }
 
         DripEnrollment__c e = enrollments[0];
         Map<String, Object> result = new Map<String, Object>{
@@ -196,13 +256,13 @@ public without sharing class DripCampaignService {
         processReactivation();
     }
 
-    // ════════════════════════════════════════════════════════════
-    // PRIVATE — DEFERRED WAKE-UPS
-    // ════════════════════════════════════════════════════════════
-
+    // ── Deferred wake-ups — each enrollment already knows the EXACT
+    // campaign the specialist chose at defer time, so this correctly
+    // runs the right steps even when several Deferred campaigns are
+    // active simultaneously. ──
     private static void processDeferred() {
         List<DripEnrollment__c> wakeUps = [
-            SELECT Id, Intake__c, DripCampaign__r.Name
+            SELECT Id, Intake__c, DripCampaign__c
             FROM DripEnrollment__c
             WHERE Type__c = 'Deferred' AND Status__c = 'Active' AND Reactivate_At__c <= :Date.today()
         ];
@@ -210,8 +270,11 @@ public without sharing class DripCampaignService {
             return;
 
         Set<Id> intakeIds = new Set<Id>();
-        for (DripEnrollment__c e : wakeUps)
+        Set<Id> campaignIds = new Set<Id>();
+        for (DripEnrollment__c e : wakeUps) {
             intakeIds.add(e.Intake__c);
+            campaignIds.add(e.DripCampaign__c);
+        }
 
         Map<Id, Intake__c> intakeMap = new Map<Id, Intake__c>(
             [
@@ -221,14 +284,8 @@ public without sharing class DripCampaignService {
             ]
         );
 
-        Set<Id> ownerIds = new Set<Id>();
-        for (Intake__c i : intakeMap.values()) {
-            if (String.valueOf(i.OwnerId).startsWith('005'))
-                ownerIds.add(i.OwnerId);
-        }
-        Map<Id, User> specialists = ownerIds.isEmpty()
-            ? new Map<Id, User>()
-            : new Map<Id, User>([SELECT Id, Name FROM User WHERE Id IN :ownerIds]);
+        Map<Id, List<DripStep__c>> stepsByCampaign = loadStepsByCampaign(campaignIds);
+        Map<Id, User> specialists = loadSpecialists(intakeMap.values());
 
         List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
         List<Task> tasks = new List<Task>();
@@ -241,31 +298,11 @@ public without sharing class DripCampaignService {
                 continue;
             User specialist = specialists.get(i.OwnerId);
 
-            // Re-engagement email to client
-            if (String.isNotBlank(i.Client__r?.Email)) {
-                String firstName = i.Client__r.Name?.split(' ')[0] ?? 'there';
-                String caseType = String.isNotBlank(i.Incident_Type__c) ? i.Incident_Type__c : 'your case';
-                String body =
-                    'Hi ' +
-                    firstName +
-                    ',\n\n' +
-                    'As requested, we\'re following up regarding ' +
-                    caseType +
-                    '. ' +
-                    'Our team is ready to assist and we look forward to connecting with you.\n\n' +
-                    'Please don\'t hesitate to reach out — we\'re here for you.\n\n' +
-                    (specialist != null ? specialist.Name : 'The intake team');
-
-                Messaging.SingleEmailMessage em = new Messaging.SingleEmailMessage();
-                em.setToAddresses(new List<String>{ i.Client__r.Email });
-                em.setSubject('Following up on your case — ' + i.Name);
-                em.setHtmlBody(buildEmailHtml(body, i.Name));
-                em.setSaveAsActivity(false);
-                emails.add(em);
-            }
-
-            // Task for specialist
-            if (specialist != null) {
+            List<DripStep__c> steps = stepsByCampaign.get(e.DripCampaign__c);
+            if (steps != null && !steps.isEmpty()) {
+                executeSteps(steps, i, specialist, emails, tasks);
+            } else if (specialist != null) {
+                // Safety net only — chosen campaign had zero steps configured
                 tasks.add(
                     new Task(
                         Subject = 'Re-engage deferred lead — ' + i.Name,
@@ -274,7 +311,8 @@ public without sharing class DripCampaignService {
                         Status = 'Not Started',
                         Type = 'Call',
                         ActivityDate = Date.today(),
-                        Description = 'This lead was deferred and is now ready for follow-up.'
+                        Description = 'Deferred lead is ready for follow-up. ' +
+                            '(Chosen campaign had no steps configured.)'
                     )
                 );
             }
@@ -296,14 +334,7 @@ public without sharing class DripCampaignService {
             enrollUpd.add(e);
         }
 
-        // Emails are NOT callouts — safe after queries, before or after DML
-        if (!emails.isEmpty()) {
-            try {
-                Messaging.sendEmail(emails);
-            } catch (Exception ex) {
-                System.debug(LoggingLevel.ERROR, 'Drip deferred email failed: ' + ex.getMessage());
-            }
-        }
+        sendEmailsSafely(emails);
         if (!tasks.isEmpty())
             insert tasks;
         if (!intUpd.isEmpty())
@@ -312,10 +343,7 @@ public without sharing class DripCampaignService {
             update enrollUpd;
     }
 
-    // ════════════════════════════════════════════════════════════
-    // PRIVATE — RE-ACTIVATION STEP EXECUTION
-    // ════════════════════════════════════════════════════════════
-
+    // ── Re-activation step execution ──
     private static void processReactivation() {
         Date today = Date.today();
 
@@ -326,8 +354,7 @@ public without sharing class DripCampaignService {
                 DripCampaign__c,
                 Enrolled_At__c,
                 Last_Step_Day__c,
-                DripCampaign__r.Total_Duration_Days__c,
-                DripCampaign__r.Name
+                DripCampaign__r.Total_Duration_Days__c
             FROM DripEnrollment__c
             WHERE Type__c = 'Re-activation' AND Status__c = 'Active'
         ];
@@ -345,21 +372,8 @@ public without sharing class DripCampaignService {
             daysElapsedMap.put(e.Id, days);
         }
 
-        // Load all steps for relevant campaigns in one query
-        Map<Id, List<DripStep__c>> stepsByCampaign = new Map<Id, List<DripStep__c>>();
-        for (DripStep__c s : [
-            SELECT Id, DripCampaign__c, Day_Number__c, Channel__c, Subject__c, Body__c, Task_Type__c, Sort_Order__c
-            FROM DripStep__c
-            WHERE DripCampaign__c IN :campaignIds
-            ORDER BY Day_Number__c ASC, Sort_Order__c ASC
-        ]) {
-            if (!stepsByCampaign.containsKey(s.DripCampaign__c)) {
-                stepsByCampaign.put(s.DripCampaign__c, new List<DripStep__c>());
-            }
-            stepsByCampaign.get(s.DripCampaign__c).add(s);
-        }
+        Map<Id, List<DripStep__c>> stepsByCampaign = loadStepsByCampaign(campaignIds);
 
-        // Load intakes
         Map<Id, Intake__c> intakeMap = new Map<Id, Intake__c>(
             [
                 SELECT Id, Name, OwnerId, Incident_Type__c, Client__c, Client__r.Name, Client__r.Email
@@ -368,14 +382,7 @@ public without sharing class DripCampaignService {
             ]
         );
 
-        Set<Id> ownerIds = new Set<Id>();
-        for (Intake__c i : intakeMap.values()) {
-            if (String.valueOf(i.OwnerId).startsWith('005'))
-                ownerIds.add(i.OwnerId);
-        }
-        Map<Id, User> specialists = ownerIds.isEmpty()
-            ? new Map<Id, User>()
-            : new Map<Id, User>([SELECT Id, Name FROM User WHERE Id IN :ownerIds]);
+        Map<Id, User> specialists = loadSpecialists(intakeMap.values());
 
         List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
         List<Task> tasks = new List<Task>();
@@ -385,52 +392,28 @@ public without sharing class DripCampaignService {
             Integer daysElapsed = daysElapsedMap.get(e.Id);
             Integer lastStepDay = (Integer) (e.Last_Step_Day__c ?? 0);
             Integer totalDays = (Integer) (e.DripCampaign__r?.Total_Duration_Days__c ?? 90);
-            List<DripStep__c> steps = stepsByCampaign.get(e.DripCampaign__c);
+            List<DripStep__c> allSteps = stepsByCampaign.get(e.DripCampaign__c);
             Intake__c intake = intakeMap.get(e.Intake__c);
             User specialist = intake != null ? specialists.get(intake.OwnerId) : null;
 
             Integer maxStepDay = lastStepDay;
 
-            if (steps != null && !steps.isEmpty() && intake != null) {
-                for (DripStep__c step : steps) {
+            if (allSteps != null && !allSteps.isEmpty() && intake != null) {
+                List<DripStep__c> dueSteps = new List<DripStep__c>();
+                for (DripStep__c step : allSteps) {
                     Integer stepDay = (Integer) step.Day_Number__c;
                     if (stepDay > daysElapsed)
-                        break; // not yet
+                        break;
                     if (stepDay <= lastStepDay)
-                        continue; // already fired
-
-                    if (step.Channel__c == 'Email') {
-                        String clientEmail = intake.Client__r?.Email;
-                        if (String.isNotBlank(clientEmail)) {
-                            String body = mergeBody(step.Body__c, intake, specialist);
-                            String subject = mergeBody(step.Subject__c, intake, specialist);
-                            Messaging.SingleEmailMessage em = new Messaging.SingleEmailMessage();
-                            em.setToAddresses(new List<String>{ clientEmail });
-                            em.setSubject(subject);
-                            em.setHtmlBody(buildEmailHtml(body, intake.Name));
-                            em.setSaveAsActivity(false);
-                            emails.add(em);
-                        }
-                    } else if (step.Channel__c == 'Specialist Task' && specialist != null) {
-                        tasks.add(
-                            new Task(
-                                Subject = mergeBody(step.Subject__c, intake, specialist),
-                                WhatId = intake.Id,
-                                OwnerId = specialist.Id,
-                                Status = 'Not Started',
-                                Type = String.isNotBlank(step.Task_Type__c) ? step.Task_Type__c : 'Call',
-                                ActivityDate = today,
-                                Description = mergeBody(step.Body__c, intake, specialist)
-                            )
-                        );
-                    }
-
+                        continue;
+                    dueSteps.add(step);
                     if (stepDay > maxStepDay)
                         maxStepDay = stepDay;
                 }
+                if (!dueSteps.isEmpty())
+                    executeSteps(dueSteps, intake, specialist, emails, tasks);
             }
 
-            // Patch enrollment
             DripEnrollment__c patch = new DripEnrollment__c(Id = e.Id);
             if (maxStepDay > lastStepDay)
                 patch.Last_Step_Day__c = maxStepDay;
@@ -439,32 +422,85 @@ public without sharing class DripCampaignService {
             enrollUpd.add(patch);
         }
 
-        if (!emails.isEmpty()) {
-            try {
-                Messaging.sendEmail(emails);
-            } catch (Exception ex) {
-                System.debug(LoggingLevel.ERROR, 'Drip re-activation email failed: ' + ex.getMessage());
-            }
-        }
+        sendEmailsSafely(emails);
         if (!tasks.isEmpty())
             insert tasks;
         if (!enrollUpd.isEmpty())
             update enrollUpd;
     }
 
-    // ════════════════════════════════════════════════════════════
-    // PRIVATE HELPERS
-    // ════════════════════════════════════════════════════════════
+    // ── Shared step execution — used by both Deferred and Re-activation ──
+    private static void executeSteps(
+        List<DripStep__c> steps,
+        Intake__c intake,
+        User specialist,
+        List<Messaging.SingleEmailMessage> emails,
+        List<Task> tasks
+    ) {
+        for (DripStep__c step : steps) {
+            if (step.Channel__c == 'Email') {
+                String clientEmail = intake.Client__r?.Email;
+                if (String.isNotBlank(clientEmail)) {
+                    String body = mergeBody(step.Body__c, intake, specialist);
+                    String subject = mergeBody(step.Subject__c, intake, specialist);
+                    Messaging.SingleEmailMessage em = new Messaging.SingleEmailMessage();
+                    em.setToAddresses(new List<String>{ clientEmail });
+                    em.setSubject(subject);
+                    em.setHtmlBody(buildEmailHtml(body, intake.Name));
+                    em.setSaveAsActivity(false);
+                    emails.add(em);
+                }
+            } else if (step.Channel__c == 'Specialist Task' && specialist != null) {
+                tasks.add(
+                    new Task(
+                        Subject = mergeBody(step.Subject__c, intake, specialist),
+                        WhatId = intake.Id,
+                        OwnerId = specialist.Id,
+                        Status = 'Not Started',
+                        Type = String.isNotBlank(step.Task_Type__c) ? step.Task_Type__c : 'Call',
+                        ActivityDate = Date.today(),
+                        Description = mergeBody(step.Body__c, intake, specialist)
+                    )
+                );
+            }
+        }
+    }
 
-    private static DripCampaign__c findActiveCampaign(String type) {
-        List<DripCampaign__c> campaigns = [
-            SELECT Id, Name, Total_Duration_Days__c
-            FROM DripCampaign__c
-            WHERE Type__c = :type AND Active__c = TRUE
-            ORDER BY CreatedDate DESC
-            LIMIT 1
-        ];
-        return campaigns.isEmpty() ? null : campaigns[0];
+    // ── Private helpers ───────────────────────────────────────────
+    private static Map<Id, List<DripStep__c>> loadStepsByCampaign(Set<Id> campaignIds) {
+        Map<Id, List<DripStep__c>> result = new Map<Id, List<DripStep__c>>();
+        for (DripStep__c s : [
+            SELECT Id, DripCampaign__c, Day_Number__c, Channel__c, Subject__c, Body__c, Task_Type__c, Sort_Order__c
+            FROM DripStep__c
+            WHERE DripCampaign__c IN :campaignIds
+            ORDER BY Day_Number__c ASC, Sort_Order__c ASC
+        ]) {
+            if (!result.containsKey(s.DripCampaign__c))
+                result.put(s.DripCampaign__c, new List<DripStep__c>());
+            result.get(s.DripCampaign__c).add(s);
+        }
+        return result;
+    }
+
+    private static Map<Id, User> loadSpecialists(List<Intake__c> intakes) {
+        Set<Id> ownerIds = new Set<Id>();
+        for (Intake__c i : intakes) {
+            if (String.valueOf(i.OwnerId).startsWith('005'))
+                ownerIds.add(i.OwnerId);
+        }
+        return ownerIds.isEmpty()
+            ? new Map<Id, User>()
+            : new Map<Id, User>([SELECT Id, Name FROM User WHERE Id IN :ownerIds]);
+    }
+
+    private static void sendEmailsSafely(List<Messaging.SingleEmailMessage> emails) {
+        if (emails.isEmpty())
+            return;
+        try {
+            Messaging.sendEmail(emails);
+        } catch (Exception ex) {
+            System.debug(LoggingLevel.ERROR, 'Drip email failed: ' + ex.getMessage());
+        }
     }
 
     private static String mergeBody(String template, Intake__c intake, User specialist) {
@@ -489,19 +525,15 @@ public without sharing class DripCampaignService {
         String htmlBody = body.replace('\n', '<br/>');
         return '<!DOCTYPE html><html><body>' +
             '<div style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;' +
-            'max-width:600px;margin:0 auto;border:1px solid #e0e5ee;' +
-            'border-radius:8px;overflow:hidden;">' +
+            'max-width:600px;margin:0 auto;border:1px solid #e0e5ee;border-radius:8px;overflow:hidden;">' +
             '<div style="background:#04152f;padding:20px 28px;">' +
-            '<p style="color:#fff;font-size:18px;font-weight:700;margin:0;">' +
-            'Delipat Law Group</p></div>' +
+            '<p style="color:#fff;font-size:18px;font-weight:700;margin:0;">Delipat Law Group</p></div>' +
             '<div style="padding:28px;background:#fff;">' +
             '<p style="color:#333;font-size:14px;line-height:1.8;margin:0;">' +
             htmlBody +
             '</p></div>' +
-            '<div style="padding:16px 28px;background:#f8f9fb;' +
-            'border-top:1px solid #e0e5ee;">' +
-            '<p style="color:#aaa;font-size:11px;margin:0;">' +
-            'Delipat PI Platform · ' +
+            '<div style="padding:16px 28px;background:#f8f9fb;border-top:1px solid #e0e5ee;">' +
+            '<p style="color:#aaa;font-size:11px;margin:0;">Delipat PI Platform · ' +
             intakeName +
             ' · Do not reply</p>' +
             '</div></div></body></html>';

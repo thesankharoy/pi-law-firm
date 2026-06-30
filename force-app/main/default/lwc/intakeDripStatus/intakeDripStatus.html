@@ -7,9 +7,7 @@
         </template>
 
         <template if:false={isLoading}>
-            <!-- ═══════════════════════════════════ -->
-            <!-- NOT ENROLLED                       -->
-            <!-- ═══════════════════════════════════ -->
+            <!-- NOT ENROLLED -->
             <template if:false={enrollment.isEnrolled}>
                 <div class="ids-card ids-card-empty">
                     <div class="ids-empty-icon">
@@ -21,8 +19,8 @@
                     <div class="ids-empty-text">
                         <div class="ids-empty-title">No drip campaign active</div>
                         <div class="ids-empty-desc">
-                            Defer this lead or wait — if it reaches Dead status, a re-activation campaign starts
-                            automatically.
+                            Defer this lead manually below, or take no action — if it later reaches Dead status, it
+                            joins the active re-activation campaign automatically.
                         </div>
                     </div>
                     <button class="ids-defer-btn" onclick={handleOpenDeferModal}>
@@ -41,9 +39,7 @@
                 </div>
             </template>
 
-            <!-- ═══════════════════════════════════ -->
-            <!-- DEFERRED ENROLLMENT                -->
-            <!-- ═══════════════════════════════════ -->
+            <!-- DEFERRED ENROLLMENT -->
             <template if:true={isDeferredEnrollment}>
                 <div class="ids-card ids-card-deferred">
                     <div class="ids-card-header">
@@ -59,8 +55,10 @@
                             </svg>
                             Deferred
                         </span>
-                        <span class="enroll-campaign-name">{enrollment.campaignName}</span>
+                        <span class="enroll-mode-tag">You chose this</span>
                     </div>
+
+                    <div class="enroll-campaign-name-row">Campaign: <strong>{enrollment.campaignName}</strong></div>
 
                     <div class="ids-reactivate-info">
                         <div class="reactivate-date-label">Re-activates on</div>
@@ -69,15 +67,13 @@
                     </div>
 
                     <div class="ids-card-footer">
-                        <span class="enrolled-since"> Enrolled {enrollment.enrolledAt} </span>
+                        <span class="enrolled-since">Enrolled {enrollment.enrolledAt}</span>
                         <button class="ids-cancel-btn" onclick={handleCancelEnrollment}>Cancel deferral</button>
                     </div>
                 </div>
             </template>
 
-            <!-- ═══════════════════════════════════ -->
-            <!-- RE-ACTIVATION ENROLLMENT           -->
-            <!-- ═══════════════════════════════════ -->
+            <!-- RE-ACTIVATION ENROLLMENT -->
             <template if:true={isReactivationEnrollment}>
                 <div class="ids-card ids-card-reactivation">
                     <div class="ids-card-header">
@@ -99,10 +95,11 @@
                             </svg>
                             Re-activation
                         </span>
-                        <span class="enroll-campaign-name"> {enrollment.campaignName} </span>
+                        <span class="enroll-mode-tag enroll-mode-auto">Automatic — this lead went Dead</span>
                     </div>
 
-                    <!-- Progress bar -->
+                    <div class="enroll-campaign-name-row">Campaign: <strong>{enrollment.campaignName}</strong></div>
+
                     <div class="ids-progress-wrap">
                         <div class="ids-progress-track">
                             <div class="ids-progress-fill" style={progressBarStyle}></div>
@@ -115,19 +112,17 @@
                     </div>
 
                     <div class="ids-card-footer">
-                        <span class="enrolled-since"> Started {enrollment.enrolledAt} </span>
+                        <span class="enrolled-since">Started {enrollment.enrolledAt}</span>
                         <button class="ids-cancel-btn" onclick={handleCancelEnrollment}>Cancel campaign</button>
                     </div>
                 </div>
-            </template> </template
-        ><!-- end if:false isLoading -->
+            </template>
+        </template>
 
-        <!-- ═══════════════════════════════════════ -->
-        <!-- DEFER MODAL                            -->
-        <!-- ═══════════════════════════════════════ -->
+        <!-- DEFER MODAL -->
         <template if:true={showDeferModal}>
             <div class="modal-backdrop" onclick={closeDeferModal}>
-                <div class="modal" onclick={stopProp}>
+                <div class="modal modal-lg" onclick={stopProp}>
                     <div class="modal-header">
                         <h2 class="modal-title">Defer Lead</h2>
                         <button class="modal-close-btn" onclick={closeDeferModal}>
@@ -143,11 +138,108 @@
                     </div>
                     <div class="modal-body">
                         <p class="defer-intro">
-                            The lead will be parked until the selected date. On that date, a task is created for you and
-                            a warm re-engagement email is sent to the client automatically.
+                            Choose which Deferred campaign to enroll this lead in, then pick the date it should wake up.
+                            On that date, the campaign's configured steps run automatically.
                         </p>
 
-                        <!-- Quick select chips -->
+                        <div class="defer-step-label">
+                            <span class="defer-step-number">1</span>
+                            Choose Campaign
+                        </div>
+
+                        <template if:true={isCampaignsLoading}>
+                            <div class="preview-loading">
+                                <lightning-spinner size="x-small" alternative-text="Loading"></lightning-spinner>
+                                Loading active campaigns…
+                            </div>
+                        </template>
+
+                        <template if:false={isCampaignsLoading}>
+                            <template if:true={hasActiveCampaigns}>
+                                <div class="campaign-select-list">
+                                    <template for:each={enrichedCampaigns} for:item="c">
+                                        <div
+                                            key={c.id}
+                                            class={c.cardClass}
+                                            data-id={c.id}
+                                            onclick={handleSelectCampaign}
+                                        >
+                                            <div class="campaign-select-top">
+                                                <span class="campaign-select-name">{c.name}</span>
+                                                <span class="campaign-select-steps">{c.stepCount} steps</span>
+                                                <template if:true={c.isSelected}>
+                                                    <svg
+                                                        viewBox="0 0 16 16"
+                                                        width="15"
+                                                        height="15"
+                                                        fill="none"
+                                                        class="campaign-select-check"
+                                                    >
+                                                        <circle cx="8" cy="8" r="7" fill="#2563eb" />
+                                                        <path
+                                                            d="M5 8l2 2 4-4"
+                                                            stroke="#fff"
+                                                            stroke-width="1.6"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                        />
+                                                    </svg>
+                                                </template>
+                                            </div>
+                                            <template if:true={c.description}>
+                                                <div class="campaign-select-desc">{c.description}</div>
+                                            </template>
+
+                                            <template if:true={c.isSelected}>
+                                                <template if:true={c.hasSteps}>
+                                                    <div class="campaign-select-preview">
+                                                        <template for:each={c.steps} for:item="s">
+                                                            <div key={s.previewKey} class="preview-step-row">
+                                                                <span class="preview-step-day">Day {s.dayNumber}</span>
+                                                                <span class="preview-step-icon">{s.icon}</span>
+                                                                <span class="preview-step-label">{s.label}</span>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                                <template if:false={c.hasSteps}>
+                                                    <div class="preview-no-steps">
+                                                        No steps configured — a fallback task will be created instead.
+                                                    </div>
+                                                </template>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <template if:false={hasActiveCampaigns}>
+                                <div class="no-campaign-warning">
+                                    <svg viewBox="0 0 14 14" width="13" height="13" fill="none">
+                                        <path
+                                            d="M7 1L13 12H1L7 1z"
+                                            stroke="#dc2626"
+                                            stroke-width="1.3"
+                                            stroke-linejoin="round"
+                                        />
+                                        <path
+                                            d="M7 5.5v3M7 10v.5"
+                                            stroke="#dc2626"
+                                            stroke-width="1.3"
+                                            stroke-linecap="round"
+                                        />
+                                    </svg>
+                                    No active Deferred campaigns found. Ask your admin to activate one in Firm Settings
+                                    → Drip Campaigns.
+                                </div>
+                            </template>
+                        </template>
+
+                        <div class="defer-step-label">
+                            <span class="defer-step-number">2</span>
+                            Choose Wake-up Date
+                        </div>
+
                         <div class="field-group">
                             <label class="field-label">Quick select</label>
                             <div class="quick-chips">
@@ -159,9 +251,8 @@
                             </div>
                         </div>
 
-                        <!-- Custom date -->
                         <div class="field-group">
-                            <label class="field-label"> Or pick a specific date </label>
+                            <label class="field-label">Or pick a specific date</label>
                             <input
                                 class="field-input"
                                 type="date"
@@ -193,7 +284,7 @@
                     </div>
                     <div class="modal-footer">
                         <button class="btn-secondary" onclick={closeDeferModal}>Cancel</button>
-                        <button class="btn-primary" onclick={handleConfirmDefer} disabled={isDeferring}>
+                        <button class="btn-primary" onclick={handleConfirmDefer} disabled={confirmDeferDisabled}>
                             <template if:false={isDeferring}>Defer Lead</template>
                             <template if:true={isDeferring}>
                                 <lightning-spinner size="x-small" alternative-text="Deferring"></lightning-spinner>

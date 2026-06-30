@@ -38,20 +38,9 @@ trigger IntakeTrigger on Intake__c(before insert, before update, after insert, a
 
     // ── AFTER UPDATE ─────────────────────────────────────────────────────────
     if (Trigger.isAfter && Trigger.isUpdate) {
-        // ── Drip: enroll intakes where Status just changed to Deferred ──
-        List<Intake__c> newlyDeferred = new List<Intake__c>();
-        for (Intake__c i : Trigger.new) {
-            if (i.Status__c == 'Deferred' && Trigger.oldMap.get(i.Id).Status__c != 'Deferred') {
-                newlyDeferred.add(i);
-            }
-        }
-
         IntakeFollowUpService.reassignTasks(Trigger.new, Trigger.oldMap);
         IntakeNotificationService.notifyAssignment(Trigger.new, Trigger.oldMap);
         IntakeNotificationService.notifyRetainerSigned(Trigger.new, Trigger.oldMap);
-        if (!newlyDeferred.isEmpty()) {
-            DripCampaignService.enrollDeferredBatch(newlyDeferred);
-        }
         IntakeTriggerHandler.handleAfterUpdate(Trigger.new, Trigger.oldMap);
         IntakeCaseSummaryHandler.handle(Trigger.new, Trigger.oldMap);
     }

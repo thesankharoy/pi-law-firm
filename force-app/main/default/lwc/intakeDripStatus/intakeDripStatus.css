@@ -12,7 +12,6 @@
     height: 80px;
 }
 
-/* ── Base card ── */
 .ids-card {
     border: 1.5px solid #e2e8f0;
     border-radius: 12px;
@@ -20,7 +19,6 @@
     background: #fff;
 }
 
-/* ── Empty state ── */
 .ids-card-empty {
     display: flex;
     align-items: center;
@@ -62,24 +60,21 @@
     background: #dbeafe;
 }
 
-/* ── Deferred card ── */
 .ids-card-deferred {
     border-color: #bfdbfe;
     background: #f8fbff;
 }
-
-/* ── Re-activation card ── */
 .ids-card-reactivation {
     border-color: #ddd6fe;
     background: #faf8ff;
 }
 
-/* ── Card header ── */
 .ids-card-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
 }
 .enroll-type-badge {
     display: inline-flex;
@@ -100,13 +95,29 @@
     background: #f5f3ff;
     color: #6d28d9;
 }
-.enroll-campaign-name {
-    font-size: 12px;
-    font-weight: 600;
-    color: #374151;
+
+.enroll-mode-tag {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+.enroll-mode-auto {
+    background: #f5f3ff;
+    color: #6d28d9;
 }
 
-/* ── Deferred info ── */
+.enroll-campaign-name-row {
+    font-size: 12px;
+    color: #475569;
+    margin-bottom: 12px;
+}
+.enroll-campaign-name-row strong {
+    color: #0f172a;
+}
+
 .ids-reactivate-info {
     margin-bottom: 12px;
 }
@@ -129,7 +140,6 @@
     font-weight: 600;
 }
 
-/* ── Progress ── */
 .ids-progress-wrap {
     margin-bottom: 12px;
 }
@@ -153,7 +163,6 @@
     color: #94a3b8;
 }
 
-/* ── Card footer ── */
 .ids-card-footer {
     display: flex;
     justify-content: space-between;
@@ -177,7 +186,6 @@
     text-decoration: underline;
 }
 
-/* ── Defer modal ── */
 .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -195,12 +203,19 @@
     max-width: 100%;
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2);
     overflow: hidden;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+.modal-lg {
+    width: 540px;
 }
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 18px 22px 0;
+    flex-shrink: 0;
 }
 .modal-title {
     font-size: 15px;
@@ -225,6 +240,8 @@
 }
 .modal-body {
     padding: 18px 22px;
+    overflow-y: auto;
+    flex: 1;
 }
 .modal-footer {
     display: flex;
@@ -232,6 +249,7 @@
     gap: 10px;
     padding: 14px 22px;
     border-top: 1px solid #f1f5f9;
+    flex-shrink: 0;
 }
 
 .defer-intro {
@@ -239,6 +257,131 @@
     color: #475569;
     line-height: 1.6;
     margin: 0 0 16px;
+}
+
+.defer-step-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #374151;
+    margin: 16px 0 10px;
+}
+.defer-step-label:first-of-type {
+    margin-top: 0;
+}
+.defer-step-number {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #0f1f3d;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.campaign-select-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+.campaign-select-card {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.12s;
+    background: #fff;
+}
+.campaign-select-card:hover {
+    border-color: #bfdbfe;
+    background: #f8fbff;
+}
+.campaign-select-card-selected {
+    border-color: #2563eb;
+    border-width: 2px;
+    background: #eff6ff;
+}
+.campaign-select-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.campaign-select-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    flex: 1;
+}
+.campaign-select-steps {
+    font-size: 11px;
+    color: #94a3b8;
+}
+.campaign-select-check {
+    flex-shrink: 0;
+}
+.campaign-select-desc {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 3px;
+}
+
+.campaign-select-preview {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #cbd5e1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.preview-step-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    color: #475569;
+}
+.preview-step-day {
+    font-weight: 700;
+    color: #2563eb;
+    min-width: 38px;
+}
+.preview-step-icon {
+    font-size: 12px;
+}
+.preview-no-steps {
+    font-size: 11px;
+    color: #94a3b8;
+    font-style: italic;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #cbd5e1;
+}
+
+.preview-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #64748b;
+    padding: 10px 0;
+}
+.no-campaign-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: #fef2f2;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 12px;
+    color: #dc2626;
+    line-height: 1.5;
 }
 
 .field-group {
@@ -323,6 +466,7 @@
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
+    transition: background 0.12s;
 }
 .btn-primary:hover:not(:disabled) {
     background: #1d4ed8;

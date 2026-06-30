@@ -16,14 +16,10 @@ const MERGE_FIELDS = [
     { token: "{IncidentType}", label: "Incident", display: "{IncidentType}" }
 ];
 
-function typeBadgeClass(type) {
-    return type === "Deferred" ? "type-badge badge-deferred" : "type-badge badge-reactivation";
-}
-function typeBarStyle(type) {
-    return type === "Deferred" ? "background:#2563eb;" : "background:#7c3aed;";
-}
-
 export default class IntakeDripManager extends LightningElement {
+    // Segment tabs — completely separate views, separate type
+    @track activeTab = "deferred"; // 'deferred' | 'reactivation'
+
     // View
     @track currentView = "list"; // 'list' | 'detail'
     @track selectedCampaign = null;
@@ -36,7 +32,7 @@ export default class IntakeDripManager extends LightningElement {
 
     // Campaign modal
     @track showCampaignModal = false;
-    @track campaignForm = { name: "", type: "Deferred", totalDays: 90, description: "", id: null };
+    @track campaignForm = { name: "", totalDays: 90, description: "", id: null };
     @track campaignFormError = null;
     @track isSavingCampaign = false;
 
@@ -46,7 +42,6 @@ export default class IntakeDripManager extends LightningElement {
     @track stepFormError = null;
     @track isSavingStep = false;
 
-    // Internal cursor / textarea sync flags
     _needsTextareaSync = false;
     _pendingCursor = null;
 
@@ -58,12 +53,7 @@ export default class IntakeDripManager extends LightningElement {
         await this.loadCampaigns();
     }
 
-    // ── renderedCallback handles two things: ─────────────────────
-    // 1. Set textarea value imperatively when modal opens (LWC
-    //    doesn't reactively sync textarea.value after first render).
-    // 2. Restore cursor position after merge-field insertion.
     renderedCallback() {
-        // Sync textarea body value
         if (this._needsTextareaSync && this.showStepModal) {
             const ta = this.template.querySelector('textarea[data-field="body"]');
             if (ta) {
@@ -71,8 +61,6 @@ export default class IntakeDripManager extends LightningElement {
                 this._needsTextareaSync = false;
             }
         }
-
-        // Restore cursor after merge-field insertion
         if (this._pendingCursor) {
             const { field, pos } = this._pendingCursor;
             const el = this.template.querySelector(`input[data-field="${field}"], textarea[data-field="${field}"]`);
@@ -84,17 +72,58 @@ export default class IntakeDripManager extends LightningElement {
         }
     }
 
+    // ── Tab switching ───────────────────────────────────────────────
+    get isDeferredTab() {
+        return this.activeTab === "deferred";
+    }
+    get isReactivationTab() {
+        return this.activeTab === "reactivation";
+    }
+    get deferredTabClass() {
+        return this.isDeferredTab ? "segment-tab segment-tab-active" : "segment-tab";
+    }
+    get reactivationTabClass() {
+        return this.isReactivationTab ? "segment-tab segment-tab-active" : "segment-tab";
+    }
+
+    async handleTabSwitch(e) {
+        const tab = e.currentTarget.dataset.tab;
+        if (tab === this.activeTab) return;
+        this.activeTab = tab;
+        await this.loadCampaigns();
+    }
+
+    get currentType() {
+        return this.isDeferredTab ? "Deferred" : "Re-activation";
+    }
+
+    get emptyStateTitle() {
+        return this.isDeferredTab ? "No Deferred campaigns yet" : "No Re-activation campaigns yet";
+    }
+    get emptyStateDesc() {
+        return this.isDeferredTab
+            ? 'Build a campaign specialists can choose from when they defer a "call me later" lead.'
+            : "Build the single campaign that automatically re-engages leads once they go Dead.";
+    }
+
+    get detailTypeBadgeClass() {
+        return this.isDeferredTab ? "type-badge badge-deferred" : "type-badge badge-reactivation";
+    }
+
     // ── Data loading ─────────────────────────────────────────────
     async loadCampaigns() {
         this.isLoading = true;
         try {
-            const raw = await getCampaigns();
+            const raw = await getCampaigns({ type: this.currentType });
             this.campaigns = (raw || []).map((c) => ({
                 ...c,
-                typeBadgeClass: typeBadgeClass(c.type),
-                barStyle: typeBarStyle(c.type),
+                barStyle: this.isDeferredTab ? "background:#2563eb;" : "background:#7c3aed;",
                 cardClass: c.isActive ? "camp-card" : "camp-card camp-card-inactive",
-                toggleLabel: c.isActive ? "Active — click to pause" : "Inactive — click to activate"
+                toggleLabel: c.isActive
+                    ? this.isReactivationTab
+                        ? "Active — the one auto-enrolling Dead leads"
+                        : "Active — click to deactivate"
+                    : "Inactive — click to activate"
             }));
         } catch (e) {
             this.toast("Error", this.errMsg(e), "error");
@@ -110,7 +139,6 @@ export default class IntakeDripManager extends LightningElement {
             this.steps = (raw || []).map((s) => ({
                 ...s,
                 channelBadgeClass: s.channel === "Email" ? "channel-badge badge-email" : "channel-badge badge-task",
-                // Only show task type label for Specialist Task steps
                 showTaskType: s.channel === "Specialist Task" && !!s.taskType,
                 bodyPreview: s.body ? s.body.substring(0, 80) + (s.body.length > 80 ? "…" : "") : ""
             }));
@@ -140,6 +168,12 @@ export default class IntakeDripManager extends LightningElement {
         await this.loadSteps(id);
     }
 
+    handleBackToList() {
+        this.currentView = "list";
+        this.selectedCampaign = null;
+        this.steps = [];
+    }
+
     // ── Campaign CRUD ──────────────────────────────────────────────
     get campaignModalTitle() {
         return this.campaignForm.id ? "Edit Campaign" : "New Campaign";
@@ -147,15 +181,9 @@ export default class IntakeDripManager extends LightningElement {
     get saveCampaignLabel() {
         return this.isSavingCampaign ? "Saving…" : "Save";
     }
-    get campaignTypeIsDeferred() {
-        return this.campaignForm.type === "Deferred";
-    }
-    get campaignTypeIsReactivation() {
-        return this.campaignForm.type === "Re-activation";
-    }
 
     handleNewCampaign() {
-        this.campaignForm = { name: "", type: "Deferred", totalDays: 90, description: "", id: null };
+        this.campaignForm = { name: "", totalDays: 90, description: "", id: null };
         this.campaignFormError = null;
         this.showCampaignModal = true;
     }
@@ -166,7 +194,6 @@ export default class IntakeDripManager extends LightningElement {
         if (!c) return;
         this.campaignForm = {
             name: c.name,
-            type: c.type,
             totalDays: c.totalDays,
             description: c.description || "",
             id: c.id
@@ -179,28 +206,25 @@ export default class IntakeDripManager extends LightningElement {
         const f = e.target.dataset.field;
         this.campaignForm = { ...this.campaignForm, [f]: e.target.value };
     }
-    handleCampaignFormSelect(e) {
-        const f = e.target.dataset.field;
-        this.campaignForm = { ...this.campaignForm, [f]: e.target.value };
-    }
-    handleBackToList() {
-        this.currentView = "list";
-        this.selectedCampaign = null;
-        this.steps = [];
-    }
 
     async handleSaveCampaign() {
         if (!this.campaignForm.name?.trim()) {
             this.campaignFormError = "Campaign name is required.";
             return;
         }
-        if (!this.campaignForm.totalDays || this.campaignForm.totalDays < 1) {
+        if (this.isReactivationTab && (!this.campaignForm.totalDays || this.campaignForm.totalDays < 1)) {
             this.campaignFormError = "Duration must be at least 1 day.";
             return;
         }
         this.isSavingCampaign = true;
         try {
-            await saveCampaign({ campaignJson: JSON.stringify(this.campaignForm) });
+            await saveCampaign({
+                campaignJson: JSON.stringify({
+                    ...this.campaignForm,
+                    type: this.currentType,
+                    isActive: true // newly created/edited campaigns activate by default
+                })
+            });
             this.showCampaignModal = false;
             await this.loadCampaigns();
             this.toast("Saved", "Campaign saved.", "success");
@@ -225,23 +249,17 @@ export default class IntakeDripManager extends LightningElement {
         }
     }
 
+    // Reload the full list after toggling — for Re-activation, the
+    // server may have silently deactivated a sibling campaign.
     async handleToggleActive(e) {
         const id = e.target.dataset.id;
         const isActive = e.target.checked;
         try {
             await toggleCampaignActive({ campaignId: id, isActive });
-            this.campaigns = this.campaigns.map((c) =>
-                c.id !== id
-                    ? c
-                    : {
-                          ...c,
-                          isActive,
-                          cardClass: isActive ? "camp-card" : "camp-card camp-card-inactive",
-                          toggleLabel: isActive ? "Active — click to pause" : "Inactive — click to activate"
-                      }
-            );
+            await this.loadCampaigns();
         } catch (ex) {
             this.toast("Error", this.errMsg(ex), "error");
+            await this.loadCampaigns();
         }
     }
 
@@ -275,10 +293,17 @@ export default class IntakeDripManager extends LightningElement {
         return this.stepForm.taskType === "SMS";
     }
 
+    get dayNumberHint() {
+        return this.isDeferredTab
+            ? "All steps in a Deferred campaign fire together on the date the specialist picks"
+            : "Days since the lead went Dead and entered this campaign";
+    }
+
     handleNewStep() {
-        this.stepForm = { id: null, dayNumber: 1, channel: "Email", subject: "", body: "", taskType: "Call" };
+        const defaultDay = this.isDeferredTab ? 0 : 7;
+        this.stepForm = { id: null, dayNumber: defaultDay, channel: "Email", subject: "", body: "", taskType: "Call" };
         this.stepFormError = null;
-        this._needsTextareaSync = true; // textarea needs sync on open
+        this._needsTextareaSync = true;
         this.showStepModal = true;
     }
 
@@ -286,7 +311,6 @@ export default class IntakeDripManager extends LightningElement {
         const id = e.currentTarget.dataset.id;
         const s = this.steps.find((x) => x.id === id);
         if (!s) return;
-        // Copy all step fields into form — body will be synced via renderedCallback
         this.stepForm = {
             id: s.id,
             dayNumber: s.dayNumber,
@@ -297,14 +321,13 @@ export default class IntakeDripManager extends LightningElement {
             sortOrder: s.sortOrder || 0
         };
         this.stepFormError = null;
-        this._needsTextareaSync = true; // triggers renderedCallback to set textarea.value
+        this._needsTextareaSync = true;
         this.showStepModal = true;
     }
 
     handleChannelSelect(e) {
         this.stepForm = { ...this.stepForm, channel: e.currentTarget.dataset.channel };
     }
-
     handleStepFormInput(e) {
         const f = e.target.dataset.field;
         this.stepForm = { ...this.stepForm, [f]: e.target.value };
@@ -313,36 +336,21 @@ export default class IntakeDripManager extends LightningElement {
         const f = e.target.dataset.field;
         this.stepForm = { ...this.stepForm, [f]: e.target.value };
     }
-
-    // Textarea has its own handler — reads from DOM since LWC
-    // doesn't sync textarea.value as a reactive property
     handleBodyInput(e) {
         this.stepForm = { ...this.stepForm, body: e.target.value };
     }
 
-    // ── Merge field insertion at cursor position ───────────────────
     handleInsertMergeField(e) {
-        const field = e.currentTarget.dataset.field; // 'subject' | 'body'
+        const field = e.currentTarget.dataset.field;
         const token = e.currentTarget.dataset.token;
-
-        // Read current cursor position from the DOM element
         const el = this.template.querySelector(`input[data-field="${field}"], textarea[data-field="${field}"]`);
         const current = field === "subject" ? this.stepForm.subject || "" : this.stepForm.body || "";
         const start = el ? el.selectionStart : current.length;
         const end = el ? el.selectionEnd : current.length;
-
-        // Build new value with token inserted at cursor
         const newVal = current.substring(0, start) + token + current.substring(end);
-
         this.stepForm = { ...this.stepForm, [field]: newVal };
-
-        // Queue cursor restore — renderedCallback fires after re-render
         this._pendingCursor = { field, pos: start + token.length };
-
-        // For textarea: also queue a DOM sync since textarea doesn't bind reactively
-        if (field === "body") {
-            this._needsTextareaSync = true;
-        }
+        if (field === "body") this._needsTextareaSync = true;
     }
 
     async handleSaveStep() {
@@ -350,16 +358,13 @@ export default class IntakeDripManager extends LightningElement {
             this.stepFormError = "Subject is required.";
             return;
         }
-        if (!this.stepForm.dayNumber || this.stepForm.dayNumber < 1) {
-            this.stepFormError = "Day number must be at least 1.";
+        if (this.stepForm.dayNumber == null || this.stepForm.dayNumber < 0) {
+            this.stepFormError = "Day number cannot be negative.";
             return;
         }
         this.isSavingStep = true;
         try {
-            await saveStep({
-                campaignId: this.selectedCampaign.id,
-                stepJson: JSON.stringify(this.stepForm)
-            });
+            await saveStep({ campaignId: this.selectedCampaign.id, stepJson: JSON.stringify(this.stepForm) });
             this.showStepModal = false;
             await this.loadSteps(this.selectedCampaign.id);
             this.toast("Saved", "Step saved.", "success");
