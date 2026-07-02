@@ -205,7 +205,7 @@ public without sharing class LeadPriorityService {
     // ── Callout ───────────────────────────────────────────────────
     private static String callClaude(String prompt) {
         Map<String, Object> body = new Map<String, Object>{
-            'model' => 'claude-sonnet-4-6',
+            'model' => 'claude-haiku-4-5-20251001',
             'max_tokens' => 1000,
             'messages' => new List<Object>{ new Map<String, Object>{ 'role' => 'user', 'content' => prompt } }
         };
