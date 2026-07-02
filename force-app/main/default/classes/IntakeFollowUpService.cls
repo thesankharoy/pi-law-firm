@@ -4,7 +4,7 @@ public without sharing class IntakeFollowUpService {
     // skipStatusesCache so repeated calls within the same execution don't re-query.
     private static Set<String> skipStatusesCache;
 
-    private static Set<String> getSkipStatuses() {
+    public static Set<String> getSkipStatuses() {
         if (skipStatusesCache != null)
             return skipStatusesCache;
 
