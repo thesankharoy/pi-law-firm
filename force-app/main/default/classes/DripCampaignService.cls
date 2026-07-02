@@ -2,11 +2,11 @@ public without sharing class DripCampaignService {
     // ════════════════════════════════════════════════════════════
     // CAMPAIGN ACTIVATION
     // Deferred: any number of campaigns may be active simultaneously.
-    //           Specialist picks one explicitly when deferring a lead.
+    //           Specialist picks one explicitly when deferring a intake.
     // Re-activation: only ONE campaign may be active at a time.
     //           Activating one auto-deactivates every other active
     //           Re-activation campaign. This is what makes the
-    //           automatic Dead-lead enrollment deterministic — there
+    //           automatic Dead-intake enrollment deterministic — there
     //           is no human in that loop to choose.
     // ════════════════════════════════════════════════════════════
 
@@ -305,13 +305,13 @@ public without sharing class DripCampaignService {
                 // Safety net only — chosen campaign had zero steps configured
                 tasks.add(
                     new Task(
-                        Subject = 'Re-engage deferred lead — ' + i.Name,
+                        Subject = 'Re-engage deferred intake — ' + i.Name,
                         WhatId = i.Id,
                         OwnerId = specialist.Id,
                         Status = 'Not Started',
                         Type = 'Call',
                         ActivityDate = Date.today(),
-                        Description = 'Deferred lead is ready for follow-up. ' +
+                        Description = 'Deferred intake is ready for follow-up. ' +
                             '(Chosen campaign had no steps configured.)'
                     )
                 );
@@ -344,6 +344,12 @@ public without sharing class DripCampaignService {
     }
 
     // ── Re-activation step execution ──
+    // MODIFIED: when a campaign completes (daysElapsed >= totalDays)
+    // with zero client response, the intake is now automatically
+    // turned down, the reason field is populated, and the intake
+    // manager is notified by email and in-app bell. Previously the
+    // enrollment simply flipped to Completed and the intake went
+    // permanently silent with no further signal anywhere.
     private static void processReactivation() {
         Date today = Date.today();
 
@@ -374,9 +380,25 @@ public without sharing class DripCampaignService {
 
         Map<Id, List<DripStep__c>> stepsByCampaign = loadStepsByCampaign(campaignIds);
 
+        // Last_Client_Response_At__c added — this is the field the
+        // "use Client_Responded__c" requirement flows through. It is
+        // populated exclusively by IntakeEngagementService.
+        // handleClientResponseUpdate(), which only ever fires when a
+        // specialist checks Client_Responded__c = true on a completed
+        // Task. Checking this field here is equivalent to checking
+        // Client_Responded__c directly, without needing a second Task
+        // query.
         Map<Id, Intake__c> intakeMap = new Map<Id, Intake__c>(
             [
-                SELECT Id, Name, OwnerId, Incident_Type__c, Client__c, Client__r.Name, Client__r.Email
+                SELECT
+                    Id,
+                    Name,
+                    OwnerId,
+                    Incident_Type__c,
+                    Client__c,
+                    Client__r.Name,
+                    Client__r.Email,
+                    Last_Client_Response_At__c
                 FROM Intake__c
                 WHERE Id IN :intakeIds
             ]
@@ -384,9 +406,23 @@ public without sharing class DripCampaignService {
 
         Map<Id, User> specialists = loadSpecialists(intakeMap.values());
 
+        // Manager lookup — used only when a campaign completes with no
+        // response, to notify whoever should pick this up next.
+        List<Intake_Manager__c> mgrs = [
+            SELECT User__c, User__r.Name, User__r.Email
+            FROM Intake_Manager__c
+            WHERE Active__c = TRUE
+            LIMIT 1
+        ];
+        Id managerId = mgrs.isEmpty() ? null : mgrs[0].User__c;
+        String managerName = mgrs.isEmpty() ? 'Manager' : mgrs[0].User__r.Name;
+        String managerEmail = mgrs.isEmpty() ? null : mgrs[0].User__r.Email;
+
         List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
         List<Task> tasks = new List<Task>();
         List<DripEnrollment__c> enrollUpd = new List<DripEnrollment__c>();
+        List<Intake__c> intakeUpd = new List<Intake__c>();
+        List<Id> notifyManagerIntakeIds = new List<Id>();
 
         for (DripEnrollment__c e : active) {
             Integer daysElapsed = daysElapsedMap.get(e.Id);
@@ -417,8 +453,39 @@ public without sharing class DripCampaignService {
             DripEnrollment__c patch = new DripEnrollment__c(Id = e.Id);
             if (maxStepDay > lastStepDay)
                 patch.Last_Step_Day__c = maxStepDay;
-            if (daysElapsed >= totalDays)
+
+            if (daysElapsed >= totalDays) {
                 patch.Status__c = 'Completed';
+
+                // ── Campaign exhausted — check for a genuine client
+                // response before turning down. A real response during
+                // the campaign window would already have cancelled this
+                // enrollment via cancelEnrollmentBatch (called from
+                // IntakeEngagementService.handleClientResponseUpdate),
+                // removing it from this query entirely — so in the
+                // normal case this branch only runs for intakes that
+                // truly never responded. The explicit check here is a
+                // defensive second guard against that same signal.
+                Boolean respondedDuringCampaign =
+                    intake != null &&
+                    intake.Last_Client_Response_At__c != null &&
+                    intake.Last_Client_Response_At__c >= e.Enrolled_At__c;
+
+                if (intake != null && !respondedDuringCampaign) {
+                    intakeUpd.add(
+                        new Intake__c(
+                            Id = intake.Id,
+                            Status__c = 'Turned Down',
+                            Turned_Down_Reason__c = 'Automatically turned down — completed the ' +
+                                totalDays +
+                                '-day re-activation drip campaign with zero ' +
+                                'client response after going Dead.'
+                        )
+                    );
+                    notifyManagerIntakeIds.add(intake.Id);
+                }
+            }
+
             enrollUpd.add(patch);
         }
 
@@ -427,6 +494,13 @@ public without sharing class DripCampaignService {
             insert tasks;
         if (!enrollUpd.isEmpty())
             update enrollUpd;
+        if (!intakeUpd.isEmpty())
+            update intakeUpd;
+
+        // Notification is plain DML/Messaging — not a callout — safe to fire after the DML above.
+        if (!notifyManagerIntakeIds.isEmpty() && managerId != null) {
+            notifyManagerCampaignExhausted(notifyManagerIntakeIds, intakeMap, managerId, managerName, managerEmail);
+        }
     }
 
     // ── Shared step execution — used by both Deferred and Re-activation ──
@@ -464,6 +538,126 @@ public without sharing class DripCampaignService {
                 );
             }
         }
+    }
+
+    // ── NEW — manager notification when a Re-activation campaign
+    // exhausts with zero client response. Sends both an email and an
+    // in-app bell notification, consistent with the escalation pattern
+    // already used in IntakeEngagementService. ──
+    private static void notifyManagerCampaignExhausted(
+        List<Id> intakeIds,
+        Map<Id, Intake__c> intakeMap,
+        Id managerId,
+        String managerName,
+        String managerEmail
+    ) {
+        List<Messaging.SingleEmailMessage> mgrEmails = new List<Messaging.SingleEmailMessage>();
+
+        List<CustomNotificationType> notifTypes = [
+            SELECT Id
+            FROM CustomNotificationType
+            WHERE DeveloperName = 'Intake_Assignment'
+            LIMIT 1
+        ];
+        Id notifTypeId = notifTypes.isEmpty() ? null : notifTypes[0].Id;
+
+        for (Id intakeId : intakeIds) {
+            Intake__c intake = intakeMap.get(intakeId);
+            if (intake == null)
+                continue;
+
+            if (String.isNotBlank(managerEmail)) {
+                mgrEmails.add(buildCampaignExhaustedEmail(intake, managerEmail, managerName));
+            }
+
+            if (notifTypeId != null) {
+                try {
+                    Messaging.CustomNotification notif = new Messaging.CustomNotification();
+                    notif.setNotificationTypeId(notifTypeId);
+                    notif.setTargetId(intakeId);
+                    notif.setTitle('Re-activation exhausted — ' + intake.Name);
+                    notif.setBody(
+                        (intake.Client__r?.Name ?? 'Client') + ' never responded. Automatically turned down.'
+                    );
+                    notif.send(new Set<String>{ String.valueOf(managerId) });
+                } catch (Exception ex) {
+                    System.debug(
+                        LoggingLevel.ERROR,
+                        'Campaign-exhausted notification failed [' + intakeId + ']: ' + ex.getMessage()
+                    );
+                }
+            }
+        }
+
+        sendEmailsSafely(mgrEmails);
+    }
+
+    // ── NEW — manager email for exhausted-campaign turn-down ──
+    private static Messaging.SingleEmailMessage buildCampaignExhaustedEmail(
+        Intake__c intake,
+        String toEmail,
+        String managerName
+    ) {
+        String client = intake.Client__r?.Name ?? '—';
+        String type = intake.Incident_Type__c ?? '—';
+
+        String html =
+            '<!DOCTYPE html><html><body>' +
+            '<div style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;' +
+            'max-width:620px;margin:0 auto;border:1px solid #e0e5ee;border-radius:8px;overflow:hidden;">' +
+            '<div style="background:#04152f;padding:20px 28px;">' +
+            '<p style="color:#fff;font-size:18px;font-weight:700;margin:0;">Delipat Law Group</p>' +
+            '<p style="color:#a8bfd6;font-size:11px;margin:4px 0 0;text-transform:uppercase;' +
+            'letter-spacing:0.08em;">Case Management Platform</p>' +
+            '</div>' +
+            '<div style="background:#fef2f2;border-left:4px solid #dc2626;padding:14px 20px;">' +
+            '<p style="color:#dc2626;font-weight:700;margin:0;font-size:15px;">' +
+            'Re-activation Campaign Exhausted — Turned Down</p></div>' +
+            '<div style="padding:28px;background:#fff;">' +
+            '<p style="color:#333;font-size:14px;margin:0 0 12px;">Hi ' +
+            managerName +
+            ',</p>' +
+            '<p style="color:#333;font-size:14px;margin:0 0 20px;">' +
+            'The following intake completed its full re-activation drip campaign with ' +
+            '<strong>zero client response</strong>. It has been automatically marked ' +
+            '<strong>Turned Down</strong>.</p>' +
+            '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px;">' +
+            '<tr><td style="padding:10px 14px;background:#f4f6f9;color:#777;font-size:11px;' +
+            'text-transform:uppercase;letter-spacing:0.05em;width:38%;">Intake</td>' +
+            '<td style="padding:10px 14px;font-weight:600;color:#04152f;">' +
+            intake.Name +
+            '</td></tr>' +
+            '<tr><td style="padding:10px 14px;background:#f4f6f9;color:#777;font-size:11px;' +
+            'text-transform:uppercase;letter-spacing:0.05em;">Client</td>' +
+            '<td style="padding:10px 14px;font-weight:600;color:#04152f;">' +
+            client +
+            '</td></tr>' +
+            '<tr><td style="padding:10px 14px;background:#f4f6f9;color:#777;font-size:11px;' +
+            'text-transform:uppercase;letter-spacing:0.05em;">Incident Type</td>' +
+            '<td style="padding:10px 14px;font-weight:600;color:#04152f;">' +
+            type +
+            '</td></tr>' +
+            '</table>' +
+            '<div style="text-align:center;">' +
+            '<a href="' +
+            URL.getOrgDomainUrl().toExternalForm() +
+            '/' +
+            intake.Id +
+            '" ' +
+            'style="display:inline-block;background:#04152f;color:#fff;text-decoration:none;' +
+            'padding:14px 32px;border-radius:8px;font-size:14px;font-weight:700;">View Intake Record →</a>' +
+            '</div></div>' +
+            '<div style="padding:16px 28px;background:#f8f9fb;border-top:1px solid #e0e5ee;">' +
+            '<p style="color:#aaa;font-size:11px;margin:0;">' +
+            'Delipat PI Platform · Automated Notification · Do not reply</p>' +
+            '</div></div></body></html>';
+
+        Messaging.SingleEmailMessage em = new Messaging.SingleEmailMessage();
+        em.setToAddresses(new List<String>{ toEmail });
+        em.setSubject('Turned Down — ' + intake.Name + ' · ' + client + ' (re-activation exhausted, no response)');
+        em.setHtmlBody(html);
+        em.setSaveAsActivity(false);
+        return em;
     }
 
     // ── Private helpers ───────────────────────────────────────────
