@@ -7,7 +7,18 @@ global class EndOfDayScheduler implements Schedulable {
     }
 
     global static void schedule() {
+        abortExisting();
         String cron = '0 0 18 * * ?'; // 6:00 PM every day
         System.schedule('End of Day Follow-Up', cron, new EndOfDayScheduler());
+    }
+
+    private static void abortExisting() {
+        for (CronTrigger ct : [
+            SELECT Id
+            FROM CronTrigger
+            WHERE CronJobDetail.Name = 'End of Day Follow-Up'
+        ]) {
+            System.abortJob(ct.Id);
+        }
     }
 }
