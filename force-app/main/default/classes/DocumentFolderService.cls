@@ -32,6 +32,47 @@ public without sharing class DocumentFolderService {
         return root;
     }
 
+    // ── Auto-assign root folder to homeless documents — NEW ────────
+    // Called from DocumentTrigger (before insert on Document__c).
+    // PREVIOUSLY, any Document__c created outside the intakeDocumentManager
+    // LWC — via Flow automation, another Apex class, Data Loader, or the
+    // API — had no way to know a root folder's Id, because ensureRoot()
+    // was only ever called lazily from the LWC's connectedCallback. If
+    // the automation author left Folder__c blank (which was the only
+    // option, since they had no folder Id to reference), the document
+    // was created successfully but became permanently invisible —
+    // listFiles() always queries WHERE Folder__c = :folderId, so a null
+    // Folder__c meant the record just sat in the database, orphaned,
+    // never shown in the Document Manager.
+    //
+    // This method closes that gap centrally: any Document__c with a
+    // null Folder__c (but a populated Intake__c) is automatically
+    // routed to that Intake's root folder — creating the root folder
+    // on the fly via the same idempotent ensureRoot() the LWC already
+    // uses, if it doesn't exist yet. Bulk-safe: documents are grouped
+    // by Intake first, so ensureRoot() is called at most once per
+    // unique Intake in the batch, not once per document.
+    public static void autoAssignRootFolder(List<Document__c> docs) {
+        Map<Id, List<Document__c>> docsByIntake = new Map<Id, List<Document__c>>();
+        for (Document__c d : docs) {
+            if (d.Folder__c == null && d.Intake__c != null) {
+                if (!docsByIntake.containsKey(d.Intake__c)) {
+                    docsByIntake.put(d.Intake__c, new List<Document__c>());
+                }
+                docsByIntake.get(d.Intake__c).add(d);
+            }
+        }
+        if (docsByIntake.isEmpty())
+            return;
+
+        for (Id intakeId : docsByIntake.keySet()) {
+            Folder__c root = ensureRoot(intakeId);
+            for (Document__c d : docsByIntake.get(intakeId)) {
+                d.Folder__c = root.Id;
+            }
+        }
+    }
+
     // ── List subfolders of a given folder ──────────────────────────
     public static List<FolderDTO> listFolders(Id parentFolderId) {
         List<Folder__c> fetched = [
