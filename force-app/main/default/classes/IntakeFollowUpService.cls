@@ -1,5 +1,38 @@
 public without sharing class IntakeFollowUpService {
-    private static final Set<String> SKIP_STATUSES = new Set<String>{ 'Closed', 'Referred Out', 'Turned Down' };
+    // PREVIOUSLY a hardcoded constant — replaced with getSkipStatuses(),
+    // Reads skip statuses from Follow_Up_Skip_Status__mdt.
+    // skipStatusesCache so repeated calls within the same execution don't re-query.
+    private static Set<String> skipStatusesCache;
+
+    private static Set<String> getSkipStatuses() {
+        if (skipStatusesCache != null)
+            return skipStatusesCache;
+
+        skipStatusesCache = new Set<String>();
+        for (Follow_Up_Skip_Status__mdt s : [
+            SELECT Status_Value__c
+            FROM Follow_Up_Skip_Status__mdt
+            WHERE Active__c = TRUE
+        ]) {
+            if (String.isNotBlank(s.Status_Value__c)) {
+                skipStatusesCache.add(s.Status_Value__c);
+            }
+        }
+
+        // Safety net — if the admin hasn't created any CMDT records yet,
+        // fall back to the original hardcoded set rather than skipping
+        // nothing at all.
+        if (skipStatusesCache.isEmpty()) {
+            skipStatusesCache = new Set<String>{
+                'Retainer Agreement Signed',
+                'Referred Out',
+                'Turned Down',
+                'Converted'
+            };
+        }
+
+        return skipStatusesCache;
+    }
 
     private static final List<String[]> TASK_DEFS = new List<String[]>{
         new List<String>{ 'Call', '📞 Call' },
@@ -12,11 +45,13 @@ public without sharing class IntakeFollowUpService {
         if (intakes == null || intakes.isEmpty())
             return;
 
+        Set<String> skipStatuses = getSkipStatuses();
+
         // Separate user-owned from queue-owned
         // Queue-owned: Day 1 clock hasn't started — do NOTHING until a specialist claims it
         List<Intake__c> userOwned = new List<Intake__c>();
         for (Intake__c i : intakes) {
-            if (SKIP_STATUSES.contains(i.Status__c))
+            if (skipStatuses.contains(i.Status__c))
                 continue;
             if (i.OwnerId == null)
                 continue;
@@ -46,6 +81,8 @@ public without sharing class IntakeFollowUpService {
         if (bhId != null && !BusinessHours.isWithin(bhId, System.now()))
             return;
 
+        Set<String> skipStatuses = getSkipStatuses();
+
         List<Intake_Follow_Up__c> due = [
             SELECT
                 Id,
@@ -56,10 +93,7 @@ public without sharing class IntakeFollowUpService {
                 Intake__r.Client__r.Name,
                 Intake__r.Status__c
             FROM Intake_Follow_Up__c
-            WHERE
-                Scheduled_Date__c <= :Date.today()
-                AND Created__c = FALSE
-                AND Intake__r.Status__c NOT IN :SKIP_STATUSES
+            WHERE Scheduled_Date__c <= :Date.today() AND Created__c = FALSE AND Intake__r.Status__c NOT IN :skipStatuses
         ];
         if (!due.isEmpty())
             processSchedules(due);
@@ -137,6 +171,8 @@ public without sharing class IntakeFollowUpService {
             //    (covers the case where a user→user transfer happened while Day 2 was past due)
             Id bhId = defaultBHId();
             if (bhId != null && BusinessHours.isWithin(bhId, System.now())) {
+                Set<String> skipStatuses = getSkipStatuses();
+
                 List<Intake_Follow_Up__c> overdue = [
                     SELECT
                         Id,
@@ -151,7 +187,7 @@ public without sharing class IntakeFollowUpService {
                         Intake__c IN :changedToUser.keySet()
                         AND Scheduled_Date__c <= :Date.today()
                         AND Created__c = FALSE
-                        AND Intake__r.Status__c NOT IN :SKIP_STATUSES
+                        AND Intake__r.Status__c NOT IN :skipStatuses
                 ];
                 if (!overdue.isEmpty())
                     processSchedules(overdue);
@@ -173,6 +209,8 @@ public without sharing class IntakeFollowUpService {
         if (bhId == null)
             return;
 
+        Set<String> skipStatuses = getSkipStatuses();
+
         DateTime now = System.now();
         Boolean withinBH = BusinessHours.isWithin(bhId, now);
 
@@ -180,7 +218,7 @@ public without sharing class IntakeFollowUpService {
         List<Intake_Follow_Up__c> schedules = new List<Intake_Follow_Up__c>();
 
         for (Intake__c intake : intakes) {
-            if (SKIP_STATUSES.contains(intake.Status__c))
+            if (skipStatuses.contains(intake.Status__c))
                 continue;
             if (intake.OwnerId == null)
                 continue;
