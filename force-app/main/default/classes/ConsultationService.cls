@@ -6,7 +6,7 @@ public without sharing class ConsultationService {
     public class BookingRequest {
         public Id intakeId;
         public String consultationType;
-        public List<String> attorneyIds; // accepts list; uses index 0 as primary
+        public List<String> attorneyIds; // one or more selected attorneys
         public String startDateTimeIso;
         public Integer durationMinutes;
         public String meetingLink;
@@ -26,11 +26,7 @@ public without sharing class ConsultationService {
         @AuraEnabled
         public String status;
         @AuraEnabled
-        public Id attorneyId;
-        @AuraEnabled
-        public String attorneyName;
-        @AuraEnabled
-        public String attorneyPhoto;
+        public List<AttorneyDTO> attorneys;
         @AuraEnabled
         public String scheduledStartIso;
         @AuraEnabled
@@ -104,15 +100,11 @@ public without sharing class ConsultationService {
 
     // ── Get consultations for an intake ──────────────────────────
     public static List<ConsultationDTO> getConsultations(Id intakeId) {
-        List<ConsultationDTO> result = new List<ConsultationDTO>();
-        for (Consultation__c c : [
+        List<Consultation__c> rows = [
             SELECT
                 Id,
                 Type__c,
                 Status__c,
-                Attorney__c,
-                Attorney__r.Name,
-                Attorney__r.SmallPhotoUrl,
                 Scheduled_Start__c,
                 Scheduled_End__c,
                 Meeting_Link__c,
@@ -127,8 +119,14 @@ public without sharing class ConsultationService {
             FROM Consultation__c
             WHERE Intake__c = :intakeId
             ORDER BY Scheduled_Start__c DESC
-        ]) {
-            result.add(toDTO(c));
+        ];
+
+        Set<Id> consultationIds = new Map<Id, Consultation__c>(rows).keySet();
+        Map<Id, List<AttorneyDTO>> attorneysByConsultation = loadAttorneysByConsultationIds(consultationIds);
+
+        List<ConsultationDTO> result = new List<ConsultationDTO>();
+        for (Consultation__c c : rows) {
+            result.add(toDTO(c, attorneysByConsultation.get(c.Id)));
         }
         return result;
     }
@@ -162,6 +160,12 @@ public without sharing class ConsultationService {
     }
 
     // ── Check attorney calendar conflict ─────────────────────────
+    // NOTE: this checks Event.OwnerId = attorneyId. Per this platform's
+    // architecture, External App Users (attorneys) can never own an
+    // Event — the specialist/intake manager always does. This check
+    // may therefore never find a genuine conflict as currently written.
+    // Left unchanged here since it's outside the scope of the current
+    // request, but flagged for a follow-up conversation.
     public static ConflictResult checkConflict(Id attorneyId, String startIso, Integer durationMinutes) {
         ConflictResult res = new ConflictResult();
         res.hasConflict = false;
@@ -220,7 +224,6 @@ public without sharing class ConsultationService {
         if (attorneys.isEmpty()) {
             throw new AuraHandledException('Selected attorney not found or is no longer active.');
         }
-        User primaryAttorney = attorneys[0];
 
         // ── Resolve specialist — guard against queue ownership ────
         // Queue Ids start with '00G'; User Ids start with '005'.
@@ -270,10 +273,11 @@ public without sharing class ConsultationService {
         insert ev;
 
         // ── DML 2: Consultation__c ────────────────────────────────
+        // No Attorney__c on this object — every attorney lives in
+        // Consultation_Attorney__c (DML 2.5 below).
         Consultation__c c = new Consultation__c(
             Intake__c = req.intakeId,
             Type__c = req.consultationType,
-            Attorney__c = primaryAttorney.Id,
             Scheduled_Start__c = startDt,
             Scheduled_End__c = endDt,
             Duration__c = req.durationMinutes,
@@ -291,6 +295,15 @@ public without sharing class ConsultationService {
             Confirmation_Sent__c = true
         );
         insert c;
+
+        // ── DML 2.5: Consultation_Attorney__c junction — ALL attorneys ──
+        // Sole source of truth for which attorneys are on this
+        // consultation. One row per selected attorney.
+        List<Consultation_Attorney__c> attorneyLinks = new List<Consultation_Attorney__c>();
+        for (User att : attorneys) {
+            attorneyLinks.add(new Consultation_Attorney__c(Consultation__c = c.Id, Attorney__c = att.Id));
+        }
+        insert attorneyLinks;
 
         // ── DML 3: Auto-create Role__c Attorney records ───────────
         // Fetch ContactIds for all selected attorneys in one query
@@ -327,10 +340,18 @@ public without sharing class ConsultationService {
                 insert rolesToInsert;
         }
 
-        // ── Send confirmation email + .ics to each attorney + client ─
-        // Messaging.sendEmail is NOT a callout; safe after DML
+        // ── Send confirmation email + .ics to client + all attorneys ──
+        // Messaging.sendEmail is NOT a callout; safe after DML. Sends
+        // the client once and every attorney independently — see
+        // sendConsultationEmails for why this replaced the old
+        // per-attorney loop.
+        sendConsultationEmails(c, intake, attorneys, 'REQUEST', 0, null);
+
+        // ── Build attorneys list for the returned DTO directly from
+        // the already-loaded `attorneys` list — no extra query needed. ──
+        List<AttorneyDTO> attorneyDtos = new List<AttorneyDTO>();
         for (User att : attorneys) {
-            sendConfirmationEmails(c, intake, att, specialist, 'REQUEST', 0);
+            attorneyDtos.add(userToAttorney(att));
         }
 
         // Return fresh DTO
@@ -340,9 +361,6 @@ public without sharing class ConsultationService {
                     Id,
                     Type__c,
                     Status__c,
-                    Attorney__c,
-                    Attorney__r.Name,
-                    Attorney__r.SmallPhotoUrl,
                     Scheduled_Start__c,
                     Scheduled_End__c,
                     Meeting_Link__c,
@@ -356,7 +374,8 @@ public without sharing class ConsultationService {
                     Sequence__c
                 FROM Consultation__c
                 WHERE Id = :c.Id
-            ]
+            ],
+            attorneyDtos
         );
     }
 
@@ -368,9 +387,6 @@ public without sharing class ConsultationService {
                 Type__c,
                 Status__c,
                 Duration__c,
-                Attorney__c,
-                Attorney__r.Name,
-                Attorney__r.Email,
                 Scheduled_Start__c,
                 Scheduled_End__c,
                 Meeting_Link__c,
@@ -420,27 +436,29 @@ public without sharing class ConsultationService {
             }
         }
 
-        // ── Resolve specialist ────────────────────────────────────
-        User specialist = null;
-        if (String.valueOf(c.Intake__r.OwnerId).startsWith('005')) {
-            List<User> specs = [
-                SELECT Id, Name, Email
-                FROM User
-                WHERE Id = :c.Intake__r.OwnerId
-                LIMIT 1
-            ];
-            if (!specs.isEmpty())
-                specialist = specs[0];
+        // ── Load ALL attorneys on this consultation ────────────────
+        // Consultation_Attorney__c is the ONLY source — no fallback
+        // to a single field. A consultation with zero attorney links
+        // simply notifies zero attorneys, which is correct.
+        Set<Id> attorneyUserIds = new Set<Id>();
+        for (Consultation_Attorney__c ca : [
+            SELECT Attorney__c
+            FROM Consultation_Attorney__c
+            WHERE Consultation__c = :consultationId
+        ]) {
+            attorneyUserIds.add(ca.Attorney__c);
         }
+        List<User> attorneyUsers = attorneyUserIds.isEmpty()
+            ? new List<User>()
+            : [SELECT Id, Name, Email, SmallPhotoUrl FROM User WHERE Id IN :attorneyUserIds];
 
-        // ── Send reschedule email ─────────────────────────────────
-        User attorney = [
-            SELECT Id, Name, Email, SmallPhotoUrl
-            FROM User
-            WHERE Id = :c.Attorney__c
-            LIMIT 1
-        ];
-        sendConfirmationEmails(c, c.Intake__r, attorney, specialist, 'REQUEST', newSeq);
+        // ── Send reschedule email to client once + every attorney ──
+        sendConsultationEmails(c, c.Intake__r, attorneyUsers, 'REQUEST', newSeq, null);
+
+        List<AttorneyDTO> attorneyDtos = new List<AttorneyDTO>();
+        for (User att : attorneyUsers) {
+            attorneyDtos.add(userToAttorney(att));
+        }
 
         return toDTO(
             [
@@ -448,9 +466,6 @@ public without sharing class ConsultationService {
                     Id,
                     Type__c,
                     Status__c,
-                    Attorney__c,
-                    Attorney__r.Name,
-                    Attorney__r.SmallPhotoUrl,
                     Scheduled_Start__c,
                     Scheduled_End__c,
                     Meeting_Link__c,
@@ -464,7 +479,8 @@ public without sharing class ConsultationService {
                     Sequence__c
                 FROM Consultation__c
                 WHERE Id = :consultationId
-            ]
+            ],
+            attorneyDtos
         );
     }
 
@@ -476,8 +492,6 @@ public without sharing class ConsultationService {
                 Status__c,
                 Sequence__c,
                 Type__c,
-                Attorney__c,
-                Attorney__r.Name,
                 Scheduled_Start__c,
                 Scheduled_End__c,
                 Meeting_Link__c,
@@ -491,8 +505,10 @@ public without sharing class ConsultationService {
                 Event_Id__c,
                 Intake__c,
                 Intake__r.Name,
+                Intake__r.OwnerId,
+                Intake__r.Client__c,
                 Intake__r.Client__r.Name,
-                Intake__r.OwnerId
+                Intake__r.Client__r.Email
             FROM Consultation__c
             WHERE Id = :consultationId
             LIMIT 1
@@ -516,33 +532,25 @@ public without sharing class ConsultationService {
             }
         }
 
-        // ── Send cancellation .ics ────────────────────────────────
-        if (String.isNotBlank(c.Client_Email__c)) {
-            String locFormatted = buildAddressString(
-                c.Meeting_Location__Street__s,
-                c.Meeting_Location__City__s,
-                c.Meeting_Location__StateCode__s,
-                c.Meeting_Location__PostalCode__s,
-                c.Meeting_Location__CountryCode__s
-            );
-            String ics = generateIcs(
-                c.Id,
-                c.Type__c + ' — ' + c.Intake__r.Name,
-                'This meeting has been cancelled. Reason: ' + (String.isNotBlank(reason) ? reason : 'No reason given.'),
-                String.isNotBlank(c.Meeting_Link__c) ? c.Meeting_Link__c : locFormatted,
-                c.Scheduled_Start__c,
-                c.Scheduled_End__c,
-                'CANCEL',
-                cancelSeq
-            );
-            sendIcsEmail(
-                new List<String>{ c.Client_Email__c },
-                'Cancelled: ' + c.Type__c + ' — ' + c.Intake__r.Name,
-                '<p>Your ' + c.Type__c.toLowerCase() + ' has been cancelled. We will be in touch to reschedule.</p>',
-                ics,
-                'CANCEL'
-            );
+        // ── Load ALL attorneys on this consultation ────────────────
+        // PREVIOUSLY cancel() never loaded or emailed any attorney at
+        // all — only the client received a cancellation notice, via a
+        // standalone client-only .ics send. Fixed below: every linked
+        // attorney now gets the cancellation notice too.
+        Set<Id> attorneyUserIds = new Set<Id>();
+        for (Consultation_Attorney__c ca : [
+            SELECT Attorney__c
+            FROM Consultation_Attorney__c
+            WHERE Consultation__c = :consultationId
+        ]) {
+            attorneyUserIds.add(ca.Attorney__c);
         }
+        List<User> attorneyUsers = attorneyUserIds.isEmpty()
+            ? new List<User>()
+            : [SELECT Id, Name, Email FROM User WHERE Id IN :attorneyUserIds];
+
+        // ── Send cancellation notice to client once + every attorney ──
+        sendConsultationEmails(c, c.Intake__r, attorneyUsers, 'CANCEL', cancelSeq, reason);
     }
 
     // ── Update status (Complete / No Show) ────────────────────────
@@ -563,9 +571,6 @@ public without sharing class ConsultationService {
                 Id,
                 Type__c,
                 Status__c,
-                Attorney__c,
-                Attorney__r.Name,
-                Attorney__r.Email,
                 Scheduled_Start__c,
                 Scheduled_End__c,
                 Meeting_Link__c,
@@ -594,6 +599,12 @@ public without sharing class ConsultationService {
         ];
         if (upcoming.isEmpty())
             return;
+
+        // Batch-load every attorney per consultation via the junction
+        // object — a consultation with multiple attorneys reminds all
+        // of them, not just one.
+        Set<Id> consultationIds = new Map<Id, Consultation__c>(upcoming).keySet();
+        Map<Id, List<AttorneyDTO>> attorneysByConsultation = loadAttorneysByConsultationIds(consultationIds);
 
         // Load custom notification type for in-app
         List<CustomNotificationType> notifTypes = [
@@ -630,6 +641,10 @@ public without sharing class ConsultationService {
                 ? '<p><a href="' + c.Meeting_Link__c + '">Join Meeting</a></p>'
                 : '';
 
+            List<AttorneyDTO> attorneysForThis = attorneysByConsultation.get(c.Id);
+            if (attorneysForThis == null)
+                attorneysForThis = new List<AttorneyDTO>();
+
             // Email to client
             if (String.isNotBlank(c.Client_Email__c)) {
                 String ics = generateIcs(
@@ -651,10 +666,12 @@ public without sharing class ConsultationService {
                 emails.add(em);
             }
 
-            // Email to attorney
-            if (String.isNotBlank(c.Attorney__r?.Email)) {
+            // Email to EVERY attorney on this consultation
+            for (AttorneyDTO att : attorneysForThis) {
+                if (String.isBlank(att.email))
+                    continue;
                 Messaging.SingleEmailMessage em = new Messaging.SingleEmailMessage();
-                em.setToAddresses(new List<String>{ c.Attorney__r.Email });
+                em.setToAddresses(new List<String>{ att.email });
                 em.setSubject(subject);
                 em.setHtmlBody(reminderHtml(c, label, 'attorney', meetingInfo));
                 em.setSaveAsActivity(false);
@@ -664,13 +681,18 @@ public without sharing class ConsultationService {
             // In-app notification to specialist (only for user-owned intakes)
             User specialist = specialistMap.get(c.Intake__r.OwnerId);
             if (notifTypeId != null && specialist != null) {
+                List<String> attorneyNames = new List<String>();
+                for (AttorneyDTO att : attorneysForThis)
+                    attorneyNames.add(att.name);
+                String attorneyLabel = attorneyNames.isEmpty() ? 'the attorney' : String.join(attorneyNames, ', ');
+
                 try {
                     Messaging.CustomNotification notif = new Messaging.CustomNotification();
                     notif.setNotificationTypeId(notifTypeId);
                     notif.setTargetId(c.Intake__c);
                     notif.setTitle('Meeting in ' + label + ' — ' + c.Intake__r.Name);
                     notif.setBody(
-                        c.Type__c + ' with ' + c.Attorney__r.Name + ' at ' + c.Scheduled_Start__c.format('h:mm a')
+                        c.Type__c + ' with ' + attorneyLabel + ' at ' + c.Scheduled_Start__c.format('h:mm a')
                     );
                     notif.send(new Set<String>{ specialist.Id });
                 } catch (Exception ex) {
@@ -688,7 +710,18 @@ public without sharing class ConsultationService {
 
         if (!emails.isEmpty()) {
             try {
-                Messaging.sendEmail(emails);
+                // allOrNone=false — same defensive pattern used in
+                // sendConsultationEmails: one bad recipient across this
+                // entire scheduled run should never silently block
+                // every reminder in the batch.
+                List<Messaging.SendEmailResult> results = Messaging.sendEmail(emails, false);
+                for (Integer i = 0; i < results.size(); i++) {
+                    if (!results[i].isSuccess()) {
+                        for (Messaging.SendEmailError err : results[i].getErrors()) {
+                            System.debug(LoggingLevel.ERROR, 'Reminder email failed: ' + err.getMessage());
+                        }
+                    }
+                }
             } catch (Exception ex) {
                 System.debug(LoggingLevel.ERROR, 'Reminder emails failed: ' + ex.getMessage());
             }
@@ -701,15 +734,60 @@ public without sharing class ConsultationService {
     // PRIVATE HELPERS
     // ════════════════════════════════════════════════════════════
 
-    // ── Confirmation email + .ics for one attorney ────────────────
-    private static void sendConfirmationEmails(
+    // ── Batch-load all attorneys per consultation via the junction
+    // object. Returns a map keyed by Consultation__c Id. ──
+    private static Map<Id, List<AttorneyDTO>> loadAttorneysByConsultationIds(Set<Id> consultationIds) {
+        Map<Id, List<AttorneyDTO>> result = new Map<Id, List<AttorneyDTO>>();
+        if (consultationIds.isEmpty())
+            return result;
+
+        for (Consultation_Attorney__c ca : [
+            SELECT Consultation__c, Attorney__c, Attorney__r.Name, Attorney__r.Email, Attorney__r.SmallPhotoUrl
+            FROM Consultation_Attorney__c
+            WHERE Consultation__c IN :consultationIds
+        ]) {
+            if (!result.containsKey(ca.Consultation__c)) {
+                result.put(ca.Consultation__c, new List<AttorneyDTO>());
+            }
+            AttorneyDTO d = new AttorneyDTO();
+            d.id = ca.Attorney__c;
+            d.name = ca.Attorney__r?.Name;
+            d.email = ca.Attorney__r?.Email;
+            d.photoUrl = ca.Attorney__r?.SmallPhotoUrl;
+            result.get(ca.Consultation__c).add(d);
+        }
+        return result;
+    }
+
+    // ── Unified email dispatch for book/reschedule/cancel ──────────────
+    // PREVIOUSLY named sendConfirmationEmails and called once PER
+    // ATTORNEY, which (a) re-sent a duplicate confirmation to the
+    // CLIENT on every iteration when multiple attorneys were selected,
+    // and (b) used the default Messaging.sendEmail(emails) with
+    // allOrNone=true, so a single bad recipient in that small 2-item
+    // batch (client + 1 attorney) silently killed BOTH emails for that
+    // call — and since the client was rebuilt into every attorney's
+    // call, one broken recipient could effectively block every
+    // attorney's email across the whole loop. cancel() additionally
+    // never emailed any attorney at all.
+    //
+    // Fixed: the client is emailed exactly ONCE regardless of how many
+    // attorneys are on the consultation. Every attorney gets their own
+    // independent email. All recipients for this action are sent
+    // together via Messaging.sendEmail(emails, false) — allOrNone=false
+    // — so one bad address never silently blocks anyone else, and each
+    // failure is logged individually with the exact recipient and error.
+    private static void sendConsultationEmails(
         Consultation__c c,
         Intake__c intake,
-        User attorney,
-        User specialist,
-        String method,
-        Integer sequence
+        List<User> attorneys,
+        String method, // 'REQUEST' (book/reschedule) or 'CANCEL'
+        Integer sequence,
+        String cancelReason
     ) {
+        // null unless method == 'CANCEL'
+        List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
+
         String locFormatted = buildAddressString(
             c.Meeting_Location__Street__s,
             c.Meeting_Location__City__s,
@@ -717,71 +795,123 @@ public without sharing class ConsultationService {
             c.Meeting_Location__PostalCode__s,
             c.Meeting_Location__CountryCode__s
         );
-
         String meetingInfo = String.isNotBlank(c.Meeting_Link__c)
             ? '<p><strong>Meeting Link:</strong> <a href="' + c.Meeting_Link__c + '">' + c.Meeting_Link__c + '</a></p>'
             : (String.isNotBlank(locFormatted) ? '<p><strong>Location:</strong> ' + locFormatted + '</p>' : '');
 
-        String ics = generateIcs(
-            c.Id,
-            c.Type__c + ' — ' + intake.Name,
-            'Intake: ' +
-                intake.Name +
-                '\\n' +
-                'Client: ' +
-                (intake.Client__c != null && intake.Client__r?.Name != null ? intake.Client__r.Name : '—') +
-                '\\n' +
-                'Attorney: ' +
-                attorney.Name +
-                '\\n' +
-                (String.isNotBlank(c.Meeting_Link__c) ? 'Join: ' + c.Meeting_Link__c : ''),
-            String.isNotBlank(c.Meeting_Link__c) ? c.Meeting_Link__c : locFormatted,
-            c.Scheduled_Start__c,
-            c.Scheduled_End__c,
-            method,
-            sequence
-        );
+        String attorneyNamesJoined = joinAttorneyNames(attorneys);
 
-        List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
-
-        // Client email + .ics (only if a client exists)
+        // ── Client — sent exactly once ─────────────────────────────
         String clientEmail = c.Client_Email__c;
         if (String.isBlank(clientEmail) && intake.Client__c != null) {
             clientEmail = intake.Client__r?.Email;
         }
         if (String.isNotBlank(clientEmail)) {
+            String ics = generateIcs(
+                c.Id,
+                c.Type__c + ' — ' + intake.Name,
+                buildIcsDescription(intake, attorneyNamesJoined, c.Meeting_Link__c),
+                String.isNotBlank(c.Meeting_Link__c) ? c.Meeting_Link__c : locFormatted,
+                c.Scheduled_Start__c,
+                c.Scheduled_End__c,
+                method,
+                sequence
+            );
             Messaging.SingleEmailMessage em = new Messaging.SingleEmailMessage();
             em.setToAddresses(new List<String>{ clientEmail });
-            em.setSubject((sequence > 0 ? 'Updated: ' : 'Confirmed: ') + c.Type__c + ' — ' + intake.Name);
-            em.setHtmlBody(confirmationHtml(c, intake, attorney, meetingInfo, 'client'));
+            if (method == 'CANCEL') {
+                em.setSubject('Cancelled: ' + c.Type__c + ' — ' + intake.Name);
+                em.setHtmlBody(cancellationHtml(c, intake, attorneyNamesJoined, cancelReason, 'client'));
+            } else {
+                em.setSubject((sequence > 0 ? 'Updated: ' : 'Confirmed: ') + c.Type__c + ' — ' + intake.Name);
+                em.setHtmlBody(confirmationHtml(c, intake, attorneyNamesJoined, meetingInfo, 'client'));
+            }
             em.setFileAttachments(new List<Messaging.EmailFileAttachment>{ icsAttachment(ics, method) });
             em.setSaveAsActivity(false);
             emails.add(em);
         }
 
-        // Attorney email + .ics
-        if (String.isNotBlank(attorney.Email)) {
+        // ── Every attorney — each independent ────────────────────────
+        for (User attorney : attorneys) {
+            if (String.isBlank(attorney.Email))
+                continue;
+            String ics = generateIcs(
+                c.Id,
+                c.Type__c + ' — ' + intake.Name,
+                buildIcsDescription(intake, attorney.Name, c.Meeting_Link__c),
+                String.isNotBlank(c.Meeting_Link__c) ? c.Meeting_Link__c : locFormatted,
+                c.Scheduled_Start__c,
+                c.Scheduled_End__c,
+                method,
+                sequence
+            );
             Messaging.SingleEmailMessage em = new Messaging.SingleEmailMessage();
             em.setToAddresses(new List<String>{ attorney.Email });
-            em.setSubject(
-                (sequence > 0 ? 'Updated: ' : 'New Consultation: ') +
-                    intake.Name +
-                    ' — ' +
-                    c.Scheduled_Start__c.format('MMM d, h:mm a')
-            );
-            em.setHtmlBody(confirmationHtml(c, intake, attorney, meetingInfo, 'attorney'));
+            if (method == 'CANCEL') {
+                em.setSubject('Cancelled: ' + c.Type__c + ' — ' + intake.Name);
+                em.setHtmlBody(cancellationHtml(c, intake, attorney.Name, cancelReason, 'attorney'));
+            } else {
+                em.setSubject(
+                    (sequence > 0 ? 'Updated: ' : 'New Consultation: ') +
+                        intake.Name +
+                        ' — ' +
+                        c.Scheduled_Start__c.format('MMM d, h:mm a')
+                );
+                em.setHtmlBody(confirmationHtml(c, intake, attorney.Name, meetingInfo, 'attorney'));
+            }
             em.setFileAttachments(new List<Messaging.EmailFileAttachment>{ icsAttachment(ics, method) });
             em.setSaveAsActivity(false);
             emails.add(em);
         }
 
-        if (!emails.isEmpty()) {
-            try {
-                Messaging.sendEmail(emails);
-            } catch (Exception ex) {
-                System.debug(LoggingLevel.ERROR, 'Confirmation email failed: ' + ex.getMessage());
+        if (emails.isEmpty())
+            return;
+
+        try {
+            List<Messaging.SendEmailResult> results = Messaging.sendEmail(emails, false);
+            for (Integer i = 0; i < results.size(); i++) {
+                if (!results[i].isSuccess()) {
+                    String toAddr = (emails[i].getToAddresses() != null && !emails[i].getToAddresses().isEmpty())
+                        ? emails[i].getToAddresses()[0]
+                        : '(unknown)';
+                    for (Messaging.SendEmailError err : results[i].getErrors()) {
+                        System.debug(
+                            LoggingLevel.ERROR,
+                            'Consultation email FAILED to ' +
+                                toAddr +
+                                ' — ' +
+                                err.getStatusCode() +
+                                ': ' +
+                                err.getMessage()
+                        );
+                    }
+                }
             }
+        } catch (Exception ex) {
+            System.debug(LoggingLevel.ERROR, 'Consultation email dispatch failed: ' + ex.getMessage());
         }
+    }
+
+    private static String joinAttorneyNames(List<User> attorneys) {
+        List<String> names = new List<String>();
+        for (User u : attorneys) {
+            if (String.isNotBlank(u.Name))
+                names.add(u.Name);
+        }
+        return names.isEmpty() ? '—' : String.join(names, ', ');
+    }
+
+    private static String buildIcsDescription(Intake__c intake, String attorneyLabel, String meetingLink) {
+        return 'Intake: ' +
+            intake.Name +
+            '\\n' +
+            'Client: ' +
+            (intake.Client__c != null && intake.Client__r?.Name != null ? intake.Client__r.Name : '—') +
+            '\\n' +
+            'Attorney: ' +
+            attorneyLabel +
+            '\\n' +
+            (String.isNotBlank(meetingLink) ? 'Join: ' + meetingLink : '');
     }
 
     // ── Build .ics calendar file ──────────────────────────────────
@@ -840,7 +970,7 @@ public without sharing class ConsultationService {
     private static String confirmationHtml(
         Consultation__c c,
         Intake__c intake,
-        User attorney,
+        String attorneyDisplayName,
         String meetingInfo,
         String recipient
     ) {
@@ -853,7 +983,9 @@ public without sharing class ConsultationService {
             intake.Client__r?.Name != null
             ? intake.Client__r.Name.split(' ')[0]
             : 'there';
-        String greeting = recipient == 'client' ? 'Hi ' + clientFirst + ',' : 'Hi ' + attorney.Name.split(' ')[0] + ',';
+        String greeting = recipient == 'client'
+            ? 'Hi ' + clientFirst + ','
+            : 'Hi ' + attorneyDisplayName.split(' ')[0] + ',';
 
         String clientDisplay = intake.Client__c != null &&
             intake.Client__r?.Name != null
@@ -885,7 +1017,7 @@ public without sharing class ConsultationService {
             'margin-bottom:20px;">' +
             tableRow('Date & Time', timeLabel) +
             tableRow('Duration', c.Duration__c != null ? c.Duration__c + ' minutes' : '—') +
-            tableRow('Attorney', attorney.Name) +
+            tableRow('Attorney', attorneyDisplayName) +
             tableRow('Intake', intake.Name) +
             '</table>' +
             meetingInfo +
@@ -897,6 +1029,58 @@ public without sharing class ConsultationService {
             '<p style="color:#aaa;font-size:11px;margin:0;">' +
             'Delipat PI Platform · Automated notification · Do not reply' +
             '</p></div></div></body></html>';
+    }
+
+    // ── Cancellation email HTML — NEW, shared by client + attorneys ──
+    private static String cancellationHtml(
+        Consultation__c c,
+        Intake__c intake,
+        String attorneyDisplayName,
+        String cancelReason,
+        String recipient
+    ) {
+        String timeLabel =
+            c.Scheduled_Start__c.format('EEEE, MMMM d, yyyy') +
+            ' at ' +
+            c.Scheduled_Start__c.format('h:mm a z');
+
+        String clientFirst = intake.Client__c != null &&
+            intake.Client__r?.Name != null
+            ? intake.Client__r.Name.split(' ')[0]
+            : 'there';
+        String greeting = recipient == 'client'
+            ? 'Hi ' + clientFirst + ','
+            : 'Hi ' + attorneyDisplayName.split(' ')[0] + ',';
+
+        String reasonLine = String.isNotBlank(cancelReason)
+            ? '<p style="color:#333;font-size:13px;margin:0 0 16px;"><strong>Reason:</strong> ' + cancelReason + '</p>'
+            : '';
+
+        return '<!DOCTYPE html><html><body>' +
+            '<div style="font-family:Helvetica Neue,Helvetica,Arial,sans-serif;' +
+            'max-width:600px;margin:0 auto;border:1px solid #e0e5ee;border-radius:8px;overflow:hidden;">' +
+            '<div style="background:#04152f;padding:20px 28px;">' +
+            '<p style="color:#fff;font-size:18px;font-weight:700;margin:0;">Delipat Law Group</p></div>' +
+            '<div style="background:#fef2f2;border-left:4px solid #dc2626;padding:14px 20px;">' +
+            '<p style="color:#dc2626;font-weight:700;margin:0;font-size:15px;">' +
+            c.Type__c +
+            ' Cancelled</p></div>' +
+            '<div style="padding:28px;background:#fff;">' +
+            '<p style="color:#333;font-size:14px;margin:0 0 8px;">' +
+            greeting +
+            '</p>' +
+            '<p style="color:#333;font-size:14px;margin:0 0 12px;">' +
+            'Your ' +
+            c.Type__c.toLowerCase() +
+            ' scheduled for <strong>' +
+            timeLabel +
+            '</strong> has been cancelled.</p>' +
+            reasonLine +
+            '<p style="color:#555;font-size:12px;">We will be in touch to reschedule if needed.</p>' +
+            '</div>' +
+            '<div style="padding:16px 28px;background:#f8f9fb;border-top:1px solid #e0e5ee;">' +
+            '<p style="color:#aaa;font-size:11px;margin:0;">Delipat PI Platform · Automated notification · Do not reply</p>' +
+            '</div></div></body></html>';
     }
 
     // ── Reminder email HTML ───────────────────────────────────────
@@ -967,27 +1151,6 @@ public without sharing class ConsultationService {
         return att;
     }
 
-    // ── Utility: send a standalone .ics email ─────────────────────
-    private static void sendIcsEmail(
-        List<String> toAddresses,
-        String subject,
-        String htmlBody,
-        String ics,
-        String method
-    ) {
-        Messaging.SingleEmailMessage em = new Messaging.SingleEmailMessage();
-        em.setToAddresses(toAddresses);
-        em.setSubject(subject);
-        em.setHtmlBody(htmlBody);
-        em.setFileAttachments(new List<Messaging.EmailFileAttachment>{ icsAttachment(ics, method) });
-        em.setSaveAsActivity(false);
-        try {
-            Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{ em });
-        } catch (Exception ex) {
-            System.debug(LoggingLevel.ERROR, 'ICS email failed: ' + ex.getMessage());
-        }
-    }
-
     // ── Utility: HTML email table row ─────────────────────────────
     private static String tableRow(String label, String value) {
         return '<tr>' +
@@ -1001,14 +1164,14 @@ public without sharing class ConsultationService {
     }
 
     // ── Map Consultation__c to ConsultationDTO ────────────────────
-    private static ConsultationDTO toDTO(Consultation__c c) {
+    // Attorney data comes exclusively from Consultation_Attorney__c.
+    // A consultation with zero linked attorneys returns an empty list.
+    private static ConsultationDTO toDTO(Consultation__c c, List<AttorneyDTO> attorneysList) {
         ConsultationDTO d = new ConsultationDTO();
         d.id = c.Id;
         d.consultationType = c.Type__c;
         d.status = c.Status__c;
-        d.attorneyId = c.Attorney__c;
-        d.attorneyName = c.Attorney__r?.Name;
-        d.attorneyPhoto = c.Attorney__r?.SmallPhotoUrl;
+        d.attorneys = attorneysList != null ? attorneysList : new List<AttorneyDTO>();
         d.scheduledStartIso = c.Scheduled_Start__c != null
             ? c.Scheduled_Start__c.formatGmt('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'')
             : null;

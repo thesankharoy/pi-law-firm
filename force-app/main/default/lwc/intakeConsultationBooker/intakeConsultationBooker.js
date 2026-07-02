@@ -14,6 +14,16 @@ function pastStatusClass(status) {
     return `past-badge past-${key}`;
 }
 
+function initialsFor(name) {
+    return (name || "")
+        .trim()
+        .split(/\s+/)
+        .map((p) => p[0] || "")
+        .join("")
+        .substring(0, 2)
+        .toUpperCase();
+}
+
 export default class IntakeConsultationBooker extends LightningElement {
     @api recordId;
 
@@ -31,11 +41,11 @@ export default class IntakeConsultationBooker extends LightningElement {
     @track showCancelModal = false;
     @track isRescheduleMode = false;
     @track _rescheduleId = null;
+    @track _cancelTargetId = null;
 
     // Form fields
     @track modalType = "Sign-up Consultation";
-    @track selectedAttorney = null;
-    @track selectedAttorneyId = null; // scalar — drives enrichedAttorneys getter
+    @track selectedAttorneyIds = [];
     @track modalDate = "";
     @track modalTime = "";
     @track modalDuration = 60;
@@ -50,18 +60,38 @@ export default class IntakeConsultationBooker extends LightningElement {
     @track conflictWarning = null;
     @track cancelReason = "";
 
-    // Countdown
+    // Countdown — NEW approach: instead of tracking one countdown
+    // string for a single consultation, _nowTick is bumped every 30s
+    // and the upcomingConsultations getter recomputes a fresh
+    // countdown per card from that tick + live Date.now().
+    @track _nowTick = Date.now();
     _countdownTimer = null;
-    @track countdown = "";
+
+    // Textarea reactivity fix — same pattern used elsewhere in this
+    // codebase (see intakeDripManager). LWC does not reactively sync a
+    // <textarea>'s DOM value after first render, so re-opening this
+    // modal for Reschedule with pre-filled notes never showed them
+    // without this imperative sync in renderedCallback.
+    _needsNotesSync = false;
 
     async connectedCallback() {
         if (!this.recordId) return;
         await Promise.all([this.loadIntakeStatus(), this.loadConsultations(), this.loadAttorneys()]);
-        this.startCountdown();
+        this.startCountdownTicker();
     }
 
     disconnectedCallback() {
         if (this._countdownTimer) clearInterval(this._countdownTimer);
+    }
+
+    renderedCallback() {
+        if (this._needsNotesSync && this.showModal) {
+            const ta = this.template.querySelector('textarea[data-field="notes"]');
+            if (ta) {
+                ta.value = this.modalNotes || "";
+                this._needsNotesSync = false;
+            }
+        }
     }
 
     // ── Data loading ─────────────────────────────────────────────
@@ -79,10 +109,18 @@ export default class IntakeConsultationBooker extends LightningElement {
         this.isLoading = true;
         try {
             const raw = await getConsultations({ intakeId: this.recordId });
-            this.consultations = (raw || []).map((c) => ({
-                ...c,
-                pastStatusClass: pastStatusClass(c.status)
-            }));
+            this.consultations = (raw || []).map((c) => {
+                const attorneys = (c.attorneys || []).map((a) => ({
+                    ...a,
+                    initials: initialsFor(a.name)
+                }));
+                return {
+                    ...c,
+                    pastStatusClass: pastStatusClass(c.status),
+                    attorneys,
+                    attorneyNames: attorneys.length ? attorneys.map((a) => a.name).join(", ") : "—"
+                };
+            });
         } catch (e) {
             this.toast("Error", this.errMsg(e), "error");
         } finally {
@@ -93,58 +131,40 @@ export default class IntakeConsultationBooker extends LightningElement {
     async loadAttorneys() {
         try {
             const raw = await getAttorneys({ intakeId: this.recordId });
-            // Store raw data only — no cardClass; computed in getter
             this.attorneys = (raw || []).map((a) => ({
                 ...a,
-                initials: a.name
-                    .trim()
-                    .split(/\s+/)
-                    .map((p) => p[0] || "")
-                    .join("")
-                    .substring(0, 2)
-                    .toUpperCase()
+                initials: initialsFor(a.name)
             }));
         } catch (e) {
             console.error("loadAttorneys:", this.errMsg(e));
         }
     }
 
-    // ── Countdown ─────────────────────────────────────────────────
-    startCountdown() {
-        this.refreshCountdown();
-        this._countdownTimer = setInterval(() => this.refreshCountdown(), 30000);
+    // ── Countdown ticker ─────────────────────────────────────────
+    startCountdownTicker() {
+        this._countdownTimer = setInterval(() => {
+            this._nowTick = Date.now();
+        }, 30000);
     }
 
-    refreshCountdown() {
-        const c = this.upcomingConsultation;
-        if (!c?.scheduledStartIso) {
-            this.countdown = "";
-            return;
-        }
-        const diff = new Date(c.scheduledStartIso) - Date.now();
-        if (diff < 0) {
-            this.countdown = "Started";
-            return;
-        }
+    // Reads _nowTick so the calling getter (upcomingConsultations)
+    // re-evaluates every time the ticker advances, keeping every
+    // card's countdown fresh without a separate tracked value per card.
+    computeCountdown(iso) {
+        // eslint-disable-next-line no-unused-expressions
+        this._nowTick;
+        if (!iso) return "";
+        const diff = new Date(iso) - Date.now();
+        if (diff < 0) return "Started";
         const h = Math.floor(diff / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
-        if (h > 48) {
-            this.countdown = `In ${Math.floor(h / 24)} days`;
-            return;
-        }
-        if (h >= 24) {
-            this.countdown = "Tomorrow";
-            return;
-        }
-        if (h > 0) {
-            this.countdown = `In ${h}h ${m}m`;
-            return;
-        }
-        this.countdown = `In ${m} minutes`;
+        if (h > 48) return `In ${Math.floor(h / 24)} days`;
+        if (h >= 24) return "Tomorrow";
+        if (h > 0) return `In ${h}h ${m}m`;
+        return `In ${m} minutes`;
     }
 
     // ── Guard getters ──────────────────────────────────────────────
-    // showNoClientGuard only fires if NOT queue owned (avoid stacking screens)
     get showNoClientGuard() {
         return !this.isQueueOwned && !this.hasClient;
     }
@@ -152,9 +172,30 @@ export default class IntakeConsultationBooker extends LightningElement {
         return !this.isQueueOwned && this.hasClient;
     }
 
-    // ── Core getters ───────────────────────────────────────────────
-    get upcomingConsultation() {
-        return (this.consultations || []).find((c) => c.status === "Scheduled" || c.status === "Confirmed") || null;
+    // ── Core getters — PLURAL now, was a single upcomingConsultation ──
+    // PREVIOUSLY only the single soonest Scheduled/Confirmed
+    // consultation was ever shown, and the Book buttons were hidden
+    // entirely once that one slot was filled — there was no way to
+    // book a second, different-time consultation. Fixed: every
+    // upcoming consultation is now shown as its own card, and a
+    // compact "Book another" row is always available alongside them.
+    get upcomingConsultations() {
+        return (this.consultations || [])
+            .filter((c) => c.status === "Scheduled" || c.status === "Confirmed")
+            .map((c) => ({
+                ...c,
+                statusBadgeClass: `uc-status-badge status-${(c.status || "").toLowerCase().replace(" ", "-")}`,
+                typeBadgeClass:
+                    c.consultationType === "Attorney Callback" ? "uc-type-badge callback" : "uc-type-badge consult",
+                cardClass: c.status === "Confirmed" ? "uc-card uc-card-confirmed" : "uc-card",
+                attorneyRoleLabel: (c.attorneys?.length || 0) > 1 ? "Attorneys" : "Attorney",
+                countdownLabel: this.computeCountdown(c.scheduledStartIso)
+            }))
+            .sort((a, b) => new Date(a.scheduledStartIso) - new Date(b.scheduledStartIso));
+    }
+
+    get hasUpcomingConsultations() {
+        return this.upcomingConsultations.length > 0;
     }
 
     get pastConsultations() {
@@ -166,32 +207,6 @@ export default class IntakeConsultationBooker extends LightningElement {
     }
     get hasAttorneys() {
         return this.attorneys.length > 0;
-    }
-
-    get upcomingAttorneyInitials() {
-        const n = this.upcomingConsultation?.attorneyName || "";
-        return n
-            .trim()
-            .split(/\s+/)
-            .map((p) => p[0] || "")
-            .join("")
-            .substring(0, 2)
-            .toUpperCase();
-    }
-
-    get upcomingStatusBadge() {
-        const s = (this.upcomingConsultation?.status || "").toLowerCase().replace(" ", "-");
-        return `uc-status-badge status-${s}`;
-    }
-
-    get upcomingTypeBadge() {
-        return this.upcomingConsultation?.consultationType === "Attorney Callback"
-            ? "uc-type-badge callback"
-            : "uc-type-badge consult";
-    }
-
-    get upcomingCardClass() {
-        return this.upcomingConsultation?.status === "Confirmed" ? "uc-card uc-card-confirmed" : "uc-card";
     }
 
     get todayIso() {
@@ -228,13 +243,24 @@ export default class IntakeConsultationBooker extends LightningElement {
         return this.modalType === "Attorney Callback" ? "type-toggle-btn selected" : "type-toggle-btn";
     }
 
-    // ── Attorney selection getter ──────────────────────────────────
-    // selectedAttorneyId is a scalar @track — changing it triggers this getter
+    // ── Multi-select attorney getters ─────────────────────────────
     get enrichedAttorneys() {
+        const selectedSet = new Set(this.selectedAttorneyIds);
         return (this.attorneys || []).map((a) => ({
             ...a,
-            cardClass: a.id === this.selectedAttorneyId ? "attorney-card attorney-card-selected" : "attorney-card"
+            isSelected: selectedSet.has(a.id),
+            cardClass: selectedSet.has(a.id) ? "attorney-card attorney-card-selected" : "attorney-card"
         }));
+    }
+
+    get hasSelectedAttorneys() {
+        return this.selectedAttorneyIds.length > 0;
+    }
+
+    get selectionCountLabel() {
+        const n = this.selectedAttorneyIds.length;
+        if (n === 0) return "";
+        return n === 1 ? "1 selected" : `${n} selected`;
     }
 
     // ── Modal open ─────────────────────────────────────────────────
@@ -242,21 +268,27 @@ export default class IntakeConsultationBooker extends LightningElement {
         this.modalType = e.currentTarget.dataset.type;
         this.isRescheduleMode = false;
         this._rescheduleId = null;
-        this.resetModalFields();
+        this.resetModalFields(null);
         this.showModal = true;
     }
 
-    handleReschedule() {
+    // Now targets a SPECIFIC consultation via data-id, seeds the modal
+    // from that consultation's own fields (including type — PREVIOUSLY
+    // modalType was never reset here, so rescheduling an Attorney
+    // Callback could incorrectly show/hide the Location field based on
+    // stale state from whatever was last booked).
+    handleReschedule(e) {
+        const id = e.currentTarget.dataset.id;
+        const target = this.upcomingConsultations.find((c) => c.id === id);
+        this.modalType = target?.consultationType || "Sign-up Consultation";
         this.isRescheduleMode = true;
-        this._rescheduleId = this.upcomingConsultation.id;
-        this.resetModalFields();
+        this._rescheduleId = id;
+        this.resetModalFields(target);
         this.showModal = true;
     }
 
-    resetModalFields() {
-        const c = this.upcomingConsultation;
-        this.selectedAttorney = null;
-        this.selectedAttorneyId = null; // clears grid → getter recomputes
+    resetModalFields(c) {
+        this.selectedAttorneyIds = []; // clears grid → getter recomputes
         this.modalDate = "";
         this.modalTime = "";
         this.modalDuration = 60;
@@ -269,6 +301,7 @@ export default class IntakeConsultationBooker extends LightningElement {
         this.modalNotes = c?.notes || "";
         this.modalError = null;
         this.conflictWarning = null;
+        this._needsNotesSync = true; // triggers renderedCallback textarea sync
     }
 
     closeModal() {
@@ -291,13 +324,11 @@ export default class IntakeConsultationBooker extends LightningElement {
 
     handleAttorneySelect(e) {
         const id = e.currentTarget.dataset.id;
-        // Toggle: click selected → deselect
-        if (this.selectedAttorneyId === id) {
-            this.selectedAttorneyId = null;
-            this.selectedAttorney = null;
+        const idx = this.selectedAttorneyIds.indexOf(id);
+        if (idx === -1) {
+            this.selectedAttorneyIds = [...this.selectedAttorneyIds, id];
         } else {
-            this.selectedAttorneyId = id;
-            this.selectedAttorney = this.attorneys.find((a) => a.id === id) || null;
+            this.selectedAttorneyIds = this.selectedAttorneyIds.filter((x) => x !== id);
         }
         this.triggerConflictCheck();
     }
@@ -331,29 +362,44 @@ export default class IntakeConsultationBooker extends LightningElement {
         this.modalLocationCountry = e.detail.country || "";
     }
 
-    handleCancelClick() {
+    handleCancelClick(e) {
+        this._cancelTargetId = e.currentTarget.dataset.id;
         this.showCancelModal = true;
     }
-    async handleMarkComplete() {
-        await this.setStatus("Completed");
+    async handleMarkComplete(e) {
+        await this.setStatus("Completed", e.currentTarget.dataset.id);
     }
-    async handleMarkNoShow() {
-        await this.setStatus("No Show");
+    async handleMarkNoShow(e) {
+        await this.setStatus("No Show", e.currentTarget.dataset.id);
     }
 
-    // ── Conflict check ─────────────────────────────────────────────
+    // ── Conflict check — checks EVERY selected attorney ─────────────
     _conflictTimer = null;
     triggerConflictCheck() {
         clearTimeout(this._conflictTimer);
-        if (!this.selectedAttorneyId || !this.modalDate || !this.modalTime) return;
+        if (!this.selectedAttorneyIds.length || !this.modalDate || !this.modalTime) {
+            this.conflictWarning = null;
+            return;
+        }
         this._conflictTimer = setTimeout(async () => {
             try {
-                const res = await checkConflict({
-                    attorneyId: this.selectedAttorneyId,
-                    startIso: `${this.modalDate}T${this.modalTime}:00`,
-                    durationMinutes: this.modalDuration
-                });
-                this.conflictWarning = res.hasConflict ? res.conflictLabel : null;
+                const startIso = `${this.modalDate}T${this.modalTime}:00`;
+                const results = await Promise.all(
+                    this.selectedAttorneyIds.map((id) =>
+                        checkConflict({
+                            attorneyId: id,
+                            startIso,
+                            durationMinutes: this.modalDuration
+                        }).then((res) => ({ id, res }))
+                    )
+                );
+                const conflicted = results.find((r) => r.res.hasConflict);
+                if (conflicted) {
+                    const name = this.attorneys.find((a) => a.id === conflicted.id)?.name || "Selected attorney";
+                    this.conflictWarning = `${name}: ${conflicted.res.conflictLabel}`;
+                } else {
+                    this.conflictWarning = null;
+                }
             } catch (e) {
                 /* silent */
             }
@@ -381,7 +427,7 @@ export default class IntakeConsultationBooker extends LightningElement {
                     requestJson: JSON.stringify({
                         intakeId: this.recordId,
                         consultationType: this.modalType,
-                        attorneyIds: [this.selectedAttorneyId],
+                        attorneyIds: this.selectedAttorneyIds,
                         startDateTimeIso: `${this.modalDate}T${this.modalTime}:00`,
                         durationMinutes: this.modalDuration,
                         meetingLink: this.modalMeetingLink,
@@ -393,11 +439,15 @@ export default class IntakeConsultationBooker extends LightningElement {
                         notes: this.modalNotes
                     })
                 });
-                this.toast("Booked", "Consultation confirmed — calendar invite sent.", "success");
+                const n = this.selectedAttorneyIds.length;
+                this.toast(
+                    "Booked",
+                    `Confirmed — calendar invite sent to ${n} attorney${n > 1 ? "s" : ""}.`,
+                    "success"
+                );
             }
             this.showModal = false;
             await this.loadConsultations();
-            this.refreshCountdown();
         } catch (e) {
             this.modalError = this.errMsg(e);
         } finally {
@@ -410,7 +460,7 @@ export default class IntakeConsultationBooker extends LightningElement {
         this.isSaving = true;
         try {
             await cancel({
-                consultationId: this.upcomingConsultation.id,
+                consultationId: this._cancelTargetId,
                 reason: this.cancelReason
             });
             this.showCancelModal = false;
@@ -424,9 +474,9 @@ export default class IntakeConsultationBooker extends LightningElement {
     }
 
     // ── Status ─────────────────────────────────────────────────────
-    async setStatus(newStatus) {
+    async setStatus(newStatus, consultationId) {
         try {
-            await updateStatus({ consultationId: this.upcomingConsultation.id, newStatus });
+            await updateStatus({ consultationId, newStatus });
             this.toast("Updated", `Marked as ${newStatus}.`, "success");
             await this.loadConsultations();
         } catch (e) {
@@ -436,7 +486,8 @@ export default class IntakeConsultationBooker extends LightningElement {
 
     // ── Validation ─────────────────────────────────────────────────
     validateModal() {
-        if (!this.isRescheduleMode && !this.selectedAttorneyId) return "Please select an attorney.";
+        if (!this.isRescheduleMode && this.selectedAttorneyIds.length === 0)
+            return "Please select at least one attorney.";
         if (!this.modalDate) return "Please select a date.";
         if (!this.modalTime) return "Please select a time.";
         if (new Date(`${this.modalDate}T${this.modalTime}:00`) <= new Date())

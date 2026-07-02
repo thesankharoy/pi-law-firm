@@ -196,43 +196,101 @@
     color: #374151;
     margin-bottom: 14px;
 }
-.uc-attorney-row {
+
+/* ── Multiple upcoming consultation cards ── */
+.upcoming-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+/* ── Book another row — always visible once at least one
+     consultation exists ── */
+.book-another-row {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+.book-another-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+}
+.book-another-btn {
+    padding: 6px 14px;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 20px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.12s;
+}
+.book-another-btn:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+}
+
+/* ── Multi-attorney display ── */
+.uc-attorneys-block {
     padding: 12px;
     background: #f8fafc;
     border-radius: 10px;
     margin-bottom: 12px;
 }
-.uc-attorney-avatar {
-    width: 40px;
-    height: 40px;
+.uc-attorneys-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+.uc-attorneys-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.uc-attorney-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 4px 10px 4px 4px;
+}
+.uc-attorney-avatar-sm {
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
 }
-.uc-avatar-initials {
+.uc-avatar-initials-sm {
     background: #2563eb;
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
+    font-size: 10px;
     font-weight: 800;
 }
-.uc-attorney-info {
-    flex: 1;
-}
-.uc-attorney-name {
-    font-size: 13px;
-    font-weight: 700;
+.uc-attorney-chip-name {
+    font-size: 12px;
+    font-weight: 600;
     color: #0f172a;
 }
-.uc-attorney-role {
-    font-size: 11px;
-    color: #64748b;
-}
+
 .uc-join-btn {
     display: inline-flex;
     align-items: center;
@@ -249,6 +307,7 @@
 .uc-join-btn:hover {
     background: #1d4ed8;
 }
+
 .uc-notes {
     font-size: 12px;
     color: #475569;
@@ -606,7 +665,32 @@
     color: #fff;
 }
 
-/* Attorney grid */
+/* Attorney multi-select grid */
+.attorney-label-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+.attorney-label-row .field-label {
+    margin-bottom: 0;
+}
+.attorney-count-badge {
+    font-size: 10px;
+    font-weight: 800;
+    background: #2563eb;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+}
+.attorney-hint {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
 .attorney-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -635,6 +719,12 @@
     border-width: 2px !important;
     background: #eff6ff !important;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.attorney-check {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    line-height: 0;
 }
 .attorney-card-avatar {
     width: 42px;
