@@ -1,0 +1,69 @@
+<template>
+    <lightning-card icon-name="utility:high_velocity_sales" title="Revenue at risk">
+        <div class="slds-p-horizontal_medium slds-p-bottom_small">
+
+            <template lwc:if={loading}>
+                <div class="slds-is-relative slds-p-vertical_large">
+                    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                </div>
+            </template>
+
+            <template lwc:if={summary}>
+                <div class="slds-grid slds-gutters_x-small slds-m-bottom_small">
+                    <div class="slds-col slds-size_1-of-3">
+                        <div class="tile">
+                            <p class="lbl">Total at risk</p>
+                            <p class="num">{totalAtRisk}</p>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                        <div class="tile">
+                            <p class="lbl">Open leaks</p>
+                            <p class="num">{openCount}</p>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                        <div class="tile">
+                            <p class="lbl">Critical</p>
+                            <p class="num num-crit">{criticalCount}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <template lwc:if={hasLeaks}>
+                    <template for:each={displayRows} for:item="r">
+                        <div key={r.leakId} class="row slds-grid slds-grid_vertical-align-center">
+                            <span class={r.badgeClass}>{r.severity}</span>
+                            <div class="meta slds-col">
+                                <p class="client">{r.client}</p>
+                                <p class="sub">{r.matter} &middot; {r.overdueLabel}</p>
+                            </div>
+                            <span class="amt">{r.amountFmt}</span>
+                            <lightning-button
+                                label="Open"
+                                icon-name="utility:forward"
+                                icon-position="right"
+                                variant="base"
+                                data-id={r.intakeId}
+                                onclick={handleOpen}
+                                class="slds-m-left_small"
+                            ></lightning-button>
+                        </div>
+                    </template>
+                </template>
+
+                <template lwc:else>
+                    <div class="empty slds-text-align_center slds-p-vertical_large slds-text-color_weak">
+                        No open revenue leaks &mdash; nothing at risk right now.
+                    </div>
+                </template>
+            </template>
+
+            <template lwc:if={error}>
+                <div class="slds-text-color_error slds-p-vertical_medium">
+                    Couldn&rsquo;t load revenue leaks.
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

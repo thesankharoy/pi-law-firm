@@ -1,0 +1,366 @@
+/* ===========================================
+   Header
+=========================================== */
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    background: #fff;
+    border: 1px solid #d8dde6;
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+}
+
+.card-header .icon {
+    font-size: 20px;
+}
+
+.card-header .title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #16325c;
+}
+
+/* ===========================================
+   Lightning Card
+=========================================== */
+
+lightning-card {
+    display: block;
+}
+
+lightning-card .slds-card {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* ===========================================
+   Dashboard
+=========================================== */
+
+.dashboard-content {
+    background: #f8fafc;
+    padding: 18px;
+}
+
+/* ===========================================
+   Top Section
+=========================================== */
+
+.topSection {
+
+    display: flex;
+
+    gap: 18px;
+
+    align-items: stretch;
+
+    margin-bottom: 18px;
+
+}
+
+/* ===========================================
+   Filter Card
+=========================================== */
+
+.filterCard {
+
+    width: 260px;
+
+    background: #fff;
+
+    border-radius: 12px;
+
+    border: 1px solid #d8dde6;
+
+    padding: 18px;
+
+    box-shadow: 0 3px 10px rgba(15,23,42,.08);
+
+}
+
+/* ===========================================
+   KPI Card
+=========================================== */
+
+.metric-card {
+
+    flex: 1;
+
+    min-height: 110px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    align-items: center;
+
+    border-radius: 12px;
+
+    transition: .25s ease;
+
+    box-shadow: 0 4px 12px rgba(15,23,42,.08);
+
+}
+
+.metric-card:hover {
+
+    transform: translateY(-3px);
+
+    box-shadow: 0 10px 20px rgba(15,23,42,.15);
+
+}
+
+.blue {
+
+    background: linear-gradient(135deg,#eef6ff,#dbeafe);
+
+    border-left: 6px solid #0176D3;
+
+}
+
+.metric-number {
+
+    font-size: 42px;
+
+    font-weight: 700;
+
+    color: #16325c;
+
+    line-height: 1;
+
+}
+
+.metric-label {
+
+    margin-top: 8px;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    color: #64748b;
+
+}
+
+/* ===========================================
+   Table
+=========================================== */
+
+.tableSection {
+
+    background: #fff;
+
+    border: 1px solid #d8dde6;
+
+    border-radius: 12px;
+
+    overflow-x: auto;
+
+    box-shadow: 0 3px 10px rgba(15,23,42,.08);
+
+}
+
+.modern-table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    min-width: 700px;
+
+}
+
+.modern-table thead {
+
+    background: #f8fafc;
+
+}
+
+.modern-table th {
+
+    padding: 13px 16px;
+
+    text-align: left;
+
+    font-size: 11px;
+
+    text-transform: uppercase;
+
+    font-weight: 700;
+
+    color: #5f6773;
+
+    border-bottom: 1px solid #e5e7eb;
+
+}
+
+.modern-table td {
+
+    padding: 13px 16px;
+
+    font-size: 13px;
+
+    color: #334155;
+
+    border-bottom: 1px solid #eef2f7;
+
+}
+
+.modern-table tbody tr {
+
+    transition: .2s ease;
+
+}
+
+.modern-table tbody tr:hover {
+
+    background: #f8fafc;
+
+}
+
+.modern-table tbody tr:last-child td {
+
+    border-bottom: none;
+
+}
+
+/* ===========================================
+   Pagination
+=========================================== */
+
+.pagination {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    align-items: center;
+
+    gap: 14px;
+
+    padding: 14px 18px;
+
+    border-top: 1px solid #eef2f7;
+
+    background: #fff;
+
+}
+
+.pageInfo {
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: #64748b;
+
+}
+
+.noData {
+
+    text-align: center;
+
+    padding: 25px;
+
+    color: #64748b;
+
+    font-weight: 600;
+
+}
+
+/* ===========================================
+   Responsive
+=========================================== */
+
+@media (max-width:768px) {
+
+    .dashboard-content {
+
+        padding: 14px;
+
+    }
+
+    .topSection {
+
+        flex-direction: column;
+
+    }
+
+    .filterCard {
+
+        width: 100%;
+
+    }
+
+    .metric-card {
+
+        min-height: 95px;
+
+    }
+
+    .metric-number {
+
+        font-size: 34px;
+
+    }
+
+    .metric-label {
+
+        font-size: 14px;
+
+    }
+
+    .pagination {
+
+        justify-content: center;
+
+        flex-wrap: wrap;
+
+    }
+
+}
+
+@media (max-width:480px) {
+
+    .dashboard-content {
+
+        padding: 12px;
+
+    }
+
+    .card-header {
+
+        padding: 10px 14px;
+
+    }
+
+    .card-header .title {
+
+        font-size: 16px;
+
+    }
+
+    .metric-number {
+
+        font-size: 30px;
+
+    }
+
+    .metric-label {
+
+        font-size: 13px;
+
+    }
+
+    .modern-table {
+
+        min-width: 550px;
+
+    }
+
+}

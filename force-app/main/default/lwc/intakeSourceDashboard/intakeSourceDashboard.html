@@ -1,47 +1,53 @@
 <template>
-    <lightning-card title="Intake Source Performance Dashboard" class="main-card">
+    <lightning-card class="lead-card">
 
-        <div class="dashboard-container">
+        <div class="header-row">
+            <div class="title-section">
+                <span class="trophy">🏆</span>
+                <span class="title">Source Performance Dashboard</span>
+            </div>
 
-            <template if:true={data}>
-                
-                <!-- TOP SUMMARY -->
-                <div class="summary-grid">
-
-                    <template for:each={data} for:item="item">
-                        <div key={item.source}
-                             class="source-card"
-                             data-source={item.source}>
-
-                            <div class="source-name">
-                                {item.source}
-                            </div>
-
-                            <div class="source-count">
-                                {item.totalIntakes}
-                            </div>
-
-                            <div class="pulse-bar"></div>
-
-                        </div>
-                    </template>
-
-                </div>
-
-                <!-- HIGHLIGHT SECTION -->
-                <div class="highlight-box">
-                    🏆 Top Performing Source: <span>{topSource}</span>
-                </div>
-
-            </template>
-
-            <template if:true={error}>
-                <div class="error-box">
-                    Error loading data
-                </div>
-            </template>
-
+            <div class="top-badge">
+                Top ROI: {topSource}
+            </div>
         </div>
+
+      <template if:true={data}>
+    <div class="dashboard-layout">
+
+      <!-- LEFT: source cards now show % share -->
+        <div class="source-grid">
+            <template for:each={cards} for:item="item">
+                <div key={item.source} class={item.cardClass}>
+                    <div class="source-label">{item.source}</div>
+                    <div class="source-count">{item.percentage}%</div>
+                    <div class="source-sub">of total intakes</div>
+                </div>
+            </template>
+        </div>
+
+        <!-- RIGHT: bar chart -->
+        <div class="chart-panel">
+            <template for:each={chartData} for:item="bar">
+                <div key={bar.source} class="chart-row">
+                    <div class="chart-source">{bar.source}</div>
+                    <div class="chart-track">
+                        <div class="chart-fill" style={bar.barStyle}>
+                            <span class="chart-value">{bar.totalIntakes}</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+    </div>
+</template>
+
+        <template if:true={error}>
+            <div class="error-box">
+                Error loading data
+            </div>
+        </template>
 
     </lightning-card>
 </template>

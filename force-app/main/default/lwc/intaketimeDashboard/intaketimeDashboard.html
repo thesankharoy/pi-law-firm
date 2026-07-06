@@ -1,71 +1,118 @@
 <template>
-    <div class="dashboard-wrapper">
+    <div class="tracker-card">
 
-        <!-- HEADER -->
-        <div class="header">
-            <h1>⚡ Intake Time Tracker</h1>
-            <p>Real-time performance & lifecycle tracking</p>
-        </div>
+        <!-- Header -->
+        <div class="card-header">
+            <div class="title-section">
+                <lightning-icon
+                    icon-name="utility:clock"
+                    size="x-small"
+                    class="header-icon">
+                </lightning-icon>
 
-        <!-- SEARCH -->
-        <div class="search-box">
-            <lightning-input 
-                type="search"
-                placeholder="Search Intake..."
-                onchange={handleSearch}>
-            </lightning-input>
-        </div>
-
-        <!-- KPI SECTION -->
-        <div class="kpi-container">
-
-            <div class="kpi-card blue">
-                <h2>Average Time</h2>
-                <p class="value">{formattedAverageTime}</p>
+                <span class="title">Intake Time Tracker</span>
             </div>
 
+            <div class="avg-time">
+                Avg: {formattedAverageTime}
+            </div>
+            <div class="filter-container">
+
+    <div class="filter-item">
+        <lightning-combobox
+            label="Month"
+            value={selectedMonth}
+            options={monthOptions}
+            onchange={handleMonthChange}>
+        </lightning-combobox>
+    </div>
+
+    <div class="filter-item">
+        <lightning-combobox
+            label="Date Filter"
+            value={selectedDateFilter}
+            options={dateFilterOptions}
+            onchange={handleDateFilterChange}>
+        </lightning-combobox>
+    </div>
+
+</div>
+
+        </div>
+       
+        <!-- Table -->
+        <div class="table-wrapper">
+
+            <table class="custom-table">
+
+                <thead>
+                    <tr>
+                        <th>INTAKE</th>
+                        <th>STATUS</th>
+                        <th>DURATION</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <template for:each={intakes} for:item="item">
+                        <tr key={item.id}>
+
+                            <td>
+                                <span
+                                    class="record-link"
+                                    data-id={item.id}
+                                    onclick={openRecord}>
+                                    {item.name}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class={item.statusClass}>
+                                    {item.status}
+
+                                    <template if:true={item.showIcon}>
+                                        <lightning-icon
+                                            icon-name={item.iconName}
+                                            size="xx-small"
+                                            class={item.iconClass}>
+                                        </lightning-icon>
+                                    </template>
+                                </span>
+                            </td>
+
+                            <td>
+                                {item.formattedTime}
+                            </td>
+
+                        </tr>
+                    </template>
+                </tbody>
+
+            </table>
+            <div class="pagination">
+
+    <lightning-button
+        label="Previous"
+        variant="neutral"
+        onclick={handlePrevious}
+        disabled={disablePrevious}>
+    </lightning-button>
+
+    <span class="page-info">
+        Page {pageNumber} of {totalPages}
+        ({totalRecords} Records)
+    </span>
+
+    <lightning-button
+        label="Next"
+        variant="brand"
+        onclick={handleNext}
+        disabled={disableNext}>
+    </lightning-button>
+
+</div>
+
         </div>
 
-       <!-- TABLE -->
-<div class="table-container">
-    <template if:true={intakes}>
-        <table class="custom-table">
-
-            <thead>
-                <tr>
-                    <th>Intake Name</th>
-                    <th>Status</th>
-                    <th>How Long It Took</th> <!-- NEW COLUMN -->
-                </tr>
-            </thead>
-
-            <tbody>
-                <template for:each={intakes} for:item="item">
-                    <tr key={item.id} class="row-hover">
-
-                        <td>
-                            <span class="link" data-id={item.id} onclick={openRecord}>
-                                {item.name}
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="status">{item.status}</span>
-                        </td>
-
-                        <td>
-                            <span class="time">
-                                {item.formattedTime}
-                            </span>
-                        </td>
-
-                    </tr>
-                </template>
-            </tbody>
-
-        </table>
-    </template>
-</div>
-         
     </div>
 </template>

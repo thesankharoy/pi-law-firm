@@ -1,0 +1,86 @@
+<template>
+    <div class="chat">
+
+        <!-- Header -->
+        <header class="topbar">
+            <div class="brand">
+                <div class="avatar avatar-brand">
+                    <lightning-icon icon-name="utility:einstein" size="x-small" class="brand-icon"></lightning-icon>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">AI Assistant</span>
+                    <span class="brand-sub"><span class="dot"></span>Personal injury assistant</span>
+                </div>
+            </div>
+            <template if:true={hasMessages}>
+                <button class="icon-btn" title="Clear chat" onclick={handleClear}>
+                    <lightning-icon icon-name="utility:delete" size="xx-small"></lightning-icon>
+                </button>
+            </template>
+        </header>
+
+        <!-- Stream -->
+        <div class="stream" lwc:ref="messages">
+
+            <template if:true={isEmpty}>
+                <div class="welcome">
+                    <div class="welcome-avatar">
+                        <lightning-icon icon-name="utility:einstein" size="small" class="brand-icon"></lightning-icon>
+                    </div>
+                    <h2 class="welcome-title">How can I help?</h2>
+                    <p class="welcome-sub">Ask about personal injury intakes — case details, injuries, insurance, and next steps.</p>
+                    <div class="chips">
+                        <template for:each={suggestions} for:item="s">
+                            <button key={s.id} class="chip" data-text={s.text} onclick={handleChip}>{s.label}</button>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <template for:each={messages} for:item="m">
+                <div key={m.id} class={m.rowClass}>
+                    <template if:false={m.isUser}>
+                        <div class="avatar avatar-msg">
+                            <lightning-icon icon-name="utility:einstein" size="xx-small" class="brand-icon"></lightning-icon>
+                        </div>
+                    </template>
+                    <div class={m.bubbleClass}>
+                        <lightning-formatted-rich-text value={m.text}></lightning-formatted-rich-text>
+                    </div>
+                </div>
+            </template>
+
+            <template if:true={isThinking}>
+                <div class="row row-assistant">
+                    <div class="avatar avatar-msg">
+                        <lightning-icon icon-name="utility:einstein" size="xx-small" class="brand-icon"></lightning-icon>
+                    </div>
+                    <div class="bubble bubble-assistant typing">
+                        <span class="tdot"></span><span class="tdot"></span><span class="tdot"></span>
+                    </div>
+                </div>
+            </template>
+
+        </div>
+
+        <!-- Composer -->
+        <div class="composer">
+            <div class="composer-box">
+                <textarea
+                    class="input"
+                    lwc:ref="composerInput"
+                    value={draft}
+                    oninput={handleInput}
+                    onkeydown={handleKeyDown}
+                    placeholder="Ask about a personal injury case…"
+                    rows="1"
+                    disabled={isThinking}></textarea>
+                <button class="send" onclick={handleSend} disabled={sendDisabled} title="Send">
+                    <lightning-icon icon-name="utility:send" size="xx-small" variant="inverse"></lightning-icon>
+                </button>
+            </div>
+            <p class="hint-line">Enter to send · Shift + Enter for a new line</p>
+        </div>
+
+    </div>
+</template>

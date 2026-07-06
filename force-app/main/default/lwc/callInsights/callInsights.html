@@ -1,0 +1,109 @@
+<template>
+    <lightning-card class="ai-card">
+
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <div class="icon-tile">
+                    <lightning-icon icon-name="utility:call" size="small" class="call-icon"></lightning-icon>
+                </div>
+                <h2 class="title">Call Insights</h2>
+            </div>
+            <div class="live-badge">
+                <span class="live-dot"></span>
+                AI ANALYZED
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <template if:true={isLoading}>
+            <div class="loading-section">
+                <lightning-spinner size="small" alternative-text="Loading"></lightning-spinner>
+                <div class="loading-text">Loading call insights...</div>
+            </div>
+        </template>
+
+        <!-- Empty -->
+        <template if:true={isEmpty}>
+            <div class="empty-section">
+                <lightning-icon icon-name="utility:call" size="small" class="empty-icon"></lightning-icon>
+                <p class="empty-text">No call insights available yet. Insights are generated automatically after a call ends.</p>
+            </div>
+        </template>
+
+        <!-- Content -->
+        <template if:false={isLoading}>
+            <template if:false={isEmpty}>
+                <div class="content">
+
+                    <!-- Follow Up Notes -->
+                    <div class="section">
+                        <div class="section-header notes-header">
+                            <span class="section-icon">📋</span>
+                            <span class="section-title notes-title">Follow Up Notes</span>
+                        </div>
+                        <div class="section-body">
+                            <template for:each={notesParagraphs} for:item="p">
+                                <p key={p.id} class="para">{p.text}</p>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Objections Raised -->
+                    <div class="section">
+                        <div class="section-header objections-header">
+                            <span class="section-icon">⚠️</span>
+                            <span class="section-title objections-title">Objections Raised</span>
+                        </div>
+                        <div class="section-body">
+                            <template if:true={hasObjections}>
+                                <template for:each={objectionItems} for:item="o">
+                                    <p key={o.id} class="para">{o.text}</p>
+                                </template>
+                            </template>
+                            <template if:false={hasObjections}>
+                                <p class="none-text">— None identified.</p>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Recommended Next Steps -->
+                    <div class="section">
+                        <div class="section-header nextsteps-header">
+                            <span class="section-icon">✅</span>
+                            <span class="section-title nextsteps-title">Recommended Next Steps</span>
+                        </div>
+                        <div class="section-body">
+                            <ul class="steps">
+                                <template for:each={nextSteps} for:item="s">
+                                    <li key={s.id} class="step">
+                                        <span class="step-main">{s.main}</span>
+                                        <template if:true={s.emphasis}>
+                                            <em class="step-em"> {s.emphasis}</em>
+                                        </template>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="insights">
+                        <span class="chip">AI Generated</span>
+                        <span class="chip">Twilio Call</span>
+                    </div>
+
+                </div>
+            </template>
+        </template>
+
+        <!-- Footer -->
+        <template if:false={isLoading}>
+            <template if:false={isEmpty}>
+                <div class="footer">
+                    <div class="timestamp">Last updated: {lastUpdated}</div>
+                </div>
+            </template>
+        </template>
+
+    </lightning-card>
+</template>

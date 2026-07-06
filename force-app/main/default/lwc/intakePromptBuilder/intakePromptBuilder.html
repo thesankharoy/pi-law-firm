@@ -1,0 +1,105 @@
+<template>
+    <div class="intake-card">
+
+        <!-- Header -->
+        <div class="card-header">
+            <div class="title-section">
+                <span class="header-badge">
+                    <lightning-icon icon-name="utility:task" size="x-small" variant="inverse"></lightning-icon>
+                </span>
+                <div class="title-text">
+                    <h2>Intake Checklist</h2>
+                    <template if:true={hasContent}>
+                        <p class="subtitle">{progressLabel}</p>
+                    </template>
+                </div>
+            </div>
+
+            <button class="refresh-btn" onclick={handleRefresh} title="Refresh">
+                <lightning-icon icon-name="utility:refresh" size="xx-small"></lightning-icon>
+                <span class="btn-text">Refresh</span>
+            </button>
+        </div>
+
+        <!-- Progress bar -->
+        <template if:true={hasContent}>
+            <div class="progress-track">
+                <div class="progress-fill" style={progressStyle}></div>
+            </div>
+        </template>
+
+        <!-- Loading -->
+        <template if:true={isLoading}>
+            <div class="state-block">
+                <lightning-spinner alternative-text="Loading checklist" size="small"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Error -->
+        <template if:true={hasError}>
+            <div class="content-area">
+                <div class="error-banner">
+                    <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                    <span>{errorMessage}</span>
+                </div>
+            </div>
+        </template>
+
+        <!-- All complete -->
+        <template if:true={allFilled}>
+            <div class="content-area">
+                <div class="all-done">
+                    <lightning-icon icon-name="utility:success" size="small" variant="success"></lightning-icon>
+                    <div>
+                        <p class="all-done-title">All set — intake is complete</p>
+                        <p class="all-done-sub">Every required field has been captured. No action needed.</p>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Checklist -->
+        <template if:true={hasMissingFields}>
+            <div class="content-area">
+
+                <!-- Needs attention -->
+                <div class="section-label attention">
+                    <lightning-icon icon-name="utility:warning" size="xx-small"></lightning-icon>
+                    <span>Needs attention · {missingCount}</span>
+                </div>
+
+                <template for:each={missingItems} for:item="item">
+                    <div key={item.apiName} class="action-card">
+                        <div class="action-card-body">
+                            <p class="action-label">{item.label}</p>
+                            <p class="action-question">{item.question}</p>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Captured -->
+                <template if:true={capturedItems.length}>
+                    <div class="section-label captured">
+                        <lightning-icon icon-name="utility:check" size="xx-small"></lightning-icon>
+                        <span>Captured · {completedCount}</span>
+                    </div>
+
+                    <div class="captured-grid">
+                        <template for:each={capturedItems} for:item="item">
+                            <div key={item.apiName} class="captured-row">
+                                <lightning-icon icon-name="utility:success" size="xx-small" variant="success"></lightning-icon>
+                                <span>{item.label}</span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <div class="footer-note">
+                    <lightning-icon icon-name="utility:info" size="xx-small"></lightning-icon>
+                    <span>Update the intake record once this information is collected, then hit Refresh.</span>
+                </div>
+            </div>
+        </template>
+
+    </div>
+</template>

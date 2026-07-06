@@ -1,0 +1,179 @@
+<template>
+    <lightning-card title="AI Sentiment Dashboard" icon-name="standard:dashboard">
+
+        <!-- Loading -->
+        <template if:true={isLoading}>
+            <lightning-spinner
+                alternative-text="Loading..."
+                size="medium">
+            </lightning-spinner>
+        </template>
+
+        <div class="dashboard">
+
+            <!-- ================= KPI CARDS ================= -->
+
+            <div class="kpi-grid">
+
+                <div class="kpi-card blue">
+                      👥
+                    <div class="kpi-title">Total Intakes</div>
+                    <div class="kpi-value">{dashboard.totalIntakes}</div>
+                </div>
+
+                <div class="kpi-card green">
+                     📞
+                    <div class="kpi-title">Total Calls</div>
+                    <div class="kpi-value">{dashboard.totalCalls}</div>
+                </div>
+
+                <div class="kpi-card orange">
+                     😊
+                    <div class="kpi-title">Average Sentiment</div>
+                    <div class="kpi-value">
+                        {dashboard.averageSentiment}
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ================= FILTER ================= -->
+
+            <div class="filter-bar">
+
+                <lightning-combobox
+                        label="Filter"
+                        value={selectedFilter}
+                        options={filterOptions}
+                        onchange={handleFilter}>
+                </lightning-combobox>
+
+            </div>
+
+            <!-- ================= TABLE ================= -->
+
+            <div class="table-container">
+
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+
+                    <thead>
+
+                    <tr>
+
+                        <th>Intake Number</th>
+
+                        <th>AI Sentiment</th>
+
+                        <th>Total Calls</th>
+
+                        <th>Last Call Date</th>
+
+                    </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    <template if:true={dashboard.records}>
+
+                        <template
+                            for:each={dashboard.records}
+                            for:item="item">
+
+                            <tr key={item.intakeId}>
+                              <td>
+                                    <lightning-button
+                                        label={item.intakeName}
+                                        variant="base"
+                                        data-id={item.intakeId}
+                                        onclick={openRecord}>
+                                    </lightning-button>
+                                </td>
+                               <td>
+
+                                    <span class={item.sentimentClass}>
+
+                                        {item.sentiment}
+
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    {item.callCount}
+
+                                </td>
+
+                                <td>
+
+                                    <lightning-formatted-date-time
+                                            value={item.lastCallDate}
+                                            year="numeric"
+                                            month="short"
+                                            day="2-digit"
+                                            hour="2-digit"
+                                            minute="2-digit">
+                                    </lightning-formatted-date-time>
+
+                                </td>
+
+                            </tr>
+
+                        </template>
+
+                    </template>
+
+                    <template if:false={dashboard.records}>
+
+                        <tr>
+
+                            <td colspan="4">
+
+                                <div class="empty">
+
+                                    No Records Found
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    </template>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <!-- ================= PAGINATION ================= -->
+
+            <div class="pagination">
+
+                <lightning-button
+                        label="Previous"
+                        onclick={previousPage}
+                        disabled={disablePrevious}>
+                </lightning-button>
+
+                <div class="page-info">
+
+                    Page {pageNumber}
+
+                </div>
+
+                <lightning-button
+                        label="Next"
+                        onclick={nextPage}
+                        disabled={disableNext}>
+                </lightning-button>
+
+            </div>
+
+        </div>
+
+    </lightning-card>
+
+</template>

@@ -1,0 +1,48 @@
+<template>
+    <lightning-card icon-name="utility:knowledge_base" title="FAQ / objection drafts to review">
+        <span slot="actions" class="slds-badge">{count}</span>
+        <div class="slds-p-horizontal_medium slds-p-bottom_small">
+
+            <template lwc:if={loading}>
+                <div class="slds-is-relative slds-p-vertical_large">
+                    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                </div>
+            </template>
+
+            <template lwc:if={rows}>
+                <template lwc:if={hasRows}>
+                    <template for:each={displayRows} for:item="r">
+                        <div key={r.id} class="row">
+                            <p class="title">{r.title}</p>
+                            <p class="meta">{r.metaLabel}</p>
+                            <lightning-textarea
+                                data-id={r.id}
+                                label="Recommended response"
+                                value={r.response}
+                                onchange={handleChange}
+                                class="slds-m-vertical_x-small"
+                            ></lightning-textarea>
+                            <div class="actions">
+                                <lightning-button label="Save" data-id={r.id} onclick={handleSave}
+                                    class="slds-m-right_x-small"></lightning-button>
+                                <lightning-button label="Approve" variant="brand" data-id={r.id}
+                                    onclick={handleApprove} class="slds-m-right_x-small"></lightning-button>
+                                <lightning-button label="Retire" variant="destructive-text" data-id={r.id}
+                                    onclick={handleRetire}></lightning-button>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+                <template lwc:else>
+                    <div class="slds-text-align_center slds-p-vertical_large slds-text-color_weak">
+                        No drafts to review &mdash; the knowledge base is up to date.
+                    </div>
+                </template>
+            </template>
+
+            <template lwc:if={error}>
+                <div class="slds-text-color_error slds-p-vertical_medium">Couldn&rsquo;t load drafts.</div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

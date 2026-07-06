@@ -14,29 +14,45 @@ const COLUMNS = [
     },
 
     {
-        label: 'Field',
+        label: 'Field Changed',
         fieldName: 'fieldName'
     },
 
     {
         label: 'Old Value',
-        fieldName: 'oldValue'
+        fieldName: 'oldValue',
+        cellAttributes: {
+            class: {
+                fieldName: 'oldValueClass'
+            }
+        }
     },
 
     {
         label: 'New Value',
-        fieldName: 'newValue'
+        fieldName: 'newValue',
+        cellAttributes: {
+            class: {
+                fieldName: 'newValueClass'
+            }
+        }
     },
 
     {
         label: 'Changed On',
         fieldName: 'changeDate',
-        type: 'date'
+        type: 'date',
+        typeAttributes: {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        }
     }
 ];
 
-export default class AuditTrailDashboard
-extends LightningElement {
+export default class AuditTrailDashboard extends LightningElement {
 
     columns = COLUMNS;
 
@@ -51,67 +67,77 @@ extends LightningElement {
     sourceChanges = 0;
     totalEvents = 0;
 
+    /* =========================================
+       SUMMARY
+    ========================================= */
+
     @wire(getAuditSummary)
     wiredSummary({ data, error }) {
 
         if (data) {
 
-            this.statusChanges =
-                data.statusChanges;
+            this.statusChanges = data.statusChanges;
+            this.ownerChanges = data.ownerChanges;
+            this.sourceChanges = data.sourceChanges;
+            this.totalEvents = data.totalEvents;
 
-            this.ownerChanges =
-                data.ownerChanges;
+        } else if (error) {
 
-            this.sourceChanges =
-                data.sourceChanges;
-
-            this.totalEvents =
-                data.totalEvents;
-        }
-        else if (error) {
-
-            console.error(error);
+            console.error('Summary Error:', error);
         }
     }
+
+    /* =========================================
+       AUDIT RECORDS
+    ========================================= */
 
     @wire(getRecentAuditRecords)
     wiredAudit({ data, error }) {
 
         if (data) {
 
-            this.allRecords = data;
+            this.allRecords = data.map(record => {
+
+                return {
+                    ...record,
+
+                    oldValueClass:
+                        'slds-text-color_warning slds-text-title_bold',
+
+                    newValueClass:
+                        'slds-text-color_success slds-text-title_bold'
+                };
+            });
 
             this.updatePage();
-        }
-        else if (error) {
 
-            console.error(error);
+        } else if (error) {
+
+            console.error('Audit Error:', error);
         }
     }
+
+    /* =========================================
+       PAGINATION
+    ========================================= */
 
     updatePage() {
 
         const start =
-            (this.pageNumber - 1)
-            * this.pageSize;
+            (this.pageNumber - 1) * this.pageSize;
 
         const end =
             start + this.pageSize;
 
         this.auditRecords =
-            this.allRecords.slice(
-                start,
-                end
-            );
+            this.allRecords.slice(start, end);
     }
 
     handleNext() {
 
-        if (this.pageNumber <
-            this.totalPages) {
+        if (this.pageNumber < this.totalPages) {
 
             this.pageNumber++;
-
             this.updatePage();
         }
     }
@@ -121,16 +147,18 @@ extends LightningElement {
         if (this.pageNumber > 1) {
 
             this.pageNumber--;
-
             this.updatePage();
         }
     }
 
+    /* =========================================
+       GETTERS
+    ========================================= */
+
     get totalPages() {
 
         return Math.ceil(
-            this.allRecords.length /
-            this.pageSize
+            this.allRecords.length / this.pageSize
         );
     }
 
@@ -141,7 +169,6 @@ extends LightningElement {
 
     get disableNext() {
 
-        return this.pageNumber ===
-            this.totalPages;
+        return this.pageNumber >= this.totalPages;
     }
 }

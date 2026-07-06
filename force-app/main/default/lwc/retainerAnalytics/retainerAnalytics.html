@@ -1,7 +1,30 @@
 <template>
-    <lightning-card title="Retainer Funnel Chart">
+    <lightning-card>
+
+        <!-- Header -->
+        <div class="dashboard-header">
+
+            <div class="header-title">
+                <span class="header-icon">📊</span>
+                <span>Retainer Sent, Viewed and Signed Analytics</span>
+            </div>
+
+            <div class="header-filter">
+                <lightning-combobox
+                    label="Date Filter"
+                    variant="label-hidden"
+                    value={selectedFilter}
+                    options={filterOptions}
+                    onchange={handleFilterChange}>
+                </lightning-combobox>
+            </div>
+
+        </div>
+
+        <!-- Chart -->
         <div class="chart-container">
             <canvas lwc:dom="manual" class="funnelChart"></canvas>
         </div>
+
     </lightning-card>
 </template>

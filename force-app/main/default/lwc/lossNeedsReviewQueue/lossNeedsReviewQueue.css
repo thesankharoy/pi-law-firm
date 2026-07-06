@@ -1,0 +1,20 @@
+.row {
+    padding: 0.75rem 0.25rem;
+    border-top: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+}
+.row-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.reason { font-weight: 700; }
+.conf { font-size: 0.8rem; color: var(--slds-g-color-neutral-base-30, #5c5c5c); margin-left: auto; }
+.summary { font-size: 0.9rem; margin-top: 2px; }
+.evidence {
+    font-size: 0.85rem;
+    font-style: italic;
+    color: var(--slds-g-color-neutral-base-30, #5c5c5c);
+    margin: 4px 0 8px;
+}
+.actions { display: flex; align-items: center; }

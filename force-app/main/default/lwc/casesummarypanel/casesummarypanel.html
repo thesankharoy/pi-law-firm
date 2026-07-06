@@ -1,0 +1,126 @@
+<template>
+    <div class="summary-root">
+
+        <!-- Header bar -->
+        <div class="summary-header">
+            <div class="header-left">
+                <span class="header-icon">⚖️</span>
+                <span class="header-title">Case Hand-Off Summary</span>
+                <template if:true={isReviewed}>
+                    <span class="badge badge-reviewed">✓ Reviewed</span>
+                </template>
+                <template if:false={isReviewed}>
+                    <template if:true={hasSummary}>
+                        <span class="badge badge-pending">Pending Review</span>
+                    </template>
+                </template>
+            </div>
+            <div class="header-actions">
+                <template if:true={hasSummary}>
+                    <button class="btn btn-ghost" onclick={handleToggleReviewed}
+                            disabled={isSaving} title="Toggle reviewed status">
+                        {reviewedLabel}
+                    </button>
+                    <button class="btn btn-ghost" onclick={handleRegenerate}
+                            disabled={isRegenerating} title="Regenerate summary from latest data">
+                        {regenerateLabel}
+                    </button>
+                </template>
+            </div>
+        </div>
+
+        <!-- Loading: initial fetch -->
+        <template if:true={isLoading}>
+            <div class="state-box">
+                <div class="spinner"></div>
+                <p class="state-msg">Loading summary…</p>
+            </div>
+        </template>
+
+        <!-- Regenerating in progress -->
+        <template if:true={isRegenerating}>
+            <div class="state-box">
+                <div class="spinner"></div>
+                <p class="state-msg">Generating Summary — this takes about 10 seconds…</p>
+            </div>
+        </template>
+
+        <!-- Error state -->
+        <template if:true={hasError}>
+            <div class="state-box error-box">
+                <p class="state-msg">{errorMessage}</p>
+            </div>
+        </template>
+
+        <!-- No summary yet -->
+        <template if:false={hasSummary}>
+            <template if:false={isLoading}>
+                <template if:false={isRegenerating}>
+                    <div class="state-box empty-box">
+                        <p class="state-msg">
+                            No summary generated yet.
+                            Summary auto-generates when the retainer is signed.
+                        </p>
+                        <button class="btn btn-primary" onclick={handleRegenerate}>
+                            Generate Now
+                        </button>
+                    </div>
+                </template>
+            </template>
+        </template>
+
+        <!-- Summary content -->
+        <template if:true={hasSummary}>
+            <template if:false={isRegenerating}>
+
+                <!-- Meta row -->
+                <div class="meta-row">
+                    <span class="meta-item">
+                        Generated: <strong>{formattedGeneratedAt}</strong>
+                    </span>
+                    <span class="meta-item">
+                        Intake: <strong>{intakeName}</strong>
+                    </span>
+                </div>
+
+                <!-- Summary body: editable textarea when editing, structured sections otherwise -->
+                <template if:true={isEditing}>
+                    <textarea class="summary-textarea"
+                              value={editBuffer}
+                              onchange={handleEditChange}
+                              rows="20"></textarea>
+                    <div class="edit-actions">
+                        <button class="btn btn-primary" onclick={handleSaveEdit}
+                                disabled={isSaving}>
+                            {saveLabel}
+                        </button>
+                        <button class="btn btn-ghost" onclick={handleCancelEdit}
+                                disabled={isSaving}>
+                            Cancel
+                        </button>
+                    </div>
+                </template>
+
+                <template if:false={isEditing}>
+                    <div class="summary-body">
+                        <template for:each={summarySections} for:item="section">
+                            <div class="summary-section" key={section.key}>
+                                <template if:true={section.label}>
+                                    <p class="section-label">{section.label}</p>
+                                </template>
+                                <p class="section-body">{section.body}</p>
+                            </div>
+                        </template>
+                    </div>
+                    <!-- <div class="edit-trigger-row">
+                        <button class="btn btn-ghost btn-sm" onclick={handleStartEdit}>
+                            ✏️ Edit Summary
+                        </button>
+                    </div> -->
+                </template>
+
+            </template>
+        </template>
+
+    </div>
+</template>

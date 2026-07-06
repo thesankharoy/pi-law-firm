@@ -1,6 +1,5 @@
 import { LightningElement, api, track } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
-import { refreshApex } from "@salesforce/apex";
 import getEnrollmentStatus from "@salesforce/apex/DripCampaignController.getEnrollmentStatus";
 import getActiveCampaigns from "@salesforce/apex/DripCampaignController.getActiveCampaigns";
 import deferIntake from "@salesforce/apex/DripCampaignController.deferIntake";

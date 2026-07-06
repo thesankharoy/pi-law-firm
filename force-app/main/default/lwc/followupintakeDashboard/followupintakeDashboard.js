@@ -22,14 +22,15 @@ export default class IntakeDashboard extends NavigationMixin(LightningElement) {
         })
         .then(result => {
 
-            this.intakes = result.records.map(item => {
-                return {
-                    ...item,
-                    statusText: item.noFollowUp ? 'No Follow-up' : 'Followed',
-                    rowClass: item.noFollowUp ? 'flash-row danger' : 'flash-row success'
-                };
-            });
-
+           this.intakes = result.records.map(item => {
+            return {
+                ...item,
+                statusText: item.noFollowUp ? 'No Follow-up' : 'Followed',
+                statusClass: item.noFollowUp
+                    ? 'status-pill danger'
+                    : 'status-pill success'
+            };
+        });
             this.totalRecords = result.totalRecords;
             this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
 

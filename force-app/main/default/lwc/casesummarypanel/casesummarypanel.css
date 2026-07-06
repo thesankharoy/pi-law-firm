@@ -1,0 +1,242 @@
+/* ─── Root container ────────────────────────────────────────────────────── */
+.summary-root {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* ─── Header ────────────────────────────────────────────────────────────── */
+.summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: #0f1729;
+    color: #ffffff;
+    gap: 12px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.header-icon {
+    font-size: 18px;
+}
+
+.header-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* ─── Badges ────────────────────────────────────────────────────────────── */
+.badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.badge-reviewed {
+    background: #22c55e;
+    color: #052e16;
+}
+
+.badge-pending {
+    background: #f97316;
+    color: #431407;
+}
+
+/* ─── Buttons ───────────────────────────────────────────────────────────── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+    white-space: nowrap;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #2563eb;
+}
+
+.btn-ghost {
+    background: rgba(255,255,255,0.12);
+    color: #ffffff;
+}
+
+.btn-ghost:hover:not(:disabled) {
+    background: rgba(255,255,255,0.22);
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+/* ─── Meta row ──────────────────────────────────────────────────────────── */
+.meta-row {
+    display: flex;
+    gap: 24px;
+    padding: 10px 18px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 12px;
+    color: #64748b;
+    flex-wrap: wrap;
+}
+
+.meta-item strong {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+/* ─── Summary body: structured sections ────────────────────────────────── */
+.summary-body {
+    margin: 0;
+    padding: 8px 22px 16px;
+    background: #ffffff;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.summary-section {
+    padding: 14px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.summary-section:last-child {
+    border-bottom: none;
+}
+
+.section-label {
+    margin: 0 0 6px 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #2563eb;
+}
+
+.section-body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13.5px;
+    line-height: 1.75;
+    color: #1e293b;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ─── Edit textarea ─────────────────────────────────────────────────────── */
+.summary-textarea {
+    display: block;
+    width: 100%;
+    padding: 16px 18px;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13.5px;
+    line-height: 1.75;
+    color: #1e293b;
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    resize: vertical;
+    outline: none;
+    background: #fafbfc;
+}
+
+.summary-textarea:focus {
+    background: #ffffff;
+    border-color: #3b82f6;
+}
+
+.edit-actions {
+    display: flex;
+    gap: 10px;
+    padding: 12px 18px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+/* edit trigger row (below sections) */
+.edit-trigger-row {
+    padding: 10px 18px;
+    border-top: 1px solid #f1f5f9;
+    background: #f8fafc;
+}
+
+/* ─── State boxes (loading / empty / error) ─────────────────────────────── */
+.state-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    gap: 16px;
+    text-align: center;
+}
+
+.empty-box {
+    background: #fafbfc;
+}
+
+.error-box {
+    background: #fef2f2;
+}
+
+.state-msg {
+    margin: 0;
+    font-size: 14px;
+    color: #64748b;
+    max-width: 380px;
+    line-height: 1.55;
+}
+
+.error-box .state-msg {
+    color: #dc2626;
+}
+
+/* ─── Spinner ───────────────────────────────────────────────────────────── */
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

@@ -1,0 +1,92 @@
+<template>
+    <div class="copilot">
+        <!-- header -->
+        <div class="cp-header">
+            <div class="cp-title">
+                <lightning-icon icon-name="utility:live_message" size="small" class="cp-logo"></lightning-icon>
+                <div class="cp-titletext">
+                    <span class="cp-name">Intake Co-Pilot</span>
+                    <template if:true={clientName}>
+                        <span class="cp-client">{clientName}</span>
+                    </template>
+                </div>
+            </div>
+            <div class="cp-header-right">
+                <span class={statusPillClass}>
+                    <span class="pill-dot"></span>{statusLabel}
+                </span>
+                <lightning-button
+                    label={toggleLabel}
+                    variant={toggleVariant}
+                    icon-name={toggleIcon}
+                    onclick={toggleListening}
+                    class="cp-toggle">
+                </lightning-button>
+            </div>
+        </div>
+
+        <!-- live signals -->
+        <template if:true={hasTurns}>
+            <div class="cp-signals">
+                <template if:true={leadFit}>
+                    <span class={leadFitClass}>Lead fit: {leadFit}</span>
+                </template>
+                <template if:true={sentiment}>
+                    <span class={sentimentClass}>{sentiment}</span>
+                </template>
+            </div>
+        </template>
+
+        <!-- feed -->
+        <div class="feed">
+            <template if:false={hasTurns}>
+                <div class="cp-empty">
+                    <lightning-icon icon-name="utility:headset" size="large" class="cp-empty-icon"></lightning-icon>
+                    <p class="cp-empty-title">{emptyTitle}</p>
+                    <p class="cp-empty-sub">{emptySub}</p>
+                    <p class="cp-debug">{debugLine}</p>
+                </div>
+            </template>
+
+            <template for:each={turns} for:item="t">
+                <div key={t.key} class={t.rowClass}>
+                    <div class="turn__head">
+                        <span class="turn__speaker">{t.speaker}</span>
+                        <template if:true={t.language}>
+                            <span class="lang">{t.language}</span>
+                        </template>
+                    </div>
+
+                    <template if:true={t.showTranslation}>
+                        <p class="turn__translation">{t.translation}</p>
+                        <p class="turn__original">&ldquo;{t.transcript}&rdquo;</p>
+                    </template>
+                    <template if:false={t.showTranslation}>
+                        <p class="turn__translation">{t.transcript}</p>
+                    </template>
+
+                    <template if:true={t.analyzing}>
+                        <p class="analyzing">
+                            <lightning-icon icon-name="utility:spinner" size="xx-small" variant="inverse"></lightning-icon>
+                            <span>Analyzing&hellip;</span>
+                        </p>
+                    </template>
+
+                    <template if:true={t.suggestion}>
+                        <div class="suggestion">
+                            <div class="suggestion__label">
+                                <lightning-icon icon-name="utility:spark" size="xx-small"></lightning-icon>
+                                <span>Suggested next move</span>
+                            </div>
+                            <p class="suggestion__text">{t.suggestion}</p>
+                        </div>
+                    </template>
+
+                    <template if:true={t.errorMsg}>
+                        <p class="turn-error">&#9888; {t.errorMsg}</p>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

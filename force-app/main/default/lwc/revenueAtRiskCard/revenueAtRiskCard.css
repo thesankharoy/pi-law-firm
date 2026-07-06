@@ -1,0 +1,37 @@
+.tile {
+    background: var(--slds-g-color-neutral-base-95, #f3f3f3);
+    border-radius: 0.25rem;
+    padding: 0.75rem 1rem;
+    height: 100%;
+}
+.lbl {
+    font-size: 0.8rem;
+    color: var(--slds-g-color-neutral-base-30, #5c5c5c);
+}
+.num {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+.num-crit {
+    color: #ba0517;
+}
+.row {
+    padding: 0.75rem 0.25rem;
+    border-top: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+}
+.meta {
+    min-width: 0;
+}
+.client {
+    font-weight: 700;
+}
+.sub {
+    font-size: 0.8rem;
+    color: var(--slds-g-color-neutral-base-30, #5c5c5c);
+}
+.amt {
+    font-weight: 700;
+    margin-left: auto;
+    white-space: nowrap;
+}

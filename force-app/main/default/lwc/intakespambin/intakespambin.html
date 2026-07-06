@@ -1,0 +1,112 @@
+<template>
+    <div class="spam-bin">
+
+        <!-- ── HEADER ─────────────────────────────────────────────────── -->
+        <div class="bin-header">
+            <div class="bin-title-row">
+                <span class="bin-icon">🛡️</span>
+                <h2 class="bin-title">Spam Bin</h2>
+                <div class="bin-badges">
+                    <span class="badge badge-spam">{spamCount} Spam</span>
+                </div>
+            </div>
+
+            <div class="bin-controls">
+                <button class="btn-refresh" onclick={refresh} title="Refresh">⟳ Refresh</button>
+            </div>
+        </div>
+
+        <!-- ── LOADING ────────────────────────────────────────────────── -->
+        <template if:true={isLoading}>
+            <div class="loading-row">
+                <div class="spinner"></div>
+                <span>Loading…</span>
+            </div>
+        </template>
+
+        <!-- ── EMPTY STATE ─────────────────────────────────────────────── -->
+        <template if:false={isLoading}>
+            <template if:true={isEmpty}>
+                <div class="empty-state">
+                    <span class="empty-icon">✅</span>
+                    <p>No spam in the bin. Your queue is clean.</p>
+                </div>
+            </template>
+        </template>
+
+        <!-- ── TABLE ──────────────────────────────────────────────────── -->
+        <template if:false={isLoading}>
+            <template if:false={isEmpty}>
+                <div class="table-wrap">
+                    <table class="bin-table">
+                        <thead>
+                            <tr>
+                                <th>Lead</th>
+                                <th>Contact</th>
+                                <th>Incident</th>
+                                <th>Score</th>
+                                <th>Reason</th>
+                                <th>Received</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={rows} for:item="row">
+                                <tr key={row.id} class="bin-row">
+                                    <td>
+                                        <a href={row.recordUrl} target="_blank" class="intake-link">{row.name}</a>
+                                    </td>
+                                    <td>
+                                        <div class="contact-name">{row.submitterName}</div>
+                                        <div class="contact-detail">{row.email}</div>
+                                        <div class="contact-detail">{row.phone}</div>
+                                    </td>
+                                    <td>
+                                        <div>{row.incidentType}</div>
+                                        <div class="contact-detail">{row.incidentDate}</div>
+                                    </td>
+                                    <td>
+                                        <div class="score-bar-wrap" title={row.triageSignals}>
+                                            <div class="score-bar" style={row.scoreBarStyle}></div>
+                                            <span class="score-num">{row.triageScore}</span>
+                                        </div>
+                                        <div class="signals-text">{row.triageSignals}</div>
+                                    </td>
+                                    <td class="reason-cell" title={row.aiReason}>{row.aiReasonShort}</td>
+                                    <td class="muted small">{row.createdDate}</td>
+                                    <td class="actions-cell">
+                                        <button class="btn-recover"
+                                                onclick={handleRecover}
+                                                data-id={row.id}
+                                                title="This is a real lead — move to New Intake">
+                                            ✅ Real
+                                        </button>
+                                        <button class="btn-delete"
+                                                onclick={handleDelete}
+                                                data-id={row.id}
+                                                title="Confirm spam and delete permanently">
+                                            🗑 Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ── PAGINATION ──────────────────────────────────────── -->
+                <div class="pagination">
+                    <span class="page-info">{pageInfo}</span>
+                    <button onclick={prevPage} disabled={isFirstPage} class="page-btn">← Prev</button>
+                    <button onclick={nextPage} disabled={isLastPage}  class="page-btn">Next →</button>
+                </div>
+            </template>
+        </template>
+
+        <!-- ── TOAST ──────────────────────────────────────────────────── -->
+        <template if:true={toast}>
+            <div class={toast.cls} role="status">{toast.msg}</div>
+        </template>
+
+    </div>
+</template>

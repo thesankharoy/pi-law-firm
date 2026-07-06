@@ -1,0 +1,28 @@
+<template>
+    <lightning-card title="Call Recording" icon-name="utility:recording">
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+
+            <template if:true={loading}>
+                <lightning-spinner alternative-text="Loading recording" size="small"></lightning-spinner>
+            </template>
+
+            <template if:true={hasRecording}>
+                <!-- crossorigin not set: media element can stream S3 cross-origin without CORS -->
+                <audio controls preload="none" src={recordingUrl} class="player">
+                    Your browser does not support audio playback.
+                </audio>
+            </template>
+
+            <template if:true={noRecording}>
+                <p class="slds-text-color_weak slds-text-body_small">
+                    No recording is attached to this call yet.
+                </p>
+            </template>
+
+            <template if:true={error}>
+                <p class="slds-text-color_error slds-text-body_small">{error}</p>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

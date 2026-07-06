@@ -1,0 +1,61 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border-top: 2px solid #ff9800;
+    border-bottom: 1px solid #ddd;
+}
+
+.tabs {
+    display: flex;
+    align-items: center;
+    gap: 6px; /* space between tabs */
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 3px solid transparent;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    color: #5f6b7a;
+}
+
+
+.tab span {
+    margin-left: 4px; /* extra icon-text spacing if needed */
+}
+
+.tab lightning-icon {
+    --slds-c-icon-color-foreground-default: currentColor;
+}
+
+.tab:hover {
+    background: #f4f6f9;
+    color: #0176d3;
+}
+.active {
+    color: #0176d3;
+    background: #eef4ff;
+    border-bottom: 3px solid #0176d3;
+    font-weight: 600;
+}
+
+.badge {
+    background: #ff9800;
+    color: #fff;
+    border-radius: 10px;
+    padding: 1px 6px;
+    font-size: 11px;
+    margin-left: 4px;
+}
+
+.filter {
+    width: 220px;
+    padding-right: 15px;
+}

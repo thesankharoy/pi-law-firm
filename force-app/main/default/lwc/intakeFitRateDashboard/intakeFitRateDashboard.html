@@ -3,7 +3,11 @@
     <div class="dashboard-grid">
 
         <!-- Intake Fit Rate -->
-        <lightning-card title="Intake Case Quality Rate by Source">
+        <lightning-card>
+            <div class="card-header">
+            <span class="icon">🎯</span>
+            <span class="title">Intake Case Quality Rate by Source</span>
+        </div>
 
             <div class="fit-container">
 
@@ -18,7 +22,7 @@
                             </span>
 
                             <span class="fit-rate">
-                                {item.fitRate}%
+                                Avg {item.qualityRate}
                             </span>
 
                         </div>
@@ -33,12 +37,8 @@
                         </div>
 
                         <div class="fit-detail">
-
-                            {item.qualifiedIntakes}
-                            Qualified of
                             {item.totalIntakes}
                             Intakes
-
                         </div>
 
                     </div>
@@ -50,8 +50,11 @@
         </lightning-card>
 
         <!-- Signed Conversion -->
-        <lightning-card
-            title="Intake-to-Signed Conversion by Source">
+        <lightning-card>
+            <div class="card-header">
+                <span class="icon">🔄</span>
+                <span class="title">Intake-to-Signed Conversion by Source</span>
+            </div>
 
             <div class="conversion-container">
 
@@ -70,7 +73,7 @@
                             </span>
 
                             <span class="conversion-rate">
-                                {item.conversionRate}%
+                                Avg {item.conversionRate}
                             </span>
 
                         </div>

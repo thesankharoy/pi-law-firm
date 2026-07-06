@@ -1,0 +1,44 @@
+<template>
+    <lightning-card icon-name="utility:warning" title="Loss classifications to review">
+        <span slot="actions" class="slds-badge">{count}</span>
+        <div class="slds-p-horizontal_medium slds-p-bottom_small">
+
+            <template lwc:if={loading}>
+                <div class="slds-is-relative slds-p-vertical_large">
+                    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                </div>
+            </template>
+
+            <template lwc:if={rows}>
+                <template lwc:if={hasRows}>
+                    <template for:each={displayRows} for:item="r">
+                        <div key={r.id} class="row">
+                            <div class="row-head">
+                                <span class="reason">{r.reason}</span>
+                                <span class="fault slds-badge">{r.fault}</span>
+                                <span class="conf">conf {r.confidenceLabel}</span>
+                            </div>
+                            <p class="summary">{r.summary}</p>
+                            <p class="evidence">&ldquo;{r.evidence}&rdquo;</p>
+                            <div class="actions">
+                                <lightning-button label="Confirm" icon-name="utility:check" variant="brand"
+                                    data-id={r.id} onclick={handleConfirm} class="slds-m-right_x-small"></lightning-button>
+                                <lightning-button label="Open intake" icon-name="utility:forward" icon-position="right"
+                                    variant="base" data-id={r.intakeId} onclick={handleOpen}></lightning-button>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+                <template lwc:else>
+                    <div class="slds-text-align_center slds-p-vertical_large slds-text-color_weak">
+                        Nothing to review &mdash; all classifications are verified.
+                    </div>
+                </template>
+            </template>
+
+            <template lwc:if={error}>
+                <div class="slds-text-color_error slds-p-vertical_medium">Couldn&rsquo;t load the review queue.</div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

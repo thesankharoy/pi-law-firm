@@ -1,184 +1,132 @@
-.ai-card {
-
+:host {
+    display: block;
+    border: 1px solid #d8dde6;
     border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
 }
 
+.ai-card {
+    border-radius: 12px;
+    border: 1px solid #d8dde6;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+/* Header */
 .header {
-
     display: flex;
-
     justify-content: space-between;
-
     align-items: center;
-
-    padding: 1rem;
-
+    padding: 1rem 1.25rem;
     border-bottom: 1px solid #ecebea;
 }
 
 .header-left {
-
     display: flex;
-
     align-items: center;
-
     gap: 12px;
 }
 
-.einstein-icon {
-
-    --slds-c-icon-color-foreground-default: #0176d3;
+.icon-tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #fef6e0;
+    font-size: 18px;
+    line-height: 1;
 }
 
 .title {
-
     margin: 0;
-
-    font-size: 1.15rem;
-
-    font-weight: 700;
-
-    color: #181818;
-}
-
-.subtitle {
-
-    margin: 0;
-
-    font-size: 0.8rem;
-
-    color: #706e6b;
-}
-
-.live-badge {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 6px;
-
-    padding: 4px 10px;
-
-    border-radius: 999px;
-
-    background: #eef4ff;
-
-    color: #0176d3;
-
-    font-size: 12px;
-
-    font-weight: 600;
-}
-
-.live-dot {
-
-    width: 8px;
-
-    height: 8px;
-
-    border-radius: 50%;
-
-    background: #2e844a;
-
-    animation: pulse 1.5s infinite;
-}
-
-.content-section {
-
-    padding: 1.25rem;
-
-    min-height: 260px;
-}
-
-.section-title {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 8px;
-
-    margin-bottom: 16px;
-
     font-size: 1.1rem;
-
     font-weight: 700;
+    color: #1b3a6b;
+}
 
+.count {
+    font-size: 13px;
+    font-weight: 500;
+    color: #706e6b;
+}
+
+/* Loading */
+.loading-section {
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #706e6b;
+}
+
+/* Action list */
+.action-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.action-item {
+    border-bottom: 1px solid #f0efed;
+}
+
+.action-item:last-child {
+    border-bottom: none;
+}
+
+.action-item:nth-child(even) .action-head {
+    background: #fbfbfa;
+}
+
+.action-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 1.25rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.action-head:hover {
+    background: #f4f7fb;
+}
+
+/* Priority badge */
+.badge {
+    flex-shrink: 0;
+    min-width: 46px;
+    text-align: center;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+}
+
+.badge-high { color: #ba0517; background: #feeceb; }
+.badge-med  { color: #c4720a; background: #fef6e7; }
+.badge-low  { color: #2e7d46; background: #ebf7ee; }
+
+.action-title {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 700;
     color: #181818;
 }
 
-.section-content {
+.chevron {
+    --slds-c-icon-color-foreground-default: #8a8886;
+}
 
-    white-space: pre-wrap;
-
-    line-height: 1.8;
-
-    color: #444;
-
+/* Expanded body */
+.action-body {
+    padding: 0 1.25rem 16px;
+    margin-left: 60px;
     font-size: 14px;
-}
-
-.loading-section {
-
-    padding: 1rem 1.25rem;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 10px;
-}
-
-.progress-container {
-
-    padding: 0 1.25rem 1rem;
-}
-
-.footer {
-
-    display: flex;
-
-    justify-content: space-between;
-
-    align-items: center;
-
-    padding: 1rem 1.25rem;
-
-    border-top: 1px solid #ecebea;
-
-    background: #fafaf9;
-}
-
-.counter {
-
-    color: #706e6b;
-
-    font-size: 13px;
-
-    font-weight: 600;
-}
-
-@keyframes pulse {
-
-    0% {
-
-        transform: scale(1);
-
-        opacity: 1;
-    }
-
-    50% {
-
-        transform: scale(1.25);
-
-        opacity: .6;
-    }
-
-    100% {
-
-        transform: scale(1);
-
-        opacity: 1;
-    }
+    line-height: 1.6;
+    color: #54534f;
 }

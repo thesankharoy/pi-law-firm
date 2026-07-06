@@ -2,6 +2,7 @@ import { LightningElement, api, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import getTimeline from '@salesforce/apex/ActivityTimelineController.getTimeline';
 import USER_ID from '@salesforce/user/Id';
+import generatePdf from '@salesforce/apex/ActivityTimelinePdfController.generatePdf';
 import { refreshApex } from '@salesforce/apex';
 export default class ActivityTimeline extends NavigationMixin(LightningElement) {
 
@@ -22,27 +23,41 @@ wiredData(result) {
 
     if (data) {
 
-        this.timelineData = data.map(group => {
+       console.log('Timeline Data:', JSON.stringify(data));
+       this.timelineData = data.map(group => {
 
+    return {
+        ...group,
+        expanded: true,
+        iconName: 'utility:chevrondown',
+
+        activities: (group.activities || []).map(act => {
             return {
-                ...group,
-                expanded: true,
-                iconName: 'utility:chevrondown',
-                activities: group.activities.map(act => {
-                    return {
-                        ...act,
-                        expanded: false,
-                        detailIcon: 'utility:chevronright'
-                    };
-                })
+                ...act,
+                expanded: false,
+                detailIcon: 'utility:chevronright',
+                statusClass: this.getStatusClass(act.status)
             };
-        });
+        })
+    };
+});
 
         this.filteredData = [...this.timelineData];
 
     } else if (error) {
         console.error(error);
     }
+}
+
+handlePdf() {
+    generatePdf({ recordId: this.recordId })
+        .then(result => {
+            // result = PDF URL
+            window.open(result, '_blank');
+        })
+        .catch(error => {
+            console.error(error);
+        });
 }
 
 handleOpenRecord(event) {
@@ -310,5 +325,22 @@ handleNoDateChange(event) {
 
 this.showNoDate =
     event.target.checked;
+}
+getStatusClass(status) {
+
+    switch(status) {
+
+        case 'Completed':
+            return 'status-cell status-completed';
+
+        case 'In Progress':
+            return 'status-cell status-progress';
+
+        case 'Not Started':
+            return 'status-cell status-notstarted';
+
+        default:
+            return 'status-cell status-incomplete';
+    }
 }
 }

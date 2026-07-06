@@ -1,378 +1,347 @@
-/* =====================================
-   GRID
-===================================== */
+/* ===========================================
+   Dashboard Card Header
+=========================================== */
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: #ffffff;
+    border: 1px solid #d8dde6;
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+}
+
+.card-header .icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.card-header .title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #16325c;
+    letter-spacing: 0.2px;
+}
+
+/* Connect with Lightning Card */
+
+lightning-card {
+    display: block;
+}
+
+lightning-card .slds-card {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+
+    .card-header {
+        padding: 12px 16px;
+    }
+
+    .card-header .icon {
+        font-size: 18px;
+    }
+
+    .card-header .title {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .card-header {
+        padding: 10px 12px;
+    }
+
+    .card-header .icon {
+        font-size: 17px;
+    }
+
+    .card-header .title {
+        font-size: 15px;
+    }
+}
 
 .analytics-grid {
-
     display: grid;
-
-    grid-template-columns: 1fr 1fr;
-
-    gap: 24px;
-
-    margin-top: 20px;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
 }
-
-.analytics-grid lightning-card {
-
-    height: 100%;
-}
-
-/* =====================================
-   CONTAINERS
-===================================== */
 
 .container,
 .response-container {
-
-    padding: 18px;
-
-    animation: fadeIn .8s ease;
+    padding: 16px;
 }
 
-/* =====================================
-   REVENUE LEAKAGE
-===================================== */
+.section-header {
+    font-size: 11px;
+    font-weight: 700;
+    color: #706e6b;
+    margin-bottom: 18px;
+}
+
+/* LEFT CARD */
 
 .row {
-
     display: flex;
-
     align-items: center;
-
-    margin-bottom: 14px;
-
-    animation: slideUp .6s ease;
+    margin-bottom: 12px;
+    gap: 10px;
 }
 
-.stage-box {
-
-    min-width: 200px;
-
-    background: linear-gradient(
-        135deg,
-        #b0e309,
-        #42c8f4
-    );
-
-    border-radius: 14px;
-
-    padding: 10px 14px;
-
-    display: flex;
-
-    justify-content: space-between;
-
-    align-items: center;
-
-    transition: all .35s ease;
-
-    box-shadow:
-        0 5px 15px rgba(249,115,22,.15);
-
-    position: relative;
-
-    overflow: hidden;
-}
-
-.stage-box:hover {
-
-    transform: translateX(6px)
-               scale(1.02);
-
-    box-shadow:
-        0 10px 25px rgba(249,115,22,.25);
-}
-
-.stage-box::after {
-
-    content: '';
-
-    position: absolute;
-
-    top: 0;
-
-    left: -100%;
-
-    width: 50%;
-
-    height: 100%;
-
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255,255,255,.4),
-        transparent
-    );
-
-    animation: shine 3s infinite;
-}
-
-.stage-name {
-
-    color: #000000;
-
-    font-weight: 700;
-
+.stage-label {
+    width: 110px;
+    min-width: 110px;
     font-size: 13px;
 }
 
-.stage-count {
+.track {
+    flex: 1;
+    height: 28px;
+    background: #ecebea;
+    border-radius: 4px;
+    overflow: hidden;
+}
 
-    color: #ea580c;
+.stage-bar {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    color: white;
+    font-weight: 700;
+    white-space: nowrap;
+}
 
-    font-weight: 800;
+.new {
+    background: #0b1f4d;
+}
 
-    font-size: 15px;
+.assigned {
+    background: #2949b6;
+}
+
+.working {
+    background: #0176d3;
+}
+
+.review {
+    background: #1b96ff;
+}
+
+.qualified {
+    background: #dd7a01;
+}
+
+.sent {
+    background: #c56f00;
+}
+
+.signed {
+    background: #2e844a;
+}
+
+.count {
+    font-size: 13px;
 }
 
 .dropoff {
-
-    flex: 1;
-
-    display: flex;
-
-    justify-content: flex-end;
-
-    align-items: center;
-
-    gap: 8px;
-}
-
-.red {
-    background: linear-gradient(
-        135deg,
-        #fef2f2,
-        #fecaca
-    );
-
-    color: #b91c1c;
-
-    border: 1px solid rgba(220, 38, 38, 0.15);
-
-    border-radius: 999px;
-
-    padding: 6px 12px;
-
+    width: 110px;
+    min-width: 110px;
+    text-align: right;
     font-size: 12px;
-
-    font-weight: 700;
-
-    box-shadow:
-        0 4px 12px rgba(220, 38, 38, 0.12);
-
-    transition: all .25s ease;
 }
 
-.red:hover {
-    transform: translateY(-1px);
-    box-shadow:
-        0 6px 16px rgba(220, 38, 38, 0.18);
+.drop-warning {
+    color: #8e030f;
+    font-weight: 600;
 }
 
-/* =====================================
-   RESPONSE TIME
-===================================== */
+.drop-success {
+    color: #2e844a;
+    font-weight: 600;
+}
+
+.neutral {
+    color: #706e6b;
+}
+
+/* RIGHT CARD */
+
+.response-container {
+    padding: 18px;
+}
 
 .response-row {
-
     margin-bottom: 20px;
-
-    animation: slideUp .6s ease;
 }
 
-.response-label {
-
+.response-header {
     display: flex;
-
     justify-content: space-between;
-
     align-items: center;
-
     margin-bottom: 8px;
 }
 
 .source {
-
-    font-weight: 700;
-
-    color: #1e293b;
-
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #3e3e3c;
 }
 
 .time {
-
-    background: rgba(124,58,237,.12);
-
-    color: #7c3aed;
-
-    padding: 4px 10px;
-
-    border-radius: 20px;
-
-    font-size: 12px;
-
+    font-size: 13px;
     font-weight: 700;
+    color: #514f4d;
 }
 
 .bar-container {
-
     width: 100%;
-
-    height: 14px;
-
-    background: #e2e8f0;
-
+    height: 12px;
+    background: #ecebea;
     border-radius: 999px;
-
     overflow: hidden;
-
-    position: relative;
 }
 
-.bar {
+.response-bar {
     height: 100%;
     border-radius: 999px;
-
-    background: linear-gradient(
-        90deg,
-        #6366f1,
-        #8b5cf6,
-        #a855f7
-    );
-
-    background-size: 300% 300%;
-    animation: gradientMove 2s ease infinite;
-    box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
+    transition: width 0.4s ease-in-out;
 }
 
-.bar::after {
-
-    content: '';
-
-    position: absolute;
-
-    top: 0;
-
-    left: -100%;
-
-    width: 40%;
-
-    height: 100%;
-
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255,255,255,.5),
-        transparent
-    );
-
-    animation: shine 2.5s infinite;
+.green {
+    background: linear-gradient(90deg, #2e844a, #3ba755);
 }
 
-/* =====================================
-   CARD HOVER
-===================================== */
-
-lightning-card {
-
-    transition: all .35s ease;
+.orange {
+    background: linear-gradient(90deg, #dd7a01, #f29f05);
 }
 
-lightning-card:hover {
-
-    transform: translateY(-4px);
-
-    box-shadow:
-        0 15px 35px rgba(15,23,42,.12);
+.red {
+    background: linear-gradient(90deg, #0176d3, #1b96ff);
 }
 
-/* =====================================
-   ANIMATIONS
-===================================== */
+/* ===========================
+   Tablet (768px and below)
+=========================== */
 
-@keyframes fadeIn {
-
-    from {
-
-        opacity: 0;
-
-        transform: translateY(15px);
-    }
-
-    to {
-
-        opacity: 1;
-
-        transform: translateY(0);
-    }
-}
-
-@keyframes slideUp {
-
-    from {
-
-        opacity: 0;
-
-        transform: translateY(20px);
-    }
-
-    to {
-
-        opacity: 1;
-
-        transform: translateY(0);
-    }
-}
-
-@keyframes growBar {
-
-    from {
-
-        width: 0%;
-    }
-}
-
-@keyframes shimmer {
-
-    0% {
-
-        filter: brightness(1);
-    }
-
-    50% {
-
-        filter: brightness(1.15);
-    }
-
-    100% {
-
-        filter: brightness(1);
-    }
-}
-
-@keyframes shine {
-
-    0% {
-
-        left: -100%;
-    }
-
-    100% {
-
-        left: 200%;
-    }
-}
-
-/* =====================================
-   MOBILE
-===================================== */
-
-@media only screen and (max-width: 1024px) {
+@media screen and (max-width: 768px) {
 
     .analytics-grid {
-
         grid-template-columns: 1fr;
     }
+
+    .container,
+    .response-container {
+        padding: 14px;
+    }
+
+    .section-header {
+        font-size: 12px;
+    }
+
+    .stage-label {
+        width: 90px;
+        min-width: 90px;
+        font-size: 12px;
+    }
+
+    .dropoff {
+        width: 85px;
+        min-width: 85px;
+        font-size: 11px;
+    }
+
+    .track {
+        height: 24px;
+    }
+
+    .stage-bar {
+        font-size: 12px;
+    }
+
+    .source,
+    .time {
+        font-size: 12px;
+    }
+
+}
+
+/* ===========================
+   Mobile (480px and below)
+=========================== */
+
+@media screen and (max-width: 480px) {
+
+    .analytics-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .container,
+    .response-container {
+        padding: 12px;
+    }
+
+    .row {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .stage-label {
+        width: 100%;
+        min-width: 100%;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .track {
+        width: 100%;
+        height: 22px;
+    }
+
+    .stage-bar {
+        font-size: 11px;
+        padding-left: 8px;
+    }
+
+    .dropoff {
+        width: 100%;
+        min-width: 100%;
+        text-align: left;
+        margin-left: 0;
+        font-size: 11px;
+    }
+
+    .response-row {
+        margin-bottom: 16px;
+    }
+
+    .response-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .source,
+    .time {
+        font-size: 12px;
+    }
+
+    .bar-container {
+        height: 10px;
+    }
+
+    .count {
+        font-size: 11px;
+    }
+
 }

@@ -1,0 +1,120 @@
+<template>
+    <div class="df-root">
+
+        <!-- ── Header ──────────────────────────────────────────────────────── -->
+        <div class="df-header">
+            <div class="df-header__left">
+                <span class="df-header__icon">📋</span>
+                <span class="df-header__title">Document Checklist</span>
+                <template lwc:if={result}>
+                    <span class="df-header__type">{result.incidentType}</span>
+                </template>
+            </div>
+            <button class="df-refresh-btn" onclick={handleRefresh} title="Refresh checklist">↻</button>
+        </div>
+
+        <!-- ── Loading ─────────────────────────────────────────────────────── -->
+        <template lwc:if={isLoading}>
+            <div class="df-loading">
+                <div class="df-spinner"></div>
+                <span>Checking documents…</span>
+            </div>
+        </template>
+
+        <!-- ── Error ───────────────────────────────────────────────────────── -->
+        <template lwc:if={hasError}>
+            <div class="df-error">
+                <span class="df-error__icon">⚠</span>
+                <span>{errorMessage}</span>
+            </div>
+        </template>
+
+        <!-- ── Main content ────────────────────────────────────────────────── -->
+        <template lwc:if={result}>
+
+            <!-- Progress bar -->
+            <div class="df-progress">
+                <div class="gauge">
+                    <div class={result.gaugeClass} style={result.gaugeStyle}></div>
+                </div>
+                <p class="df-progress__label">{statusSummary}</p>
+            </div>
+
+            <!-- All-clear -->
+            <template lwc:if={allClear}>
+                <div class="df-all-clear">
+                    <span class="df-all-clear__icon">✓</span>
+                    <div>
+                        <p class="df-all-clear__title">All required documents on file</p>
+                        <p class="df-all-clear__sub">Case is fully documented and ready to proceed.</p>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Missing documents -->
+            <template lwc:if={hasMissing}>
+
+                <!-- Urgent callout for HIGH blockers -->
+                <template lwc:if={highCount}>
+                    <div class="df-callout df-callout--urgent">
+                        <span>⚠</span>
+                        <span>{highCount} HIGH-priority document(s) are blocking case progress.</span>
+                    </div>
+                </template>
+
+                <div class="df-section-label">
+                    Missing Documents
+                    <span class="df-section-count">{missingCount}</span>
+                </div>
+
+                <ul class="df-list">
+                    <template for:each={result.missing} for:item="flag">
+                        <li key={flag.docType} class="df-item df-item--missing">
+                            <div class="df-item__left">
+                                <span class={flag.badgeClass}>{flag.badgeLabel}</span>
+                            </div>
+                            <div class="df-item__body">
+                                <p class="df-item__name">{flag.docType}</p>
+                                <p class="df-item__reason">{flag.reason}</p>
+                            </div>
+                            <div class="df-item__right">
+                                <span class="df-item__status df-item__status--missing">Missing</span>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+
+            <!-- Filed documents (collapsible) -->
+            <template lwc:if={presentCount}>
+                <button class="df-toggle" onclick={handleTogglePresent}>
+                    {toggleLabel}
+                </button>
+
+                <template lwc:if={showPresent}>
+                    <ul class="df-list df-list--present">
+                        <template for:each={result.present} for:item="flag">
+                            <li key={flag.docType} class="df-item df-item--present">
+                                <div class="df-item__left">
+                                    <span class="df-item__check">✓</span>
+                                </div>
+                                <div class="df-item__body">
+                                    <p class="df-item__name">{flag.docType}</p>
+                                    <p class="df-item__filename">{flag.docName}</p>
+                                    <template lwc:if={flag.uploadedLabel}>
+                                        <p class="df-item__date">{flag.uploadedLabel}</p>
+                                    </template>
+                                </div>
+                                <div class="df-item__right">
+                                    <span class="df-item__status df-item__status--present">On file</span>
+                                </div>
+                            </li>
+                        </template>
+                    </ul>
+                </template>
+            </template>
+
+        </template>
+
+    </div>
+</template>

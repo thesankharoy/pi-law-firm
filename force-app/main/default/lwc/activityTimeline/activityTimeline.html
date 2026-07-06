@@ -2,6 +2,47 @@
 
     <lightning-card>
 
+<div class="timeline-header">
+
+  
+    <div class="header-left">
+
+        <lightning-icon
+            icon-name="utility:activity"
+            size="small"
+            class="title-icon">
+        </lightning-icon>
+
+        <span class="timeline-title">
+            Activity Timeline
+        </span>
+
+    </div>
+
+    <div class="header-right">
+
+        <lightning-button-icon
+            icon-name="utility:print"
+            alternative-text="Print PDF"
+            title="Print / Download PDF"
+            onclick={handlePdf}
+            class="header-btn">
+        </lightning-button-icon>
+
+      <div class="refresh-btn">
+            <lightning-button-icon
+                icon-name="utility:refresh"
+                alternative-text="Refresh"
+                size="small"
+                variant="bare"
+                onclick={handleRefresh}
+                title="Refresh">
+            </lightning-button-icon>
+        </div>
+    </div>
+
+</div>
+
     <!-- Search -->
 
     <div class="toolbar">
@@ -126,11 +167,9 @@
     </div>
 
     </template>
-    <br><br>
-
     <div class="layout">
 
-        <!-- LEFT MONTH NAVIGATION -->
+        <!-- LEFT MONTH NAVIGATION 
 
         <div class="month-nav">
 
@@ -144,35 +183,13 @@
 
                 </div>
 
-            </template>
+            </template> 
 
-        </div>
+        </div>  -->
 
     <!-- TIMELINE -->
 
     <div class="timeline">
-               <!-- Refresh Button -->
-       <div class="timeline-header">
-
-    <!-- LEFT SIDE -->
-    <div class="header-left">
-        <span class="title-text">
-        </span>
-    </div>
-
-    <!-- RIGHT SIDE -->
-    <div class="header-right">
-        <lightning-button-icon
-            icon-name="utility:refresh"
-            alternative-text="Refresh"
-            size="small"
-            variant="bare"
-            onclick={handleRefresh}
-            title="Refresh">
-        </lightning-button-icon>
-    </div>
-
-</div>
 
     <template
         for:each={filteredData}
@@ -199,10 +216,10 @@
                 <span class="month-title">
                     {group.monthYear}
                 </span>
-
-                <span class="activity-count">
-                    ({group.activities.length})
-                </span>
+                    <span class="activity-count">
+                        {group.activities.length}
+                    </span>
+                            
 
             </div>
 
@@ -254,8 +271,7 @@
                                 </div>
 
                                 <!-- Status -->
-
-                                <div class="status-cell">
+                                <div class={item.statusClass}>
                                     {item.status}
                                 </div>
 
@@ -337,8 +353,6 @@
     </div>
 
         </div>
-
-    </div>
 
     </lightning-card>
 

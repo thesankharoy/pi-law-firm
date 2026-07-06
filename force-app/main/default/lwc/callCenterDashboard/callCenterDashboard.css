@@ -1,0 +1,36 @@
+.dashboard-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 16px;
+}
+
+.card {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #d8dde6;
+    padding: 20px;
+    min-width: 220px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+
+.service-level {
+    border-left: 5px solid #2e844a;
+}
+
+.label {
+    font-size: 14px;
+    color: #706e6b;
+}
+
+.value {
+    font-size: 34px;
+    font-weight: bold;
+    color: #032d60;
+    margin-top: 8px;
+}
+
+.sub-text {
+    color: #706e6b;
+    margin-top: 8px;
+}

@@ -1,124 +1,50 @@
 <template>
+    <lightning-card>
 
-    <div class="dashboard-grid">
+        <div class="retainer-card">
 
-        <div class="metric-card sent">
-
-            <lightning-icon
-                icon-name="utility:send"
-                size="large">
-            </lightning-icon>
-
-            <div class="metric-value">
-                {sentCount}
+            <!-- Header -->
+            <div class="card-header">
+                <span class="icon">🎉</span>
+                <span class="title">Retainer Leakage Dashboards</span>
             </div>
 
-            <div class="metric-title">
-                Retainers Sent
-            </div>
+            <!-- Signed -->
+            <div class="status-row">
 
-        </div>
-
-        <div class="metric-card signed">
-
-            <lightning-icon
-                icon-name="utility:success"
-                size="large">
-            </lightning-icon>
-
-            <div class="metric-value">
-                {signedCount}
-            </div>
-
-            <div class="metric-title">
-                Retainers Signed
-            </div>
-
-        </div>
-
-        <div class="metric-card unsigned">
-
-            <lightning-icon
-                icon-name="utility:warning"
-                size="large">
-            </lightning-icon>
-
-            <div class="metric-value">
-                {unsignedCount}
-            </div>
-
-            <div class="metric-title">
-                Unsigned Retainers
-            </div>
-
-        </div>
-
-        <div class="metric-card leakage">
-
-            <lightning-icon
-                icon-name="utility:trend_down"
-                size="large">
-            </lightning-icon>
-
-            <div class="metric-value">
-                {leakageRate}%
-            </div>
-
-            <div class="metric-title">
-                Leakage Rate
-            </div>
-
-        </div>
-
-    </div>
-
-    <lightning-card
-        title="Retainer Leakage Analysis">
-
-        <div class="analysis-container">
-
-            <div class="analysis-row">
-
-                <div class="label">
+                <div class="status-label">
+                    <span class="dot green"></span>
                     Signed Retainers
                 </div>
 
-                <div class="bar-bg">
-
-                    <div
-                        class="signed-bar"
-                        style={signedWidth}>
+                <div class="progress-track">
+                    <div class="progress-fill green-fill"
+                         style={signedWidth}>
                     </div>
-
                 </div>
 
-                <div class="value">
-
-                    {signedPercent}%
-
+                <div class="status-value success-text">
+                    {signedCount} ({signedPercent}%)
                 </div>
 
             </div>
 
-            <div class="analysis-row">
+            <!-- Unsigned -->
+            <div class="status-row">
 
-                <div class="label">
+                <div class="status-label">
+                    <span class="dot red"></span>
                     Unsigned Retainers
                 </div>
 
-                <div class="bar-bg">
-
-                    <div
-                        class="unsigned-bar"
-                        style={unsignedWidth}>
+                <div class="progress-track">
+                    <div class="progress-fill red-fill"
+                         style={unsignedWidth}>
                     </div>
-
                 </div>
 
-                <div class="value">
-
-                    {leakageRate}%
-
+                <div class="status-value danger-text">
+                    {unsignedCount} ({leakageRate}%)
                 </div>
 
             </div>
@@ -126,5 +52,4 @@
         </div>
 
     </lightning-card>
-
 </template>

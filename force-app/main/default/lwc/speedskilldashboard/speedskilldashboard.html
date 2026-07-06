@@ -1,0 +1,131 @@
+<template>
+  <div class="accent-bar"></div>
+  <div class="wrap">
+
+    <header class="head">
+      <div class="brand">
+        <div>
+          <div class="name">Speed-vs-Skill Diagnosis</div>
+        </div>
+      </div>
+      <div class="kicker">Conversion diagnosis · {rangeLabel}</div>
+      <div></div>
+      <div class="scn-group" role="group" aria-label="Date range">
+        <template for:each={rangeButtons} for:item="s">
+          <button key={s.key} class={s.cls} data-days={s.days} onclick={handleRange}>{s.label}</button>
+        </template>
+      </div>
+    </header>
+
+    <!-- LOADING -->
+    <template lwc:if={isLoading}>
+      <div class="state">
+        <div class="spinner"></div>
+        <div class="state-title">Loading your intake data…</div>
+      </div>
+    </template>
+
+    <!-- ERROR -->
+    <template lwc:elseif={errorMsg}>
+      <div class="state state-error">
+        <div class="state-title">Couldn't load the dashboard</div>
+        <div class="state-sub">{errorMsg}</div>
+      </div>
+    </template>
+
+    <!-- EMPTY -->
+    <template lwc:elseif={isEmpty}>
+      <div class="state">
+        <div class="state-title">No intakes in this window</div>
+        <div class="state-sub">Try a wider date range, or check that intakes have QA scores and first-response times recorded.</div>
+      </div>
+    </template>
+
+    <!-- DASHBOARD -->
+    <template lwc:else>
+
+      <!-- KPIs -->
+      <div class="kpis">
+        <div class="kpi"><div class="kpi-val">{m.kpiLeads}</div><div class="kpi-lbl">Intake</div></div>
+        <div class="kpi"><div class="kpi-val">{m.kpiConv}</div><div class="kpi-lbl">Overall conversion</div></div>
+        <div class="kpi"><div class="kpi-val">{m.kpiMins}</div><div class="kpi-lbl">Avg first response</div></div>
+        <div class="kpi"><div class="kpi-val">{m.kpiQa}</div><div class="kpi-lbl">Avg intake QA</div></div>
+      </div>
+
+      <!-- MAIN GRID -->
+      <div class="grid">
+
+        <!-- QUADRANT -->
+        <section class="card quad-card">
+          <div class="card-head">
+            <h3>Where your specialists fall</h3>
+            <span class="sub">Each dot is a specialist · size = Intake volume</span>
+          </div>
+          <svg viewBox="0 0 400 320" class="quad" role="img" aria-label="Speed versus intake-quality quadrant">
+            <template for:each={m.quads} for:item="q">
+              <rect key={q.key} x={q.x} y={q.y} width={q.w} height={q.h}
+                fill={q.fill} stroke={q.stroke} stroke-width={q.strokeWidth} rx="6"></rect>
+            </template>
+            <line x1={m.xMid} y1={m.plotT} x2={m.xMid} y2={m.plotB} stroke="#CFCFCF" stroke-width="1" stroke-dasharray="3 3"></line>
+            <line x1={m.plotL} y1={m.yMid} x2={m.plotR} y2={m.yMid} stroke="#CFCFCF" stroke-width="1" stroke-dasharray="3 3"></line>
+            <template for:each={m.quads} for:item="q">
+              <text key={q.label} x={q.labelX} y={q.labelY} text-anchor={q.anchor}
+                fill={q.labelFill} font-size="11" font-weight={q.labelWeight}>{q.label}</text>
+            </template>
+            <template for:each={m.reps} for:item="r">
+              <circle key={r.key} cx={r.cx} cy={r.cy} r={r.r} fill={r.fill}
+                fill-opacity="0.82" stroke="#fff" stroke-width="2">
+                <title>{r.tip}</title>
+              </circle>
+            </template>
+            <template lwc:if={m.showAvg}>
+              <circle cx={m.avgCx} cy={m.avgCy} r="7" fill="none" stroke="#1B1B1B" stroke-width="2.5"></circle>
+              <circle cx={m.avgCx} cy={m.avgCy} r="2.5" fill="#1B1B1B"></circle>
+              <text x={m.avgLabelX} y={m.avgLabelY} text-anchor="middle" font-size="10.5" font-weight="700" fill="#1B1B1B">Firm avg</text>
+            </template>
+            <text x={m.plotL} y="304" font-size="10" fill="#8A8A8A">◀ slower response</text>
+            <text x={m.plotR} y="304" text-anchor="end" font-size="10" fill="#8A8A8A">faster ▶</text>
+            <text x="13" y="30" font-size="10" fill="#8A8A8A">▲ higher</text>
+            <text x="13" y="272" font-size="10" fill="#8A8A8A">▼ lower</text>
+          </svg>
+          <div class="legend">
+            <span><i style="background:#1B8A5A"></i>Fast &amp; high quality</span>
+            <span><i style="background:#2C6E9B"></i>Slow, good quality</span>
+            <span><i style="background:#C2683B"></i>Fast, low quality</span>
+            <span><i style="background:#B23B2E"></i>Slow &amp; low quality</span>
+          </div>
+        </section>
+        <!-- BAR STRIPS -->
+        <div class="rightcol">
+          <section class="card">
+            <div class="card-head">
+              <h3>Conversion by response time</h3>
+              <span class="dim dim-speed">Speed</span>
+            </div>
+            <template for:each={m.speedBars} for:item="b">
+              <div key={b.key} class="bar-row">
+                <div class="bar-label">{b.label}<small>{b.leadPct}</small></div>
+                <div class="bar-track"><div class="bar-fill" style={b.style}></div></div>
+                <div class="bar-val">{b.conv}</div>
+              </div>
+            </template>
+          </section>
+
+          <section class="card">
+            <div class="card-head">
+              <h3>Conversion by intake quality</h3>
+              <span class="dim dim-skill">Skill</span>
+            </div>
+            <template for:each={m.qaBars} for:item="b">
+              <div key={b.key} class="bar-row">
+                <div class="bar-label">{b.label}<small>{b.leadPct}</small></div>
+                <div class="bar-track"><div class="bar-fill" style={b.style}></div></div>
+                <div class="bar-val">{b.conv}</div>
+              </div>
+            </template>
+          </section>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>

@@ -1,0 +1,211 @@
+/* ── Overall wrapper ── */
+.builder-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 600px;
+    background: #fff;
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+}
+
+/* ── Top bar (Name + checkboxes) ── */
+.top-bar {
+    border-bottom: 1px solid #dddbda;
+    background: #f3f2f2;
+}
+
+.name-input {
+    max-width: 400px;
+}
+
+/* ── Main layout: sidebar + right panel ── */
+.main-layout {
+    display: flex;
+    flex: 1;
+    min-height: 500px;
+}
+
+/* ── LEFT SIDEBAR ── */
+.sidebar {
+    width: 200px;
+    min-width: 160px;
+    border-right: 1px solid #dddbda;
+    background: #f3f2f2;
+    flex-shrink: 0;
+}
+
+.sidebar-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #706e6b;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #dddbda;
+    margin-bottom: 8px;
+}
+
+.node-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 2px;
+    font-size: 13px;
+    color: #3e3e3c;
+    transition: background 0.15s;
+}
+
+.node-item:hover {
+    background: #e4e4e3;
+}
+
+.node-item_active {
+    background: #0070d2;
+    color: #fff;
+}
+
+.node-item_active:hover {
+    background: #005fb2;
+}
+
+.node-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.node-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.node-item:hover .node-actions {
+    opacity: 1;
+}
+
+.node-item_active .node-actions {
+    opacity: 1;
+}
+
+.node-editor {
+    background: #fff;
+    border: 1px solid #0070d2;
+    border-radius: 4px;
+    padding: 6px;
+}
+
+.add-node-btn {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    cursor: pointer;
+    color: #0070d2;
+    font-size: 12px;
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+.add-node-btn:hover {
+    background: #e4e4e3;
+}
+
+/* ── RIGHT PANEL ── */
+.right-panel {
+    flex: 1;
+    overflow-x: auto;
+}
+
+.node-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #3e3e3c;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #0070d2;
+    margin-bottom: 16px;
+}
+
+.section-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #3e3e3c;
+    border-bottom: 1px solid #dddbda;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+}
+
+/* ── Tables ── */
+.slds-table th {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #706e6b;
+    background: #f3f2f2;
+    white-space: nowrap;
+}
+
+.slds-table td {
+    vertical-align: top;
+    padding: 6px 8px;
+}
+
+/* ── Add row button (the + circle) ── */
+.add-row-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid #dddbda;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #0070d2;
+    background: #fff;
+    transition: background 0.15s;
+}
+
+.add-row-btn:hover {
+    background: #e4e4e3;
+}
+
+/* ── Add rule button within nav rows ── */
+.add-rule-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid #dddbda;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #0070d2;
+    background: #fff;
+    margin-top: 4px;
+}
+
+.add-rule-btn:hover {
+    background: #e4e4e3;
+}
+
+/* ── Rule rows ── */
+.rule-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ── Bottom bar ── */
+.bottom-bar {
+    border-top: 1px solid #dddbda;
+    background: #f3f2f2;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+}

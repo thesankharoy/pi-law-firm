@@ -1,0 +1,111 @@
+<template>
+  <div class="accent-bar"></div>
+  <div class="wrap">
+
+    <div class="brand">
+      <div class="logo" aria-hidden="true">D</div>
+      <span class="name">Delipat</span>
+    </div>
+
+    <h1>What will calls, texts, AI &amp; storage cost?</h1>
+    <p class="lede">Your Delipat platform subscription is a fixed monthly fee. On top of it, you pay four services
+      directly for what you use: Twilio (calls &amp; texts), Claude (AI), Deepgram (call transcription) and Amazon S3
+      (document storage). Match the sliders to a typical month and the numbers update instantly.</p>
+
+    <div class="grid">
+
+      <!-- INPUTS -->
+      <section class="panel" aria-label="Your monthly activity">
+        <h2>A typical month at your firm</h2>
+        <p class="note">Rough numbers are fine — change anything.</p>
+
+        <div class="field">
+          <div class="row"><label for="leads">New leads we work</label><span class="val"><span>{leadsDisplay}</span>/mo</span></div>
+          <input type="range" id="leads" data-field="leads" min="20" max="800" step="10" value={leads} oninput={handleInput}>
+          <div class="hint">About <span>{leadsDay}</span> new leads on a working day.</div>
+        </div>
+
+        <div class="field">
+          <div class="row"><label for="calls">Call attempts per lead</label><span class="val">{calls}</span></div>
+          <input type="range" id="calls" data-field="calls" min="1" max="15" step="1" value={calls} oninput={handleInput}>
+          <div class="hint">Fast follow-up means several tries; many ring out in seconds.</div>
+        </div>
+
+        <div class="field">
+          <div class="row"><label for="mins">Average minutes per call</label><span class="val">{mins}</span></div>
+          <input type="range" id="mins" data-field="mins" min="0.5" max="8" step="0.5" value={mins} oninput={handleInput}>
+        </div>
+
+        <div class="field">
+          <div class="row"><label for="trans">Calls we transcribe</label><span class="val"><span>{trans}</span>%</span></div>
+          <input type="range" id="trans" data-field="trans" min="0" max="100" step="5" value={trans} oninput={handleInput}>
+          <div class="hint">Usually only the calls that connect get transcribed (Deepgram).</div>
+        </div>
+
+        <div class="field">
+          <div class="row"><label for="texts">Text messages per lead</label><span class="val">{texts}</span></div>
+          <input type="range" id="texts" data-field="texts" min="0" max="40" step="1" value={texts} oninput={handleInput}>
+        </div>
+
+        <div class="field">
+          <div class="row"><label for="ai">Leads we run AI on</label><span class="val"><span>{ai}</span>%</span></div>
+          <input type="range" id="ai" data-field="ai" min="0" max="100" step="5" value={ai} oninput={handleInput}>
+          <div class="hint">Summaries, scoring, live call help, hand-off notes (Claude).</div>
+        </div>
+
+        <div class="field">
+          <div class="row"><label for="store">Documents &amp; recordings stored</label><span class="val"><span>{storeDisplay}</span> GB</span></div>
+          <input type="range" id="store" data-field="store" min="0" max="1000" step="10" value={store} oninput={handleInput}>
+          <div class="hint">Your running total in Amazon S3 — grows as you save more.</div>
+        </div>
+
+        <div class="field">
+          <div class="row"><label for="sign">Leads that become signed cases</label><span class="val"><span>{sign}</span>%</span></div>
+          <input type="range" id="sign" data-field="sign" min="1" max="40" step="1" value={sign} oninput={handleInput}>
+          <div class="hint">Used to show your cost per signed case.</div>
+        </div>
+      </section>
+
+      <!-- SUMMARY -->
+      <aside class="summary" aria-label="Estimated monthly cost">
+        <div class="total-band">
+          <div class="cap">Estimated usage · per month</div>
+          <div class="amount">{totalDisplay}</div>
+          <div class="per">≈ <span>{perLeadDisplay}</span> per lead worked</div>
+        </div>
+        <div class="items">
+          <div class="item"><div class="who">Twilio<small>calls, texts &amp; numbers</small></div><div class="amt">{twilioDisplay}</div></div>
+          <div class="item"><div class="who">Claude<small>AI on your intakes</small></div><div class="amt">{claudeDisplay}</div></div>
+          <div class="item"><div class="who">Deepgram<small>call transcription</small></div><div class="amt">{deepgramDisplay}</div></div>
+          <div class="item"><div class="who">Amazon S3<small>document storage</small></div><div class="amt">{s3Display}</div></div>
+        </div>
+        <div class="percase">
+          <div class="big">≈ <span>{perCaseDisplay}</span> per signed case</div>
+          <div class="sub">For a case worth thousands in fees, that's the tech cost to win it.</div>
+        </div>
+        <div class="foot"><b>Four separate bills, paid by you</b> to each provider on your own card — no markup from
+          Delipat. Each one lets you set spending alerts and caps. Your platform subscription is billed separately and
+          doesn't change with usage.</div>
+      </aside>
+    </div>
+
+    <details>
+      <summary>Price assumptions</summary>
+      <div class="assump">
+        <div class="nf"><label for="rSms">Text message (incl. carrier), $</label><input type="number" id="rSms" data-field="rSms" value={rSms} step="0.001" min="0" oninput={handleInput}></div>
+        <div class="nf"><label for="rVoice">Call, $ per minute</label><input type="number" id="rVoice" data-field="rVoice" value={rVoice} step="0.001" min="0" oninput={handleInput}></div>
+        <div class="nf"><label for="nNum">Phone numbers in use</label><input type="number" id="nNum" data-field="nNum" value={nNum} step="1" min="0" oninput={handleInput}></div>
+        <div class="nf"><label for="rNum">Phone number, $ per month</label><input type="number" id="rNum" data-field="rNum" value={rNum} step="0.05" min="0" oninput={handleInput}></div>
+        <div class="nf"><label for="rAi">Claude AI, $ per intake</label><input type="number" id="rAi" data-field="rAi" value={rAi} step="0.01" min="0" oninput={handleInput}></div>
+        <div class="nf"><label for="rDg">Deepgram, $ per minute</label><input type="number" id="rDg" data-field="rDg" value={rDg} step="0.0001" min="0" oninput={handleInput}></div>
+        <div class="nf"><label for="rS3">Amazon S3, $ per GB / month</label><input type="number" id="rS3" data-field="rS3" value={rS3} step="0.001" min="0" oninput={handleInput}></div>
+      </div>
+    </details>
+
+    <p class="disclaimer">Estimates only, based on typical published rates as of mid-2026 (Twilio ~$0.0083/text plus
+      carrier fees and ~$0.014/min calls; Claude billed per use; Deepgram ~$0.0077/min streaming; Amazon S3
+      ~$0.023/GB-month). Your real bill depends on your actual volume and the rates in effect at the time, and may
+      include carrier, transcription add-on, data-transfer and compliance (e.g. HIPAA) fees. Use this to understand the
+      order of magnitude, not as a quote.</p>
+  </div>
+</template>

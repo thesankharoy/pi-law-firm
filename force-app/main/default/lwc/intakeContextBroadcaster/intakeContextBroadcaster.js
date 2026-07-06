@@ -1,30 +1,37 @@
 import { LightningElement, api, wire } from 'lwc';
-import { publish, MessageContext } from 'lightning/messageService';
+import { publish, subscribe, MessageContext } from 'lightning/messageService';
 import INTAKE_CONTEXT_CHANNEL from '@salesforce/messageChannel/intakeContext__c';
 
 export default class IntakeContextBroadcaster extends LightningElement {
-    @api recordId;
+    _recordId;
+
+    @api
+    get recordId() {
+        return this._recordId;
+    }
+    set recordId(value) {
+        console.log('[Broadcaster] recordId set:', value);
+        this._recordId = value;
+    }
 
     @wire(MessageContext)
     messageContext;
 
     connectedCallback() {
-        console.log('[Broadcaster] connectedCallback, recordId =', this.recordId);
-        this.tryPublish();
-    }
+        console.log('[Broadcaster] connectedCallback, recordId =', this._recordId);
 
-    renderedCallback() {
-        console.log('[Broadcaster] renderedCallback, recordId =', this.recordId);
-        this.tryPublish();
-    }
+        // Subscribe to listen for requests from utility bar
+        subscribe(this.messageContext, INTAKE_CONTEXT_CHANNEL, (message) => {
+            console.log('[Broadcaster] Received message:', JSON.stringify(message));
 
-    tryPublish() {
-        if (this.recordId && !this._published) {
-            this._published = true;
-            console.log('[Broadcaster] Publishing intakeId:', this.recordId);
-            publish(this.messageContext, INTAKE_CONTEXT_CHANNEL, {
-                intakeId: this.recordId
-            });
-        }
+            // If utility bar is requesting the current record Id, respond
+            if (message.requestId === true && this._recordId) {
+                console.log('[Broadcaster] Responding to request with intakeId:', this._recordId);
+                publish(this.messageContext, INTAKE_CONTEXT_CHANNEL, {
+                    intakeId: this._recordId,
+                    requestId: false
+                });
+            }
+        });
     }
 }

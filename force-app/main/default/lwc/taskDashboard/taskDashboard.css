@@ -1,96 +1,106 @@
-.container {
-    padding: 15px;
-    background: #f7f9fc;
-}
-
-/* Summary Cards */
-.summary {
+.card-title {
     display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.card {
-    flex: 1;
-    padding: 15px;
-    border-radius: 12px;
-    color: white;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.08);
-    transition: transform 0.3s ease;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-}
-
-.blue { background: linear-gradient(135deg,#4facfe,#00f2fe); }
-.green { background: linear-gradient(135deg,#43e97b,#38f9d7); }
-.red { background: linear-gradient(135deg,#fa709a,#fee140); }
-
-/* Task List */
-.task-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill,minmax(250px,1fr));
-    gap: 15px;
-}
-
-/* Task Card */
-.task-card {
-    background: white;
-    padding: 15px;
-    border-radius: 12px;
-    box-shadow: 0 5px 12px rgba(0,0,0,0.06);
-    transition: all 0.3s ease;
-    cursor: pointer;
-    border-left: 5px solid transparent;
-}
-
-.task-card:hover {
-    transform: scale(1.03);
-}
-
-.task-card.completed {
-    border-left: 5px solid #38f9d7;
-}
-
-.task-card.pending-anim {
-    border-left: 5px solid #fa709a;
-}
-
-/* Text */
-.task-title {
-    font-size: 16px;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
     font-weight: 600;
 }
 
-.task-meta {
+.emoji-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+.compliance-container {
+    position: relative;
+    background: #ffffff;
+    padding: 12px 0 10px 0;
+}
+
+/* Total Task Count Top Right */
+.task-count {
+    position: absolute;
+    top: 0;
+    right: 15px;
     font-size: 12px;
-    color: #666;
-    margin-top: 5px;
+    color: #6b7280;
 }
 
-/* Badge */
-.badge {
+/* 3 Columns */
+.stats-grid {
+    display: flex;
     margin-top: 10px;
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    background: #38f9d7;
-    color: white;
+    border-top: 1px solid #e5e7eb;
 }
 
-.badge.pending {
-    background: #fa709a;
+.stat-box {
+    flex: 1;
+    text-align: center;
+    padding: 14px 10px;
+    cursor: pointer;
+    transition: background 0.2s ease;
 }
 
-/* Click animation */
-.pulse {
-    animation: pulse 0.4s ease;
+.stat-box:hover {
+    background: #f8fafc;
 }
 
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.08); }
-    100% { transform: scale(1); }
+.stat-box:not(:last-child) {
+    border-right: 1px solid #d9d9d9;
+}
+
+.label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+
+.value {
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.total {
+    color: #0f172a;
+}
+
+.completed {
+    color: #15803d;
+}
+
+.pending {
+    color: #d97706;
+}
+
+/* Progress Section */
+.progress-section {
+    padding: 10px 16px 0;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.percentage {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #22c55e;
+    border-radius: 10px;
+    transition: width 0.4s ease;
 }

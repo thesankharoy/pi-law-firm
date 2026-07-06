@@ -1,0 +1,107 @@
+<template>
+    <div class="dashboard-card">
+
+        <div class="header">
+
+            <div class="title-section">
+                <div class="icon">
+                    📈
+                </div>
+
+                <div class="title">
+                    Specialist Performance Risk Dashboard
+                </div>
+            </div>
+
+            <div class="count">
+                {totalSpecialists} specialists
+            </div>
+
+        </div>
+
+        <template lwc:if={isLoading}>
+            <div class="state">
+                Loading...
+            </div>
+        </template>
+
+        <template lwc:elseif={errorMsg}>
+            <div class="state error">
+                {errorMsg}
+            </div>
+        </template>
+
+        <template lwc:elseif={isEmpty}>
+            <div class="state">
+                No specialists found.
+            </div>
+        </template>
+
+        <template lwc:else>
+
+            <div class="stats">
+
+                <div class="stat-box">
+                    <div class="label">Healthy</div>
+                    <div class="value healthy">
+                        {healthyCount}
+                    </div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="label">Watch</div>
+                    <div class="value watch">
+                        {watchCount}
+                    </div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="label">At Risk</div>
+                    <div class="value risk">
+                        {riskCount}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="footer">
+
+                <div class="progress-header">
+                    <span>Overall Risk Score</span>
+                    <span>{overallRiskScore}%</span>
+                </div>
+
+                <div class="progress-bar">
+                    <div
+                        class="progress-fill"
+                        style={progressStyle}>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="specialists">
+
+                <template for:each={rows} for:item="r">
+
+                    <div key={r.name} class="specialist-row">
+
+                        <div class="specialist-name">
+                            {r.name}
+                        </div>
+
+                        <div class="specialist-risk">
+                            <span class={r.riskDotClass}></span>
+                            {r.riskLevel}
+                        </div>
+
+                    </div>
+
+                </template>
+
+            </div>
+
+        </template>
+
+    </div>
+</template>

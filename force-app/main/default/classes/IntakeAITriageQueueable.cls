@@ -1,33 +1,12 @@
-/**
- * IntakeAITriageQueueable
- *
- * Layer-2 AI spam/junk classification using Claude.
- * Called async from after-insert trigger via IntakeSpamFilterService.enqueueAITriage().
- *
- * Named Credential: Anthropic_Claude  (https://api.anthropic.com)
- * Model: claude-opus-4-8 — highest accuracy for classification (per user config).
- *
- * FAIL-OPEN GUARANTEE:
- *   Any exception → Lead_Triage_Status__c = 'Needs Review'. Never auto-spammed on error.
- *
- * Verdicts (enum-constrained via tool use):
- *   Real          – genuine PI prospect
- *   Spam          – bot / injection / solicitation / test
- *   Junk          – real human, wrong fit (wrong area, no injury, expired SoL, prank)
- *   Needs_Review  – ambiguous; human should decide
- *
- * Batch size: 5 per job (well under 2-min Queueable limit). Chains for remainder.
- */
 public without sharing class IntakeAITriageQueueable implements Queueable, Database.AllowsCallouts {
 
     static final Integer BATCH_SIZE  = 5;
-    static final String  MODEL       = 'claude-opus-4-8';
+    static final String  MODEL       = 'claude-haiku-4-5-20251001';
     static final String  NC_ENDPOINT = 'callout:Anthropic_Claude/v1/messages';
     static final String  TOOL_NAME   = 'classify_intake';
+    static final String  STATUS_SPAM = 'Spam';
 
-    static final Set<String> VALID_VERDICTS = new Set<String>{
-        'Real', 'Spam', 'Junk', 'Needs_Review'
-    };
+    static final Set<String> VALID_VERDICTS = new Set<String>{ 'Real', 'Spam' };
 
     private List<Id> intakeIds;
 
@@ -66,7 +45,7 @@ public without sharing class IntakeAITriageQueueable implements Queueable, Datab
                    Incident_Description__c, Injury_Severity__c,
                    Medical_Treatment_Status__c, Police_Called__c,
                    Insurance_Available__c, Liability_Clarity__c,
-                   Source__c, Triage_Score__c, Triage_Signals__c
+                   Source__c, Status__c, Triage_Score__c, Triage_Signals__c
             FROM   Intake__c
             WHERE  Id IN :ids
         ];
@@ -77,17 +56,21 @@ public without sharing class IntakeAITriageQueueable implements Queueable, Datab
             try {
                 AITriageResult result = classify(intake);
                 Intake__c upd = new Intake__c(Id = intake.Id);
-                upd.Lead_Triage_Status__c   = mapVerdict(result.verdict);
                 upd.AI_Triage_Verdict__c    = result.verdict;
                 upd.AI_Triage_Confidence__c = result.confidence;
                 upd.AI_Triage_Reason__c     = result.reason;
                 upd.AI_Triage_Timestamp__c  = System.now();
+                if (result.verdict == STATUS_SPAM) {
+                    upd.Status__c = STATUS_SPAM;
+                }
+                // else Real: leave Status__c untouched — record stays wherever
+                // the normal intake lifecycle already put it (e.g. 'New').
                 toUpdate.add(upd);
             } catch (Exception e) {
+                // FAIL OPEN — do not touch Status__c; just record what happened.
                 Intake__c upd = new Intake__c(Id = intake.Id);
-                upd.Lead_Triage_Status__c  = 'Needs Review';
-                upd.AI_Triage_Verdict__c   = 'Needs_Review';
-                upd.AI_Triage_Reason__c    = 'AI triage error (fail-open): ' + e.getMessage();
+                upd.AI_Triage_Verdict__c   = 'Error';
+                upd.AI_Triage_Reason__c    = 'AI triage error (fail-open, left as-is): ' + e.getMessage();
                 upd.AI_Triage_Timestamp__c = System.now();
                 toUpdate.add(upd);
             }
@@ -148,30 +131,23 @@ public without sharing class IntakeAITriageQueueable implements Queueable, Datab
         }
 
         return
-            'You are a lead-triage assistant for a personal injury (PI) law firm. ' +
-            'Your job is to protect intake specialists from wasting time on non-cases ' +
-            'while ensuring ZERO real injured prospects are ever lost.\n\n' +
-            'Classify this web lead as exactly one of: Real, Spam, Junk, or Needs_Review.\n\n' +
+            'You are a spam filter for a personal injury (PI) law firm\'s web lead intake form. ' +
+            'Your ONLY job is to decide whether this submission is SPAM or a REAL person. ' +
+            'You are not evaluating whether the case is winnable, viable, or a good fit — ' +
+            'only whether a genuine human submitted it.\n\n' +
+            'Classify this web lead as exactly one of: Real, Spam.\n\n' +
             'Definitions:\n' +
-            '  Real         – a genuine injured person seeking PI legal representation. ' +
-            'They describe a real incident, mention injury or damages, and have a plausible ' +
-            'personal injury claim (auto accident, slip and fall, workers comp, medical ' +
-            'malpractice, product liability, dog bite, wrongful death, etc.).\n' +
-            '  Spam         – a bot, form scraper, link injector, B2B marketing solicitation, ' +
-            'vendor pitch, test/dummy submission, or obvious fake. The description is absent, ' +
-            'nonsensical, contains URLs/HTML, or is clearly commercial.\n' +
-            '  Junk         – a real human who submitted but is not a viable PI case. ' +
-            'Examples: wrong practice area (criminal, family, contract), no physical injury, ' +
-            'statute of limitations clearly expired, prank, venting, or someone seeking ' +
-            'free legal advice with no actionable claim.\n' +
-            '  Needs_Review – genuinely ambiguous; a human specialist should decide. ' +
-            'When in doubt, use this.\n\n' +
-            'CRITICAL BIAS RULE: The cost of incorrectly flagging a real injured person ' +
-            'as Spam or Junk is severe — a lost client and a lost contingency fee. ' +
-            'Always err on the side of Real or Needs_Review when uncertain. ' +
-            'Only mark Spam when you are highly confident (>85%) it is not a real person ' +
-            'seeking injury representation. Only mark Junk when you are confident the person ' +
-            'is real but the case is clearly not viable.\n\n' +
+            '  Real – a genuine human submitted this. This includes strong PI cases, weak or ' +
+            'unclear cases, wrong practice area, expired claims, venting, or anything else a ' +
+            'real person might type. All of these are "Real" — a human specialist will judge ' +
+            'case viability separately. Only the authenticity of the submitter matters here.\n' +
+            '  Spam – a bot, form scraper, link injector, B2B marketing solicitation, vendor ' +
+            'pitch, test/dummy submission, or other obviously fake/automated submission. ' +
+            'The description is absent, nonsensical, contains URLs/HTML/marketing language, ' +
+            'or shows other clear signs of automation.\n\n' +
+            'CRITICAL BIAS RULE: The cost of wrongly flagging a real injured person as Spam ' +
+            'is severe — a lost client and a lost contingency fee. Only classify as Spam when ' +
+            'you are highly confident (>85%) it is not a real person. When in doubt, choose Real.\n\n' +
             'Lead data:\n' +
             String.join(parts, '\n') + '\n\n' +
             'Use the classify_intake tool to return your verdict, confidence (0.0–1.0), ' +
@@ -186,7 +162,7 @@ public without sharing class IntakeAITriageQueueable implements Queueable, Datab
             'properties' => new Map<String, Object>{
                 'verdict' => new Map<String, Object>{
                     'type'        => 'string',
-                    'enum'        => new List<String>{ 'Real', 'Spam', 'Junk', 'Needs_Review' },
+                    'enum'        => new List<String>{ 'Real', 'Spam' },
                     'description' => 'Classification verdict'
                 },
                 'confidence' => new Map<String, Object>{
@@ -204,7 +180,7 @@ public without sharing class IntakeAITriageQueueable implements Queueable, Datab
 
         Map<String, Object> tool = new Map<String, Object>{
             'name'         => TOOL_NAME,
-            'description'  => 'Classify a personal injury web lead.',
+            'description'  => 'Classify a personal injury web lead as Real or Spam.',
             'input_schema' => inputSchema
         };
 
@@ -255,17 +231,6 @@ public without sharing class IntakeAITriageQueueable implements Queueable, Datab
         }
 
         throw new IntakeAITriageException('No tool_use block found in Claude response');
-    }
-
-    // ── Verdict → picklist value ──────────────────────────────────────────────
-    static String mapVerdict(String verdict) {
-        switch on verdict {
-            when 'Real'         { return 'Real'; }
-            when 'Spam'         { return 'Spam'; }
-            when 'Junk'         { return 'Junk'; }
-            when 'Needs_Review' { return 'Needs Review'; }
-            when else           { return 'Needs Review'; }
-        }
     }
 
     static String safeVal(String s) { return s == null ? 'not provided' : s; }

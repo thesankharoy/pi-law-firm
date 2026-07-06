@@ -1,118 +1,92 @@
 <template>
 
-    <div class="dashboard-grid">
+    <!-- KPI SECTION -->
 
-        <div class="metric-card status">
+    <div class="summary-container">
 
-            <lightning-icon
-                icon-name="utility:change_record_type"
-                size="large">
-            </lightning-icon>
-
-            <div class="metric-value">
-                {statusChanges}
-            </div>
-
-            <div class="metric-title">
-                Status Changes
-            </div>
-
+        <div class="summary-box">
+            <div class="summary-label">STATUS CHANGES</div>
+            <div class="summary-value">{statusChanges}</div>
         </div>
 
-        <div class="metric-card owner">
-
-            <lightning-icon
-                icon-name="utility:user"
-                size="large">
-            </lightning-icon>
-
-            <div class="metric-value">
-                {ownerChanges}
-            </div>
-
-            <div class="metric-title">
-                Owner Changes
-            </div>
-
+        <div class="summary-box">
+            <div class="summary-label">OWNER CHANGES</div>
+            <div class="summary-value">{ownerChanges}</div>
         </div>
 
-        <div class="metric-card source">
-
-            <lightning-icon
-                icon-name="utility:connected_apps"
-                size="large">
-            </lightning-icon>
-
-            <div class="metric-value">
-                {sourceChanges}
-            </div>
-
-            <div class="metric-title">
-                Source Changes
-            </div>
-
+        <div class="summary-box">
+            <div class="summary-label">SOURCE CHANGES</div>
+            <div class="summary-value">{sourceChanges}</div>
         </div>
 
-        <div class="metric-card total">
-
-            <lightning-icon
-                icon-name="utility:activity"
-                size="large">
-            </lightning-icon>
-
-            <div class="metric-value">
+        <div class="summary-box">
+            <div class="summary-label">TOTAL AUDIT EVENTS</div>
+            <div class="summary-value total-link">
                 {totalEvents}
             </div>
-
-            <div class="metric-title">
-                Total Audit Events
-            </div>
-
         </div>
 
     </div>
 
-    <lightning-card title="Recent Audit Trail">
+    <!-- AUDIT TRAIL -->
 
-    <div class="table-container">
+    <section class="audit-card">
 
-        <lightning-datatable
-            key-field="changeDate"
-            data={auditRecords}
-            columns={columns}
-            hide-checkbox-column>
-        </lightning-datatable>
+        <div class="audit-header">
+
+            <div class="header-left">
+                <lightning-icon
+                    icon-name="utility:table"
+                    size="x-small">
+                </lightning-icon>
+
+                <span class="header-title">
+                    Recent Audit Trail
+                </span>
+            </div>
+
+            <div class="header-right">
+                {totalEvents} Events
+            </div>
+
+        </div>
+
+        <div class="table-wrapper">
+
+            <lightning-datatable
+                key-field="id"
+                data={auditRecords}
+                columns={columns}
+                hide-checkbox-column
+                show-row-number-column>
+            </lightning-datatable>
+
+        </div>
 
         <div class="pagination">
 
-            <lightning-button
-                label="Previous"
-                icon-name="utility:chevronleft"
-                onclick={handlePrevious}
-                disabled={disablePrevious}>
-            </lightning-button>
-
             <span class="page-info">
-
-                Page
-                {pageNumber}
-                of
-                {totalPages}
-
+                Page {pageNumber} of {totalPages}
             </span>
 
-            <lightning-button
-                label="Next"
-                icon-name="utility:chevronright"
-                icon-position="right"
-                onclick={handleNext}
-                disabled={disableNext}>
-            </lightning-button>
+            <div class="button-group">
+
+                <lightning-button
+                    label="Previous"
+                    onclick={handlePrevious}
+                    disabled={disablePrevious}>
+                </lightning-button>
+
+                <lightning-button
+                    label="Next"
+                    onclick={handleNext}
+                    disabled={disableNext}>
+                </lightning-button>
+
+            </div>
 
         </div>
 
-    </div>
-
-</lightning-card>
+    </section>
 
 </template>

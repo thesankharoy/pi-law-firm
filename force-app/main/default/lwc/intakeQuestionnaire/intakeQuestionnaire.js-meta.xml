@@ -9,7 +9,8 @@
     </targets>
     <targetConfigs>
         <targetConfig targets="lightning__RecordPage">
-            <property name="caseType" type="String" label="Case Type" default=""/>
+            <property name="caseType" type="String" label="Case Type Filter" description="Optional: filter questionnaires by case type" default=""/>
         </targetConfig>
     </targetConfigs>
+    
 </LightningComponentBundle>

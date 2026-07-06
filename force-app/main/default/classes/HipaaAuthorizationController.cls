@@ -1,4 +1,4 @@
-public with sharing class HipaaAuthorizationController {
+public without sharing class HipaaAuthorizationController {
 
     public IntakeDocumentDataService.IntakeDocPacket packet { get; private set; }
 

@@ -1,28 +1,4 @@
-/**
- * CaseSummaryQueueable
- *
- * Enqueued from GenerateIntakeAuthDocsQueueable, AFTER the HIPAA/LOR
- * documents have been generated and committed. This ordering is required:
- * CaseSummaryQueueable is no longer enqueued directly from the trigger,
- * because two independently-enqueued Queueables have no execution-order
- * guarantee relative to each other in Salesforce.
- *
- * Design principle: Apex computes every fact, date, and number.
- *                   Claude writes only the qualitative narrative sections.
- *                   The model NEVER calculates or invents a figure.
- *
- * Incident_Location__c is a standard Address compound field.
- * Sub-fields queried: __Street__s, __City__s, __PostalCode__s only
- * (State and Country are not present in this org).
- * Document__c has no Category__c field, but DOES have Document_Type__c
- * (confirmed via GenerateIntakeAuthDocsQueueable — values include
- * 'Letter of Representation' and 'HIPAA Authorization').
- *
- * Document__c.Status__c values actually used in this org for
- * auth-doc generation are 'Generated' (not 'Active' — there is no
- * 'Active' value produced by GenerateIntakeAuthDocsQueueable).
- */
-public class CaseSummaryQueueable implements Queueable, Database.AllowsCallouts {
+public without sharing class CaseSummaryQueueable implements Queueable, Database.AllowsCallouts {
 
     private final Id intakeId;
 
@@ -195,7 +171,7 @@ public class CaseSummaryQueueable implements Queueable, Database.AllowsCallouts 
           + factJson;
 
         Map<String, Object> requestBody = new Map<String, Object>{
-            'model'      => 'claude-sonnet-4-6',
+            'model'      => 'claude-haiku-4-5',
             'max_tokens' => 1500,
             'system'     => systemPrompt,
             'messages'   => new List<Object>{

@@ -27,62 +27,6 @@
                 </div>
 
                 <div class="slds-col slds-size_5-of-12">
-                  <template if:true={stage.timeSpent}>
-                    <div class="time-pill">
-                      ⏱ {stage.timeSpent}
-                    </div>
-                  </template>
-                  <template if:false={stage.timeSpent}>
-                    <template if:true={stage.isCurrent}>
-                      <div class="time-pill current">
-                        ⏳ In Progress...
-                      </div>
-                    </template>
-                  </template>
-                </div>
-
-              </div>
-            </template>
-          </div>
-
-          <div class="slds-m-top_medium slds-border_top slds-p-top_small">
-            <strong>Total Time (New → Current):</strong> {totalTime}
-          </div>
-        </template>
-      </template>
-    </div>
-  </lightning-card>
-</template> -->
-
-<template>
-  <lightning-card title="Stage Time Tracker" icon-name="standard:lead">
-    <div class="slds-p-around_medium">
-      <template if:true={isLoading}>
-        <lightning-spinner alternative-text="Loading..."></lightning-spinner>
-      </template>
-
-      <template if:false={isLoading}>
-        <template if:true={stageData.length}>
-          <div class="slds-timeline">
-            <template for:each={stageData} for:item="stage">
-              <div key={stage.name} class="stage-row slds-grid slds-gutters slds-m-bottom_small">
-                
-                <div class="slds-col slds-size_3-of-12">
-                  <span class={stage.badgeClass}>
-                    {stage.name}
-                  </span>
-                </div>
-
-                <div class="slds-col slds-size_4-of-12 slds-text-body_small slds-text-color_weak">
-                  <template if:true={stage.enteredAt}>
-                    📅 {stage.enteredAt}
-                  </template>
-                  <template if:false={stage.enteredAt}>
-                    <span class="slds-text-color_weak">— Not Reached —</span>
-                  </template>
-                </div>
-
-                <div class="slds-col slds-size_5-of-12">
                   <template if:false={stage.isConverted}>
                     <template if:true={stage.timeSpent}>
                       <div class="time-pill">
@@ -109,6 +53,97 @@
             </div>
           </template>
 
+        </template>
+      </template>
+    </div>
+  </lightning-card>
+</template> -->
+
+<template>
+  <lightning-card>
+    <span slot="title">
+      <span class="slds-media__figure slds-media__figure_fixed-width header-icon-wrap">
+        <lightning-icon icon-name="standard:clock" size="small"></lightning-icon>
+      </span>
+      Stage Time Tracker
+    </span>
+
+    <div class="slds-p-around_medium">
+
+      <!-- Loading spinner -->
+      <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading..." size="small"></lightning-spinner>
+      </template>
+
+      <template if:false={isLoading}>
+
+        <!-- ── Top Stats Cards (2 cards only) ── -->
+        <div class="stat-cards-grid slds-m-bottom_medium">
+          <div class="stat-card">
+            <div class="stat-label">Total Elapsed Time</div>
+            <div class="stat-value">
+              <lightning-icon icon-name="utility:clock" size="x-small" class="stat-icon"></lightning-icon>
+              {totalTime}
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Current Stage</div>
+            <div class="stat-value stat-value--stage">
+              <span class="stage-dot stage-dot--active"></span>
+              {currentStageName}
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Table ── -->
+        <template if:true={stageData.length}>
+          <table class="stage-table">
+            <thead>
+              <tr class="stage-table__head-row">
+                <th class="stage-table__th">Stage</th>
+                <th class="stage-table__th">Time Spent</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template for:each={stageData} for:item="stage">
+                <tr key={stage.name} class={stage.rowClass}>
+
+                  <!-- Stage name + icon + timeline connector -->
+                  <td class="stage-table__td stage-cell">
+                    <div class="stage-cell__inner">
+                      <div class="timeline-col">
+                        <span class={stage.iconWrapClass}>
+                          <lightning-icon
+                            icon-name={stage.iconName}
+                            size="small"
+                            variant={stage.iconVariant}
+                          ></lightning-icon>
+                        </span>
+                        <template if:false={stage.isLast}>
+                          <span class="timeline-line"></span>
+                        </template>
+                      </div>
+                      <span class="stage-name">{stage.name}</span>
+                    </div>
+                  </td>
+
+                  <!-- Time Spent + date below -->
+                  <td class="stage-table__td time-cell">
+                    <template if:true={stage.timeSpent}>
+                      <span class={stage.timeClass}>{stage.timeSpent}</span>
+                      <template if:true={stage.enteredAt}>
+                        <div class="time-cell__date">{stage.enteredAt}</div>
+                      </template>
+                    </template>
+                    <template if:false={stage.timeSpent}>
+                      <span class="em-dash">—</span>
+                    </template>
+                  </td>
+
+                </tr>
+              </template>
+            </tbody>
+          </table>
         </template>
       </template>
     </div>

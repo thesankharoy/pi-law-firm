@@ -1,0 +1,78 @@
+<template>
+    <div class="question-editor">
+
+        <div class="field-block">
+            <label class="field-label">Question Label <span class="required-mark">*</span></label>
+            <lightning-input
+                type="text"
+                label=""
+                value={questionLabel}
+                onchange={handleLabelChange}>
+            </lightning-input>
+        </div>
+
+        <div class="field-block answer-type-block">
+            <label class="field-label">Answer Type <span class="required-mark">*</span></label>
+            <div class="combobox-wrapper">
+                <lightning-input
+                    type="search"
+                    label=""
+                    placeholder="Search..."
+                    value={searchTerm}
+                    onfocus={handleSearchFocus}
+                    onchange={handleSearchInput}
+                    onblur={handleSearchBlur}>
+                </lightning-input>
+
+                <template if:true={isDropdownOpen}>
+                    <div class="options-list">
+                        <template for:each={filteredOptions} for:item="opt">
+                            <div key={opt.value}
+                                 class={opt.cssClass}
+                                 data-value={opt.value}
+                                 data-label={opt.label}
+                                 onmousedown={handleOptionSelect}>
+                                {opt.label}
+                            </div>
+                        </template>
+                        <template if:true={hasNoOptions}>
+                            <div class="no-options">No matches found</div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <template if:true={showPicklistOptions}>
+            <div class="field-block">
+                <label class="field-label">
+                    Picklist Options <span class="required-mark">*</span>
+                </label>
+                <lightning-textarea
+                    label=""
+                    value={picklistOptions}
+                    placeholder="Enter each option separated by a comma e.g. Yes, No, Maybe"
+                    onchange={handlePicklistOptionsChange}>
+                </lightning-textarea>
+                <p class="field-hint">Separate options with commas. e.g. <em>Yes, No, Maybe</em></p>
+            </div>
+        </template>
+
+        <div class="button-row">
+            <lightning-button
+                label="Save & New"
+                variant="neutral"
+                disabled={isSaving}
+                onclick={handleSaveAndNew}
+                class="slds-m-right_small">
+            </lightning-button>
+            <lightning-button
+                label="Save"
+                variant="brand"
+                disabled={isSaving}
+                onclick={handleSave}>
+            </lightning-button>
+        </div>
+
+    </div>
+</template>

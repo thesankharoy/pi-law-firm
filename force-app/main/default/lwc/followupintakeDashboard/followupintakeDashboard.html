@@ -1,15 +1,26 @@
 <template>
-    <lightning-card title="Intake Follow-up Dashboard">
+    <lightning-card>
+         <div slot="title" class="card-header">
 
-        <div class="table-container">
+        <lightning-icon
+            icon-name="standard:document"
+            size="small"
+            class="header-icon">
+        </lightning-icon>
+
+        <span>Follow-Up Leakage Reporting</span>
+
+    </div>
+
+        <div class="table-wrapper">
 
             <table class="custom-table">
 
                 <thead>
                     <tr>
-                        <th>Intake Name</th>
-                        <th>Created Date</th>
-                        <th>Status</th>
+                        <th>INTAKE NAME</th>
+                        <th>CREATED DATE</th>
+                        <th>FOLLOW-UP STATUS</th>
                     </tr>
                 </thead>
 
@@ -17,23 +28,32 @@
 
                     <template for:each={intakes} for:item="i">
 
-                        <tr key={i.id}
-                            class={i.rowClass}
-                            onclick={openRecord}
-                            data-id={i.id}>
+                        <tr key={i.id}>
 
-                            <td>{i.name}</td>
+                            <td>
+                                <a
+                                    data-id={i.id}
+                                    onclick={openRecord}
+                                    class="record-link">
+                                    {i.name}
+                                </a>
+                            </td>
 
                             <td>
                                 <lightning-formatted-date-time
-                                    value={i.createdDate}>
+                                    value={i.createdDate}
+                                    year="numeric"
+                                    month="short"
+                                    day="2-digit">
                                 </lightning-formatted-date-time>
                             </td>
 
                             <td>
+
                                 <span class={i.statusClass}>
                                     {i.statusText}
                                 </span>
+
                             </td>
 
                         </tr>
@@ -44,26 +64,33 @@
 
             </table>
 
-            <!-- 🔥 PAGINATION SECTION -->
-            <div class="pagination">
+        </div>
 
-                <button class="page-btn"
-                        onclick={prevPage}
-                        disabled={disablePrev}>
-                    ⬅ Previous
-                </button>
+        <!-- Pagination -->
 
-                <span class="page-info">
-                    Page {pageNumber} of {totalPages}
-                </span>
+        <div class="pagination">
 
-                <button class="page-btn"
-                        onclick={nextPage}
-                        disabled={disableNext}>
-                    Next ➡
-                </button>
+            <span class="page-info">
+                Page {pageNumber} of {totalPages}
+            </span>
 
-            </div>
+            <button
+                class="page-button"
+                onclick={prevPage}
+                disabled={disablePrev}>
+
+                ‹ Prev
+
+            </button>
+
+            <button
+                class="page-button"
+                onclick={nextPage}
+                disabled={disableNext}>
+
+                Next ›
+
+            </button>
 
         </div>
 

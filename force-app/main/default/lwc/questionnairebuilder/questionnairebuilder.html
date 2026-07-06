@@ -1,0 +1,194 @@
+<template>
+    <div class="builder-wrapper">
+
+        <!-- ══════════════════════════════════════
+             TOP: Questionnaire Name + Checkboxes
+        ══════════════════════════════════════ -->
+        <div class="top-bar slds-p-around_medium">
+            <lightning-input type="text" label="Name" value={questionnaireName} onchange={handleNameChange}
+                class="name-input">
+            </lightning-input>
+
+            <div class="slds-grid slds-m-top_small slds-wrap">
+                <div class="slds-col slds-m-right_large">
+                    <lightning-input type="checkbox" label="Active Questionnaire" checked={isActive}
+                        onchange={handleActiveChange}>
+                    </lightning-input>
+                </div>
+                <div class="slds-col">
+                    <lightning-input type="checkbox" label="Available Questionnaire" checked={isAvailable}
+                        onchange={handleAvailableChange}>
+                    </lightning-input>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             MAIN LAYOUT: Left Sidebar + Right Panel
+        ══════════════════════════════════════ -->
+        <div class="main-layout">
+
+            <!-- LEFT SIDEBAR: Question Nodes -->
+            <div class="sidebar slds-p-around_small">
+                <div class="sidebar-label slds-text-body_small slds-text-color_weak slds-m-bottom_x-small">
+                    QUESTION NODES
+                </div>
+
+                <template for:each={nodes} for:item="node">
+                    <div key={node.tempId} class={node.itemClass} onclick={handleNodeSelect} data-id={node.tempId}>
+                        <span class="node-name">{node.Name}</span>
+                        <div class="node-actions">
+                            <lightning-button-icon icon-name="utility:edit" variant="bare" size="x-small"
+                                data-id={node.tempId} onclick={handleNodeEdit} alternative-text="Edit">
+                            </lightning-button-icon>
+                            <lightning-button-icon icon-name="utility:delete" variant="bare" size="x-small"
+                                data-id={node.tempId} onclick={handleNodeDelete} alternative-text="Delete">
+                            </lightning-button-icon>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Inline node name editor -->
+                <template if:true={isEditingNode}>
+                    <div class="node-editor slds-m-top_x-small">
+                        <lightning-input label="" placeholder="Node name..." value={editingNodeName}
+                            onchange={handleEditingNodeName} onkeyup={handleNodeNameKeyup}>
+                        </lightning-input>
+                        <lightning-button label="Update" variant="brand" size="small" class="slds-m-top_x-small"
+                            onclick={confirmNodeEdit}>
+                        </lightning-button>
+                    </div>
+                </template>
+
+                <!-- Add node button -->
+                <div class="add-node-btn slds-m-top_x-small" onclick={addNode}>
+                    <lightning-icon icon-name="utility:add" size="x-small"></lightning-icon>
+                    <span class="slds-m-left_xx-small slds-text-body_small">Add Node</span>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: Questions + Navigation for selected node -->
+            <div class="right-panel slds-p-around_medium">
+
+                <template if:true={selectedNode}>
+
+                    <!-- Node title at top right -->
+                    <div class="node-title slds-text-heading_small slds-m-bottom_medium">
+                        {selectedNode.Name}
+                    </div>
+
+                    <!-- ── QUESTIONS TABLE ── -->
+                    <div class="section-label slds-text-heading_small slds-m-bottom_small">
+                        Questions
+                    </div>
+
+                    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-bottom_small">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th>QUESTION</th>
+                                <th>DESCRIPTION</th>
+                                <th>MAPPING</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={selectedNodeQuestions} for:item="q">
+                                <tr key={q.tempId}>
+                                    <td>
+                                        <lightning-combobox label="" placeholder="Select an Option"
+                                            options={questionOptions} value={q.questionId} data-id={q.tempId}
+                                            onchange={handleQuestionSelect}>
+                                        </lightning-combobox>
+                                    </td>
+                                    <td>
+                                        <lightning-input label="" placeholder="Question Description"
+                                            value={q.description} data-id={q.tempId} onchange={handleQuestionDesc}>
+                                        </lightning-input>
+                                    </td>
+                                    <td>
+                                        <lightning-combobox label="" placeholder="Select an Option"
+                                            options={q.filteredMappingOptions} value={q.mapping} data-id={q.tempId}
+                                            onchange={handleQuestionMapping}>
+                                        </lightning-combobox>
+                                    </td>
+                                    
+                                    <td>
+                                        <lightning-button-icon icon-name="utility:delete" variant="bare"
+                                            data-id={q.tempId} onclick={handleRemoveQuestion} alternative-text="Remove">
+                                        </lightning-button-icon>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+
+                    <!-- Add question row -->
+                    <div class="add-row-btn slds-m-bottom_large" onclick={addQuestionRow}>
+                        <lightning-icon icon-name="utility:add" size="x-small"></lightning-icon>
+                    </div>
+
+                    <!-- ── NAVIGATION TABLE ── -->
+                    <div class="section-label slds-text-heading_small slds-m-bottom_small">
+                        Navigation<span>(Optional)</span>
+                    </div>
+
+                    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-bottom_small">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th>QUESTIONNAIRE</th>
+                                <th>NODE</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={selectedNodeNavRules} for:item="nav">
+                                <tr key={nav.tempId}>
+                                    <td>
+                                        <lightning-combobox label="" placeholder="Select Questionnaire"
+                                            options={currentQuestionnaireOptions} value={currentQuestionnaireId}
+                                            disabled>
+                                        </lightning-combobox>
+                                    </td>
+                                    <td>
+                                        <lightning-combobox label="" placeholder="Select Node" options={nodeOptions}
+                                            value={nav.targetNodeId} data-id={nav.tempId} onchange={handleNavNode}>
+                                        </lightning-combobox>
+                                    </td>
+                                    <td>
+                                        <lightning-button-icon icon-name="utility:delete" variant="bare"
+                                            data-id={nav.tempId} onclick={handleRemoveNavRow} alternative-text="Remove">
+                                        </lightning-button-icon>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+
+                    <!-- Add navigation row -->
+                    <div class="add-row-btn" onclick={addNavRow}>
+                        <lightning-icon icon-name="utility:add" size="x-small"></lightning-icon>
+                    </div>
+
+                </template>
+
+                <template if:false={selectedNode}>
+                    <div class="slds-text-color_weak slds-text-align_center slds-p-top_large">
+                        Select a node from the left to configure questions and navigation.
+                    </div>
+                </template>
+
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             BOTTOM: Cancel + Save
+        ══════════════════════════════════════ -->
+        <div class="bottom-bar slds-p-around_medium slds-grid slds-grid_align-end">
+            <lightning-button label="Cancel" variant="neutral" class="slds-m-right_small" onclick={handleCancel}>
+            </lightning-button>
+            <lightning-button label="Save" variant="brand" onclick={handleSave} disabled={isSaving}>
+            </lightning-button>
+        </div>
+
+    </div>
+</template>

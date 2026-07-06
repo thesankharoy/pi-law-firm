@@ -1,0 +1,147 @@
+<template>
+    <div class="da-root">
+        <!-- ── Header ── -->
+        <div class="da-header">
+            <div class="da-title-wrap">
+                <svg viewBox="0 0 20 20" width="16" height="16" fill="none" class="da-spark">
+                    <path d="M10 2l1.6 4.4L16 8l-4.4 1.6L10 14l-1.6-4.4L4 8l4.4-1.6z"
+                        fill="currentColor" />
+                    <circle cx="15.5" cy="14.5" r="1.5" fill="currentColor" />
+                </svg>
+                <span class="da-title">Document Insights</span>
+                <span class="da-sub">AI key-fact extraction</span>
+            </div>
+        </div>
+
+        <div class="da-body">
+            <!-- ── Left: file list ── -->
+            <div class="da-list">
+                <div class="da-list-label">Documents</div>
+
+                <template if:true={isLoading}>
+                    <div class="da-spinner-wrap">
+                        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                    </div>
+                </template>
+
+                <template if:false={isLoading}>
+                    <template if:false={hasFiles}>
+                        <div class="da-empty-list">No files on this intake yet.</div>
+                    </template>
+                    <template for:each={files} for:item="f">
+                        <button key={f.documentId} class={f.rowClass} data-id={f.documentId}
+                            onclick={handleSelect} disabled={f.notAnalyzable} aria-disabled={f.notAnalyzable}>
+                            <div class="file-row-main">
+                                <span class="file-row-name" title={f.name}>{f.name}</span>
+                                <span class={f.statusClass}>{f.statusLabel}</span>
+                            </div>
+                        </button>
+                    </template>
+                </template>
+            </div>
+
+            <!-- ── Right: detail ── -->
+            <div class="da-detail">
+                <!-- Nothing selected -->
+                <template if:false={hasSelection}>
+                    <div class="da-placeholder">
+                        <svg viewBox="0 0 64 64" width="56" height="56" fill="none">
+                            <rect x="14" y="8" width="36" height="48" rx="5" fill="#f1f5f9" stroke="#e2e8f0"
+                                stroke-width="2" />
+                            <path d="M22 22h20M22 30h20M22 38h12" stroke="#cbd5e1" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                        <div class="da-ph-title">Select a document</div>
+                        <div class="da-ph-desc">Pick a PDF or image on the left to view its extracted key facts,
+                            or run a new analysis with Claude.</div>
+                    </div>
+                </template>
+
+                <!-- Selected -->
+                <template if:true={hasSelection}>
+                    <div class="da-detail-head">
+                        <div class="da-detail-name" title={selectedFileName}>{selectedFileName}</div>
+                        <template if:true={hasAnalysis}>
+                            <button class="da-btn da-btn-ghost" onclick={handleReanalyze}
+                                disabled={isAnalyzing}>Re-analyze</button>
+                        </template>
+                    </div>
+
+                    <!-- Analyzing spinner -->
+                    <template if:true={isAnalyzing}>
+                        <div class="da-analyzing">
+                            <lightning-spinner alternative-text="Analyzing" size="small"></lightning-spinner>
+                            <span>Reading the document with Claude…</span>
+                        </div>
+                    </template>
+
+                    <!-- No cached analysis: prompt to run -->
+                    <template if:true={showAnalyzePrompt}>
+                        <div class="da-run">
+                            <div class="da-run-desc">This document hasn't been analyzed yet.</div>
+                            <button class="da-btn da-btn-primary" onclick={handleAnalyze}>
+                                <svg viewBox="0 0 16 16" width="13" height="13" fill="none">
+                                    <path d="M8 2l1.3 3.5L13 7l-3.7 1.5L8 12l-1.3-3.5L3 7l3.7-1.5z"
+                                        fill="currentColor" />
+                                </svg>
+                                Analyze with Claude
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Cached / fresh analysis -->
+                    <template if:true={hasAnalysis}>
+                        <div class="da-result">
+                            <div class="da-meta-row">
+                                <template if:true={analysis.documentType}>
+                                    <span class="da-doctype">{analysis.documentType}</span>
+                                </template>
+                                <template if:true={analysis.analyzedOnLabel}>
+                                    <span class="da-meta">Analyzed {analysis.analyzedOnLabel}</span>
+                                </template>
+                                <template if:true={analysis.model}>
+                                    <span class="da-meta">· {analysis.model}</span>
+                                </template>
+                            </div>
+
+                            <template if:true={analysis.summary}>
+                                <div class="da-summary">{analysis.summary}</div>
+                            </template>
+
+                            <template for:each={sections} for:item="sec">
+                                <div key={sec.key} class="da-section">
+                                    <div class="da-section-title">{sec.title}</div>
+
+                                    <template if:true={sec.isPairs}>
+                                        <div class="da-pairs">
+                                            <template for:each={sec.items} for:item="it">
+                                                <div key={it.key} class="da-pair">
+                                                    <span class="da-pair-primary">{it.primary}</span>
+                                                    <template if:true={it.secondary}>
+                                                        <span class="da-pair-secondary">{it.secondary}</span>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    <template if:true={sec.isList}>
+                                        <ul class="da-bullets">
+                                            <template for:each={sec.items} for:item="it">
+                                                <li key={it.key}>{it.text}</li>
+                                            </template>
+                                        </ul>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <template if:true={usageLabel}>
+                                <div class="da-usage">{usageLabel}</div>
+                            </template>
+                        </div>
+                    </template>
+                </template>
+            </div>
+        </div>
+    </div>
+</template>

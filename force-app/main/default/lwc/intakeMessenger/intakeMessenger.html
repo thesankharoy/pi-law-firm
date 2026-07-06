@@ -1,0 +1,69 @@
+<template>
+    <div class="messenger">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-main">
+                <span class="avatar" title={clientName}>💬</span>
+                <div class="header-text">
+                    <span class="name">{clientName}</span>
+                    <template if:true={leadPhone}>
+                        <span class="phone">{leadPhone}</span>
+                    </template>
+                </div>
+            </div>
+            <span class={statusClass}>{statusLabel}</span>
+        </header>
+
+        <!-- Thread -->
+        <div class="thread">
+            <template if:true={loading}>
+                <div class="loading">Loading conversation…</div>
+            </template>
+
+            <template if:true={error}>
+                <div class="banner banner-error">{error}</div>
+            </template>
+
+            <template if:true={showEmpty}>
+                <div class="empty">
+                    <div class="empty-icon">✉️</div>
+                    <p class="empty-title">No messages yet</p>
+                    <p class="empty-sub">Start the conversation by sending the first text below.</p>
+                </div>
+            </template>
+
+            <template for:each={messages} for:item="m">
+                <div key={m.id} class={m.rowClass}>
+                    <div class={m.bubbleClass}>
+                        <div class="meta">
+                            <span class="author">
+                                <template if:true={m.fromBot}>🤖 </template>{m.author}
+                            </span>
+                            <span class="time">{m.time}</span>
+                        </div>
+                        <div class="body">{m.body}</div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Composer -->
+        <div class="composer">
+            <textarea
+                class="input"
+                placeholder="Type a message…  (Enter to send, Shift+Enter for a new line)"
+                value={draft}
+                oninput={handleInput}
+                onkeydown={handleKeyDown}
+                disabled={sending}></textarea>
+            <button
+                class="send-btn"
+                onclick={handleSend}
+                disabled={sendDisabled}
+                title="Send">
+                <template if:true={sending}>…</template>
+                <template if:false={sending}>Send</template>
+            </button>
+        </div>
+    </div>
+</template>

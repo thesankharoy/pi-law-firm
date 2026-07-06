@@ -1,0 +1,135 @@
+<template>
+
+    <div class="dashboard-container">
+
+        <lightning-card>
+
+            <!-- Header -->
+
+            <div class="card-header">
+
+                <div class="title-section">
+
+                    <lightning-icon
+                        icon-name="utility:task"
+                        size="x-small"
+                        class="header-icon">
+                    </lightning-icon>
+
+                    <span class="card-title">
+                        Overdue Tasks
+                    </span>
+
+                </div>
+
+                <lightning-button
+                    label="Refresh"
+                    icon-name="utility:refresh"
+                    onclick={handleRefresh}>
+                </lightning-button>
+
+            </div>
+
+            <!-- Table -->
+
+            <div class="table-wrapper">
+
+                <table class="task-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>TASK</th>
+                            <th>STATUS</th>
+                            <th>PRIORITY</th>
+                            <th>DUE DATE</th>
+                            <th>OWNER</th>
+                            <th>DAYS OVER</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        <template for:each={tasks} for:item="task">
+
+                            <tr key={task.recordId}>
+
+                                <td>
+                                    {task.subject}
+                                </td>
+
+                                <td>
+
+                                    <span class={task.statusClass}>
+                                        {task.status}
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    <span class="priority-pill">
+                                        {task.priority}
+                                    </span>
+
+                                </td>
+
+                                <td class="due-date">
+                                    {task.dueDate}
+                                </td>
+
+                                <td>
+                                    {task.ownerName}
+                                </td>
+
+                                <td>
+
+                                    <span class={task.daysClass}>
+                                        {task.ageDays}
+                                    </span>
+
+                                </td>
+
+                            </tr>
+
+                        </template>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <!-- Footer -->
+
+            <div class="pagination-bar">
+
+                <div class="record-count">
+                    Page {pageNumber} of {totalPages}
+                    ({totalRecords} total)
+                </div>
+
+                <div class="pager-buttons">
+
+                    <lightning-button
+                        label="‹ Prev"
+                        onclick={handlePrevious}
+                        disabled={disablePrevious}>
+                    </lightning-button>
+
+                    <lightning-button
+                        label="Next ›"
+                        onclick={handleNext}
+                        disabled={disableNext}>
+                    </lightning-button>
+
+                </div>
+
+            </div>
+
+        </lightning-card>
+
+    </div>
+
+</template>

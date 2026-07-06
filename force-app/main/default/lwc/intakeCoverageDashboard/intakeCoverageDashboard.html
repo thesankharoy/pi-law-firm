@@ -1,126 +1,83 @@
 <template>
-
-    <div class="dashboard-grid">
-
-        <div class="metric-card night">
-
-            <lightning-icon
-                icon-name="utility:nightview"
-                size="large">
-            </lightning-icon>
-
-            <div class="metric-value">
-                {afterHoursCount}
-            </div>
-
-            <div class="metric-title">
-                After-Hours Intakes
-            </div>
-
+    <lightning-card>
+            <div class="dashboard-header">
+        <div class="header-title">
+            <span class="header-icon">🌄</span>
+            <span>24×7 After-Hours Coverage</span>
         </div>
-
-        <div class="metric-card covered">
-
-            <lightning-icon
-                icon-name="utility:success"
-                size="large">
-            </lightning-icon>
-
-            <div class="metric-value">
-                {coveredCount}
-            </div>
-
-            <div class="metric-title">
-                Covered Within SLA
-            </div>
-
-        </div>
-
-        <div class="metric-card missed">
-
-            <lightning-icon
-                icon-name="utility:warning"
-                size="large">
-            </lightning-icon>
-
-            <div class="metric-value">
-                {missedCount}
-            </div>
-
-            <div class="metric-title">
-                Missed Opportunities
-            </div>
-
-        </div>
-
-        <div class="metric-card rate">
-
-            <lightning-icon
-                icon-name="utility:chart"
-                size="large">
-            </lightning-icon>
-
-            <div class="metric-value">
-                {coverageRate}%
-            </div>
-
-            <div class="metric-title">
-                Coverage Rate
-            </div>
-
-        </div>
-
     </div>
 
-    <lightning-card
-        title="24x7 Intake Coverage">
 
-        <div class="coverage-container">
+        <div class="coverage-dashboard">
 
-            <div class="coverage-row">
+            <!-- Metrics Grid -->
+            <div class="metrics-grid">
 
-                <span class="label">
-                    Covered
-                </span>
+                <div class="metric-cell">
+                    <div class="metric-label">After-Hours Intakes</div>
+                    <div class="metric-number">{afterHoursCount}</div>
+                </div>
 
-                <div class="bar-bg">
+                <div class="metric-cell">
+                    <div class="metric-label">Coverage Rate</div>
+                    <div class="metric-number">{coverageRate}%</div>
+                </div>
 
+                <div class="metric-cell">
+                    <div class="metric-label">Covered Within SLA</div>
+                    <div class="metric-number">{coveredCount}</div>
+                </div>
+
+                <div class="metric-cell">
+                    <div class="metric-label">Missed Opportunities</div>
+                    <div class="metric-number">{missedCount}</div>
+                </div>
+
+            </div>
+
+            <!-- Covered -->
+            <div class="progress-section">
+
+                <div class="progress-header">
+                    <span>Responded Within 30 Min</span>
+                    <span>{coverageRate}%</span>
+                </div>
+
+                <div class="progress-bg">
                     <div
                         class="covered-bar"
                         style={coveredStyle}>
                     </div>
-
                 </div>
-
-                <span>
-                    {coverageRate}%
-                </span>
 
             </div>
 
-            <div class="coverage-row">
+            <!-- Missed -->
+            <div class="progress-section">
 
-                <span class="label">
-                    Missed
-                </span>
+                <div class="progress-header">
+                    <span>Missed</span>
+                    <span>{missedPercent}%</span>
+                </div>
 
-                <div class="bar-bg">
-
+                <div class="progress-bg">
                     <div
                         class="missed-bar"
                         style={missedStyle}>
                     </div>
-
                 </div>
 
-                <span>
-                    {missedPercent}%
-                </span>
-
             </div>
+
+            <!-- Warning Box -->
+            <template if:true={showWarning}>
+                <div class="warning-box">
+                    ⚠ 100% of after-hours leads are missed.
+                    Consider an answering service or on-call rotation.
+                </div>
+            </template>
 
         </div>
 
     </lightning-card>
-
 </template>

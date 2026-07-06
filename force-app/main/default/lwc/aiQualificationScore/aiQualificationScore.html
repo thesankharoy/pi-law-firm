@@ -1,0 +1,37 @@
+<template>
+    <div class="score-card">
+        <!-- Header -->
+        <div class="card-header">
+            <div class="card-title">
+                <lightning-icon 
+                    icon-name="utility:einstein" 
+                    size="x-small" 
+                    class="einstein-icon">
+                </lightning-icon>
+                <span>AI Qualification Score</span>
+            </div>
+            <span class="card-updated">{updatedLabel}</span>
+        </div>
+
+        <!-- Score -->
+        <div class="score-row">
+            <span class="score-number" style={scoreStyle}>{score}</span>
+            <span class="score-denom">/ 100</span>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-track">
+            <div class="progress-fill" style={progressStyle}></div>
+        </div>
+
+        <!-- Tags -->
+        <div class="tags-row">
+            <template if:true={hasConversionTag}>
+                <span class="tag">{conversionLabel}</span>
+            </template>
+            <template if:true={hasLiabilityTag}>
+                <span class="tag">{liabilityLabel}</span>
+            </template>
+        </div>
+    </div>
+</template>

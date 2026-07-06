@@ -1,0 +1,342 @@
+:host {
+    display: block;
+    background: #f4f6f9;
+}
+
+/*=========================
+Dashboard
+==========================*/
+
+.dashboard {
+    padding: 1rem;
+}
+
+
+
+.record-link{
+    color:#0176d3;
+    font-weight:600;
+    text-decoration:none;
+    cursor:pointer;
+}
+
+.record-link:hover{
+    color:#014486;
+    text-decoration:underline;
+}
+
+/*=========================
+KPI Cards
+==========================*/
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.kpi-card{
+
+    background:#fff;
+
+    border-radius:14px;
+
+    padding:22px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+    border-left:6px solid #0176d3;
+
+    box-shadow:0 6px 20px rgba(0,0,0,.08);
+
+    transition:.25s;
+
+}
+
+.kpi-card:hover{
+
+    transform:translateY(-3px);
+
+}
+.blue{
+
+    border-left-color:#0176d3;
+
+}
+
+.green{
+
+    border-left-color:#2e844a;
+
+}
+
+.orange{
+
+    border-left-color:#ff8c00;
+
+}
+
+.kpi-title{
+
+    font-size:16px;
+
+    color:#666;
+
+    font-weight:600;
+
+}
+
+.kpi-value{
+
+    font-size:42px;
+
+    font-weight:700;
+
+    color:#222;
+
+    margin-top:8px;
+
+}
+
+/*=========================
+Filter
+==========================*/
+
+.filter-bar {
+    background: white;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+/*=========================
+Table
+==========================*/
+
+.table-container {
+    overflow-x: auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead{
+
+    background:#f4f6f9;
+
+}
+
+thead th{
+
+    color:#4d4d4d;
+
+    font-size:15px;
+
+    font-weight:700;
+
+}
+
+tbody td {
+    padding: .9rem;
+    border-bottom: 1px solid #ececec;
+    vertical-align: middle;
+}
+
+tbody tr:hover {
+    background: #f7f9fc;
+}
+/*=========================
+Empty
+==========================*/
+
+.empty {
+    text-align: center;
+    padding: 2rem;
+    color: gray;
+    font-size: 1rem;
+}
+
+/*=========================
+Pagination
+==========================*/
+
+.pagination {
+    margin-top: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page-info {
+    font-weight: 600;
+    color: #444;
+}
+
+
+/*=========================
+Scrollbar
+==========================*/
+
+.table-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #b7b7b7;
+    border-radius: 20px;
+}
+
+/*=========================
+Tablet
+==========================*/
+
+@media screen and (max-width: 1024px) {
+
+    .kpi-grid {
+        grid-template-columns: repeat(2,1fr);
+    }
+
+}
+
+/*=========================
+Mobile
+==========================*/
+
+@media screen and (max-width: 768px) {
+
+    .dashboard {
+        padding: .75rem;
+    }
+
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .kpi-card {
+        text-align: center;
+    }
+
+    .pagination {
+        flex-direction: column;
+        gap: .8rem;
+    }
+
+    thead th,
+    tbody td {
+        padding: .75rem;
+        font-size: .85rem;
+    }
+
+    .kpi-value {
+        font-size: 1.7rem;
+    }
+
+}
+
+/*=========================
+Small Mobile
+==========================*/
+
+@media screen and (max-width:480px){
+
+    .dashboard{
+        padding:.5rem;
+    }
+
+    .filter-bar{
+        padding:.75rem;
+    }
+
+    .kpi-title{
+        font-size:.8rem;
+    }
+
+    .kpi-value{
+        font-size:1.5rem;
+    }
+
+    table{
+        min-width:650px;
+    }
+
+}
+.icon{
+
+    width:58px;
+
+    height:58px;
+
+    border-radius:12px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:26px;
+
+    font-weight:bold;
+
+}
+
+.blue-icon{
+
+    background:#e8f3ff;
+
+    color:#0176d3;
+
+}
+
+.green-icon{
+
+    background:#e8f8ed;
+
+    color:#2e844a;
+
+}
+
+.orange-icon{
+
+    background:#fff3e6;
+
+    color:#ff8c00;
+
+}
+.sentiment-positive {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #e7f9ed;
+    color: #2e844a;
+    font-weight: 600;
+}
+
+.sentiment-neutral {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #fff4e5;
+    color: #ff8c00;
+    font-weight: 600;
+}
+
+.sentiment-negative {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #fde7e9;
+    color: #c23934;
+    font-weight: 600;
+}

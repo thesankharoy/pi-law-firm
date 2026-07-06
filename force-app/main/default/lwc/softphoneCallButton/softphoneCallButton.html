@@ -1,0 +1,22 @@
+<template>
+    <lightning-card title="Call" icon-name="utility:call">
+        <div class="slds-p-horizontal_small slds-p-bottom_small">
+            <template if:true={hasPhones}>
+                <template for:each={phones} for:item="p">
+                    <lightning-button
+                        key={p.key}
+                        label={p.btnLabel}
+                        icon-name="utility:call"
+                        variant="brand"
+                        data-number={p.phone}
+                        onclick={handleCall}
+                        class="slds-m-right_x-small slds-m-bottom_x-small">
+                    </lightning-button>
+                </template>
+            </template>
+            <template if:true={showEmpty}>
+                <p class="slds-text-color_weak">No phone number on this record.</p>
+            </template>
+        </div>
+    </lightning-card>
+</template>

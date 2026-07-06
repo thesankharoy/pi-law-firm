@@ -1,7 +1,10 @@
-public with sharing class GenerateIntakeAuthDocsQueueable implements Queueable, Database.AllowsCallouts {
+public without sharing class GenerateIntakeAuthDocsQueueable implements Queueable, Database.AllowsCallouts {
 
-    public static final String DOC_TYPE_LOR  = 'Letter of Representation';
-    public static final String DOC_TYPE_HIPAA = 'HIPAA Authorization';
+    public static final String DOC_TYPE_LOR       = 'Letter of Representation';
+    public static final String DOC_TYPE_HIPAA     = 'HIPAA Authorization';
+    public static final String DOC_TYPE_RETAINER  = 'Retainer Agreement';
+
+    private static final String CONTENT_TYPE = 'application/pdf';
 
     private Id intakeId;
 
@@ -16,9 +19,8 @@ public with sharing class GenerateIntakeAuthDocsQueueable implements Queueable, 
         }
 
         String jobId = (ctx != null) ? ctx.getJobId() : 'DIRECT-CALL';
-System.debug(LoggingLevel.INFO, '[AuthDocGen] START — Intake=' + intakeId + ' | Job=' + jobId);
+        System.debug(LoggingLevel.INFO, '[AuthDocGen] START — Intake=' + intakeId + ' | Job=' + jobId);
 
-        // ── Guard: confirm Intake still exists ──────────────────────────
         List<Intake__c> intakeCheck = [
             SELECT Id, Name, Status__c
             FROM   Intake__c
@@ -32,6 +34,23 @@ System.debug(LoggingLevel.INFO, '[AuthDocGen] START — Intake=' + intakeId + ' 
         System.debug(LoggingLevel.INFO, '[AuthDocGen] Intake confirmed: Name=' + intakeCheck[0].Name + ' Status=' + intakeCheck[0].Status__c);
 
         List<Document__c> docsToInsert = new List<Document__c>();
+
+        // ── Retainer Agreement ───────────────────────────────────────────
+        System.debug(LoggingLevel.INFO, '[AuthDocGen] Rendering Retainer Agreement for Intake=' + intakeId);
+        try {
+            Document__c retainerDoc = generateAndUpload(
+                intakeId,
+                DOC_TYPE_RETAINER,
+                Page.RetainerAgreement,
+                'Retainer Agreement - ' + intakeCheck[0].Name
+            );
+            if (retainerDoc != null) {
+                docsToInsert.add(retainerDoc);
+                System.debug(LoggingLevel.INFO, '[AuthDocGen] Retainer built — S3_Key=' + retainerDoc.S3_Key__c + ' Size=' + retainerDoc.File_Size__c);
+            }
+        } catch (Exception e) {
+            logAndPersist(intakeId, 'Retainer Agreement generation threw: ' + e.getTypeName() + ': ' + e.getMessage() + ' | Stack: ' + e.getStackTraceString());
+        }
 
         // ── Letter of Representation ─────────────────────────────────────
         System.debug(LoggingLevel.INFO, '[AuthDocGen] Rendering LOR for Intake=' + intakeId);
@@ -80,7 +99,7 @@ System.debug(LoggingLevel.INFO, '[AuthDocGen] START — Intake=' + intakeId + ' 
             SELECT Id, Name, Document_Type__c, S3_Key__c, Status__c
             FROM   Document__c
             WHERE  Intake__c = :intakeId
-              AND  Document_Type__c IN (:DOC_TYPE_LOR, :DOC_TYPE_HIPAA)
+              AND  Document_Type__c IN (:DOC_TYPE_LOR, :DOC_TYPE_HIPAA, :DOC_TYPE_RETAINER)
             ORDER BY CreatedDate DESC
         ];
         System.debug(LoggingLevel.INFO, '[AuthDocGen] SOQL post-insert check — Document__c rows for Intake=' + intakeId + ': ' + savedDocs.size());
@@ -88,76 +107,89 @@ System.debug(LoggingLevel.INFO, '[AuthDocGen] START — Intake=' + intakeId + ' 
             System.debug(LoggingLevel.INFO, '[AuthDocGen] Saved: Id=' + d.Id + ' Type=' + d.Document_Type__c + ' Key=' + d.S3_Key__c + ' Status=' + d.Status__c);
         }
 
-        // ── Chain to case summary generation ─────────────────────────────
-        // Runs AFTER the Document__c inserts above have committed, so
-        // CaseSummaryQueueable's fact-sheet query is guaranteed to see the
-        // HIPAA/LOR documents (whichever of them succeeded). Fired
-        // unconditionally — even if both doc generations failed above —
-        // so the attorney still gets a hand-off summary built from
-        // whatever data does exist; CaseSummaryQueueable already handles
-        // missing/partial data by writing "Not provided" rather than
-        // failing. This replaces the old direct trigger-time enqueue of
-        // CaseSummaryQueueable, which had no ordering guarantee relative
-        // to this job and could run before these documents existed.
-        try {
-            System.enqueueJob(new CaseSummaryQueueable(intakeId));
-            System.debug(LoggingLevel.INFO, '[AuthDocGen] Chained CaseSummaryQueueable for Intake=' + intakeId);
-        } catch (Exception e) {
-            logAndPersist(intakeId, 'Failed to enqueue CaseSummaryQueueable: ' + e.getTypeName() + ': ' + e.getMessage());
-        }
+        // Case-summary generation is intentionally NOT triggered here. It is a
+        // fully separate flow, published independently from IntakeTriggerHandler
+        // (Case_Summary_Generation__e). This job does documents only.
 
         System.debug(LoggingLevel.INFO, '[AuthDocGen] END — Intake=' + intakeId);
     }
 
     private Document__c generateAndUpload(Id intakeId, String documentType, PageReference vfPage, String docName) {
-    System.debug(LoggingLevel.INFO, '[AuthDocGen] renderPdf start — type=' + documentType);
-    Blob pdfBlob = renderPdf(vfPage, intakeId);
-    if (pdfBlob == null) {
-        logAndPersist(intakeId, documentType + ': getContent() returned null blob.');
-        return null;
+        System.debug(LoggingLevel.INFO, '[AuthDocGen] renderPdf start — type=' + documentType);
+        Blob pdfBlob = renderPdf(vfPage, intakeId);
+        if (pdfBlob == null) {
+            logAndPersist(intakeId, documentType + ': getContent() returned null blob.');
+            return null;
+        }
+        System.debug(LoggingLevel.INFO, '[AuthDocGen] PDF rendered — bytes=' + pdfBlob.size());
+
+        // Build the key with the SAME service that presigns downloads/previews,
+        // so upload and preview/download resolve to the same bucket + key.
+        // buildKey() is pure (no callout) so it is safe to call in test context.
+        String fileName = docName + '.pdf';
+        String s3Key    = S3LambdaService.buildKey(intakeId, fileName);
+
+        // In test context we skip the real presign + PUT callouts and just record the key.
+        if (!Test.isRunningTest()) {
+            Boolean uploaded = putToS3(intakeId, s3Key, pdfBlob, CONTENT_TYPE);
+            if (!uploaded) {
+                // putToS3 already logged the failure detail.
+                return null;
+            }
+        }
+
+        Document__c doc      = new Document__c();
+        doc.Name             = docName;
+        doc.Document_Type__c = documentType;
+        doc.Intake__c        = intakeId;
+        doc.S3_Key__c        = s3Key;
+        doc.MIME_Type__c     = CONTENT_TYPE;
+        doc.File_Size__c     = pdfBlob.size();
+        doc.Status__c        = 'Active';
+        return doc;
     }
-    System.debug(LoggingLevel.INFO, '[AuthDocGen] PDF rendered — bytes=' + pdfBlob.size());
 
-    // ── NEW: skip real S3 upload in test context ─────────────────────────
-    S3UploadService.UploadResult uploadResult;
-    if (Test.isRunningTest()) {
-        uploadResult = new S3UploadService.UploadResult();
-        uploadResult.success    = true;
-        uploadResult.s3Key      = 'intakes/' + intakeId + '/documents/MOCK_' + documentType + '.pdf';
-        uploadResult.statusCode = 200;
-    } else {
-        uploadResult = S3UploadService.upload(intakeId, documentType, pdfBlob);
+    /**
+     * Pre-signs a PUT via S3LambdaService (unchanged) and PUTs the bytes to the
+     * returned presigned URL. Two callouts: one to the Lambda (via the
+     * AWS_Lambda_NC named credential) to presign, one to S3 to store the bytes.
+     *
+     * NOTE: the PUT targets a raw S3 URL, so the S3 host needs a Remote Site
+     * Setting (see MIGRATION_NOTES). The Content-Type header MUST match the
+     * contentType passed to presignPut, or S3 rejects the signature.
+     */
+    private Boolean putToS3(Id intakeId, String s3Key, Blob body, String contentType) {
+        try {
+            String putUrl = S3LambdaService.presignPut(s3Key, contentType); // callout → Lambda
+
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint(putUrl);
+            req.setMethod('PUT');
+            req.setHeader('Content-Type', contentType);
+            req.setBodyAsBlob(body);
+            req.setTimeout(120000);
+
+            HttpResponse res = new Http().send(req); // callout → S3 (needs Remote Site Setting)
+            Integer sc = res.getStatusCode();
+            if (sc >= 200 && sc < 300) {
+                System.debug(LoggingLevel.INFO, '[AuthDocGen] S3 PUT ok — key=' + s3Key + ' status=' + sc);
+                return true;
+            }
+            logAndPersist(intakeId, 'S3 PUT failed for key ' + s3Key + ' — HTTP ' + sc + ': ' + res.getBody());
+            return false;
+        } catch (Exception e) {
+            logAndPersist(intakeId, 'S3 PUT threw for key ' + s3Key + ': ' + e.getTypeName() + ': ' + e.getMessage());
+            return false;
+        }
     }
-    // ─────────────────────────────────────────────────────────────────────
 
-    System.debug(LoggingLevel.INFO, '[AuthDocGen] S3 result — success=' + uploadResult.success
-        + ' status=' + uploadResult.statusCode
-        + ' key='    + uploadResult.s3Key
-        + ' error='  + uploadResult.errorMessage);
-
-    if (!uploadResult.success) {
-        logAndPersist(intakeId, documentType + ' S3 upload failed — HTTP '
-            + uploadResult.statusCode + ': ' + uploadResult.errorMessage);
-        return null;
-    }
-
-    Document__c doc      = new Document__c();
-    doc.Name             = docName;
-    doc.Document_Type__c = documentType;
-    doc.Intake__c        = intakeId;
-    doc.S3_Key__c        = uploadResult.s3Key;
-    doc.MIME_Type__c     = 'application/pdf';
-    doc.File_Size__c     = pdfBlob.size();
-    doc.Status__c        = 'Active';
-    return doc;
-}
     private Blob renderPdf(PageReference vfPage, Id intakeId) {
         vfPage.getParameters().put('Id', String.valueOf(intakeId));
         try {
-            Blob b = Test.isRunningTest() ? Blob.valueOf('MOCK_PDF') : vfPage.getContent();
-            return b;
+            // Runs as the licensed scheduling user, so getContent() renders natively.
+            return Test.isRunningTest() ? Blob.valueOf('MOCK_PDF') : vfPage.getContent();
         } catch (Exception e) {
-            System.debug(LoggingLevel.ERROR, '[AuthDocGen] getContent() threw: ' + e.getMessage());
+            System.debug(LoggingLevel.ERROR, '[AuthDocGen] getContent() threw for ' + intakeId + ': ' + e.getMessage());
             return null;
         }
     }
@@ -183,19 +215,10 @@ System.debug(LoggingLevel.INFO, '[AuthDocGen] START — Intake=' + intakeId + ' 
         }
     }
 
-    /**
-     * Logs to System.debug AND writes a persistent Intake_Error_Log__c record
-     * so failures survive after the debug log window closes.
-     * Create a lightweight custom object: Intake_Error_Log__c with
-     *   Intake__c Lookup(Intake), Message__c LongTextArea, Occurred_At__c DateTime
-     */
     private void logAndPersist(Id relatedIntakeId, String message) {
         System.debug(LoggingLevel.ERROR, '[AuthDocGen] ERROR — Intake=' + relatedIntakeId + ' — ' + message);
         try {
-            // Replace with your actual error log object/fields if different
-            // If you don't have this object yet, comment out the insert
-            // and rely on System.debug until you create it.
-            /* 
+            /*
             Intake_Error_Log__c log = new Intake_Error_Log__c();
             log.Intake__c     = relatedIntakeId;
             log.Message__c    = message.left(32768);

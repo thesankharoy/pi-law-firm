@@ -3,3 +3,78 @@
     background: white;
     border-radius: 12px;
 }
+/* ===========================
+   Dashboard Header
+=========================== */
+
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    padding: 14px 20px;
+    border: 1px solid #d8dde6;
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #16325c;
+}
+
+.header-icon {
+    font-size: 22px;
+    line-height: 1;
+}
+
+/* Make the Lightning card connect seamlessly with the custom header */
+lightning-card {
+    display: block;
+}
+
+lightning-card .slds-card {
+    border-radius: 0 0 10px 10px;
+    border-top: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 12px 16px;
+    }
+
+    .header-title {
+        font-size: 16px;
+    }
+
+    .header-icon {
+        font-size: 20px;
+    }
+
+    .header-filter {
+        width: 100%;
+        min-width: auto;
+    }
+}
+/* Date Filter */
+
+.header-filter {
+    width: 190px;
+    min-width: 190px;
+}
+
+.header-filter lightning-combobox {
+    width: 100%;
+}

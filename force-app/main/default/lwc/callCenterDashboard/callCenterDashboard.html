@@ -1,0 +1,51 @@
+<template>
+
+    <lightning-card title="Speed-to-Answer Dashboards">
+
+        <div class="dashboard-container">
+
+            <div class="card service-level">
+                <div class="label">Service Level</div>
+                <div class="value">
+                    {serviceLevel}%
+                </div>
+                <div class="sub-text">
+                    Answered within 6 seconds
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="label">Answered Calls</div>
+                <div class="value">
+                    {totalAnswered}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="label">Within 6 Sec</div>
+                <div class="value">
+                    {answeredWithinSix}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="label">Avg Answer Time</div>
+                <div class="value">
+                    {avgAnswerTime}
+                </div>
+                <div class="sub-text">Seconds</div>
+            </div>
+
+            <div class="card">
+                <div class="label">Avg Call Duration</div>
+                <div class="value">
+                    {avgCallDuration}
+                </div>
+                <div class="sub-text">Seconds</div>
+            </div>
+
+        </div>
+
+    </lightning-card>
+
+</template>

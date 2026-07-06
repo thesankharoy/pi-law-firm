@@ -1,0 +1,331 @@
+:host {
+    display: block;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.da-root {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* ── Header ── */
+.da-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.da-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.da-spark {
+    color: #7c3aed;
+}
+.da-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f172a;
+}
+.da-sub {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── Body layout ── */
+.da-body {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: 320px;
+}
+
+/* ── Left list ── */
+.da-list {
+    border-right: 1px solid #f1f5f9;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #fafbfc;
+    max-height: 520px;
+    overflow-y: auto;
+}
+.da-list-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.da-spinner-wrap,
+.da-empty-list {
+    padding: 20px 8px;
+    text-align: center;
+    font-size: 12px;
+    color: #94a3b8;
+}
+.file-row {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: 1.5px solid #f1f5f9;
+    border-radius: 8px;
+    background: #fff;
+    padding: 9px 10px;
+    cursor: pointer;
+    transition:
+        border-color 0.12s,
+        background 0.12s;
+}
+.file-row:hover:not(:disabled) {
+    border-color: #ddd6fe;
+    background: #faf5ff;
+}
+.file-row:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+.file-row-selected {
+    border-color: #a78bfa;
+    background: #f5f3ff;
+}
+.file-row-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.file-row-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.badge {
+    flex-shrink: 0;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.badge-neutral {
+    background: #eff6ff;
+    color: #2563eb;
+}
+.badge-done {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+.badge-muted {
+    background: #f1f5f9;
+    color: #94a3b8;
+}
+
+/* ── Right detail ── */
+.da-detail {
+    padding: 16px 18px;
+    overflow-y: auto;
+    max-height: 520px;
+}
+.da-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 100%;
+    min-height: 280px;
+    gap: 8px;
+}
+.da-ph-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #475569;
+}
+.da-ph-desc {
+    font-size: 12px;
+    color: #94a3b8;
+    max-width: 280px;
+    line-height: 1.5;
+}
+
+.da-detail-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.da-detail-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.da-analyzing {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 24px 4px;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.da-run {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 20px 4px;
+}
+.da-run-desc {
+    font-size: 13px;
+    color: #64748b;
+}
+
+/* ── Buttons ── */
+.da-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 8px 16px;
+    transition: background 0.12s;
+}
+.da-btn-primary {
+    border: none;
+    background: #7c3aed;
+    color: #fff;
+}
+.da-btn-primary:hover {
+    background: #6d28d9;
+}
+.da-btn-ghost {
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    padding: 6px 12px;
+    font-size: 12px;
+}
+.da-btn-ghost:hover:not(:disabled) {
+    background: #f8fafc;
+    color: #0f172a;
+}
+.da-btn-ghost:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ── Result ── */
+.da-meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.da-doctype {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6d28d9;
+    background: #f5f3ff;
+    border: 1px solid #ddd6fe;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+.da-meta {
+    font-size: 11px;
+    color: #94a3b8;
+}
+.da-summary {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #334155;
+    background: #f8fafc;
+    border-left: 3px solid #a78bfa;
+    border-radius: 0 6px 6px 0;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+}
+.da-section {
+    margin-bottom: 14px;
+}
+.da-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+.da-pairs {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.da-pair {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    background: #fafbfc;
+}
+.da-pair-primary {
+    font-weight: 600;
+    color: #334155;
+}
+.da-pair-secondary {
+    color: #64748b;
+    text-align: right;
+    flex-shrink: 0;
+}
+.da-bullets {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.da-bullets li {
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.45;
+}
+.da-usage {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+    font-size: 10px;
+    color: #cbd5e1;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+    .da-body {
+        grid-template-columns: 1fr;
+    }
+    .da-list {
+        border-right: none;
+        border-bottom: 1px solid #f1f5f9;
+        max-height: 240px;
+    }
+}

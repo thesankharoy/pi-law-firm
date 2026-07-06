@@ -1,41 +1,4 @@
-<!-- <template>
-    <lightning-card>
-
-        <div class="actions-container">
-
-            <div class="header">
-                Actions
-            </div>
-
-            <div class="button-section">
-
-                <lightning-button
-                    label="Open Matter"
-                    variant="brand"
-                    class="action-btn"
-                    onclick={handleOpenMatter}>
-                </lightning-button>
-
-                <lightning-button
-                    label="Turn Down"
-                    variant="neutral"
-                    class="action-btn"
-                    onclick={handleTurnDown}>
-                </lightning-button>
-
-                <lightning-button
-                    label="Refer Out"
-                    variant="neutral"
-                    class="action-btn"
-                    onclick={handleReferOut}>
-                </lightning-button>
-
-            </div>
-
-        </div>
-
-    </lightning-card>
-</template> -->
+<!-- 
 
 <template>
     <template if:true={isActiveIntake}>
@@ -46,6 +9,49 @@
                     <lightning-button label="Open Matter" variant="brand" class="action-btn" onclick={handleOpenMatter}></lightning-button>
                     <lightning-button label="Turn Down" variant="neutral" class="action-btn" onclick={handleTurnDown}></lightning-button>
                     <lightning-button label="Refer Out" variant="neutral" class="action-btn" onclick={handleReferOut}></lightning-button>
+                </div>
+            </div>
+        </lightning-card>
+    </template>
+</template> -->
+
+<template>
+    <template if:true={isActiveIntake}>
+        <lightning-card>
+            <div class="actions-container">
+                <div class="header">Actions</div>
+
+                <button class="primary-action" onclick={handleOpenMatter}>
+                    <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.2l7 3.5v8.6l-7 3.5-7-3.5V7.7l7-3.5z"/>
+                    </svg>
+                    Open Matter
+                </button>
+
+                <div class="secondary-grid">
+                    <!-- <div class="secondary-action" onclick={handleSendRetainer}>
+                        <span class="icon">🖼️</span>
+                        <span>Send Retainer</span>
+                    </div> -->
+                    <div class="secondary-action" onclick={handleLogCall}>
+                        <span class="icon">📞</span>
+                        <span>Log Call</span>
+                    </div>
+                    <div class="secondary-action" onclick={handleScheduleEvent}>
+                        <span class="icon">📅</span>
+                        <span>Schedule Event</span>
+                    </div>
+                    <div class="secondary-action" onclick={handleReferOut}>
+                        <span class="icon">🔗</span>
+                        <span>Refer Out</span>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="turn-down-btn" onclick={handleTurnDown}>
+                    <span>✖</span>
+                    <span>Turn Down</span>
                 </div>
             </div>
         </lightning-card>

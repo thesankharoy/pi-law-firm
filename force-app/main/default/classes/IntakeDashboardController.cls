@@ -1,216 +1,154 @@
 public with sharing class IntakeDashboardController {
 
-   @AuraEnabled(cacheable=true)
-public static Integer getTotalLeadsEntered(
-    Integer monthNumber,
-    Integer yearNumber,
-    String dateFilter
-) {
+ // ---- public methods (called by the LWC) ----
 
-    // Date Filter takes priority
-    if(String.isNotBlank(dateFilter) && dateFilter != 'ALL') {
-
-        if(dateFilter == 'TODAY')
-            return [SELECT COUNT() FROM Intake__c WHERE CreatedDate = TODAY];
-
-        if(dateFilter == 'YESTERDAY')
-            return [SELECT COUNT() FROM Intake__c WHERE CreatedDate = YESTERDAY];
-
-        if(dateFilter == 'THIS_WEEK')
-            return [SELECT COUNT() FROM Intake__c WHERE CreatedDate = THIS_WEEK];
-
-        if(dateFilter == 'LAST_WEEK')
-            return [SELECT COUNT() FROM Intake__c WHERE CreatedDate = LAST_WEEK];
-
-        if(dateFilter == 'THIS_MONTH')
-            return [SELECT COUNT() FROM Intake__c WHERE CreatedDate = THIS_MONTH];
-
-        if(dateFilter == 'LAST_MONTH')
-            return [SELECT COUNT() FROM Intake__c WHERE CreatedDate = LAST_MONTH];
-
-        if(dateFilter == 'THIS_YEAR')
-            return [SELECT COUNT() FROM Intake__c WHERE CreatedDate = THIS_YEAR];
-
-        if(dateFilter == 'LAST_YEAR')
-            return [SELECT COUNT() FROM Intake__c WHERE CreatedDate = LAST_YEAR];
+    @AuraEnabled(cacheable=true)
+    public static Integer getTotalLeadsEntered(String dateFilter, Date startDate, Date endDate) {
+        return countIntakes(null, dateFilter, startDate, endDate);
     }
 
-    // Month Filter
-    if(monthNumber != null && monthNumber > 0) {
-
-        Date startDate = Date.newInstance(yearNumber, monthNumber, 1);
-        Date endDate = startDate.addMonths(1);
-
-        return [
-            SELECT COUNT()
-            FROM Intake__c
-            WHERE CreatedDate >= :DateTime.newInstance(startDate, Time.newInstance(0,0,0,0))
-            AND CreatedDate < :DateTime.newInstance(endDate, Time.newInstance(0,0,0,0))
-        ];
+    @AuraEnabled(cacheable=true)
+    public static Integer getSignedClients(String dateFilter, Date startDate, Date endDate) {
+        return countIntakes('Status__c = \'Retainer Agreement Signed\'', dateFilter, startDate, endDate);
     }
 
-    return [SELECT COUNT() FROM Intake__c];
-}
-  @AuraEnabled(cacheable=true)
-public static Integer getSignedClients(
-    Integer monthNumber,
-    Integer yearNumber,
-    String dateFilter
-) {
-
-    if(String.isNotBlank(dateFilter) && dateFilter != 'ALL') {
-
-        if(dateFilter == 'TODAY')
-            return [SELECT COUNT() FROM Intake__c
-                    WHERE Status__c='Retainer Agreement Signed'
-                    AND CreatedDate = TODAY];
-
-        if(dateFilter == 'THIS_MONTH')
-            return [SELECT COUNT() FROM Intake__c
-                    WHERE Status__c='Retainer Agreement Signed'
-                    AND CreatedDate = THIS_MONTH];
-
-        if(dateFilter == 'LAST_MONTH')
-            return [SELECT COUNT() FROM Intake__c
-                    WHERE Status__c='Retainer Agreement Signed'
-                    AND CreatedDate = LAST_MONTH];
-
-        if(dateFilter == 'THIS_YEAR')
-            return [SELECT COUNT() FROM Intake__c
-                    WHERE Status__c='Retainer Agreement Signed'
-                    AND CreatedDate = THIS_YEAR];
-
-        if(dateFilter == 'LAST_YEAR')
-            return [SELECT COUNT() FROM Intake__c
-                    WHERE Status__c='Retainer Agreement Signed'
-                    AND CreatedDate = LAST_YEAR];
+    @AuraEnabled(cacheable=true)
+    public static Decimal getConversionRate(String dateFilter, Date startDate, Date endDate) {
+        Integer total     = countIntakes(null, dateFilter, startDate, endDate);
+        Integer converted = countIntakes('Status__c = \'Converted\'', dateFilter, startDate, endDate);
+        if (total == 0) return 0;
+        return (((Decimal) converted / total) * 100).setScale(2, System.RoundingMode.HALF_UP);
     }
+    
+    @AuraEnabled(cacheable=true)
+    public static Decimal getOverallConversionRate() {
+    Integer total = countIntakes(null, null, null, null);
+    Integer converted = countIntakes('Status__c = \'Converted\'', null, null, null);
 
-    if(monthNumber != null && monthNumber > 0) {
-
-        Date startDate = Date.newInstance(yearNumber, monthNumber, 1);
-        Date endDate = startDate.addMonths(1);
-
-        return [
-            SELECT COUNT()
-            FROM Intake__c
-            WHERE Status__c='Retainer Agreement Signed'
-            AND CreatedDate >= :DateTime.newInstance(startDate, Time.newInstance(0,0,0,0))
-            AND CreatedDate < :DateTime.newInstance(endDate, Time.newInstance(0,0,0,0))
-        ];
-    }
-
-    return [
-        SELECT COUNT()
-        FROM Intake__c
-        WHERE Status__c='Retainer Agreement Signed'
-    ];
-}
-   @AuraEnabled(cacheable=true)
-public static Decimal getConversionRate() {
-
-    Integer totalIntakes = [
-        SELECT COUNT()
-        FROM Intake__c
-    ];
-
-    Integer convertedIntakes = [
-        SELECT COUNT()
-        FROM Intake__c
-        WHERE Status__c = 'Converted'
-    ];
-
-    if (totalIntakes == 0) {
+    if (total == 0) {
         return 0;
     }
 
-    return ((Decimal)convertedIntakes / totalIntakes) * 100;
-}
+    return (((Decimal) converted / total) * 100)
+        .setScale(2, System.RoundingMode.HALF_UP);
+  }
+
+    // ---- shared counting helper ----
+
+    private static Integer countIntakes(String extraFilter, String dateFilter, Date startDate, Date endDate) {
+
+        List<String> conds = new List<String>();
+        if (String.isNotBlank(extraFilter)) {
+            conds.add(extraFilter);
+        }
+
+        // Custom range takes priority when supplied
+        Datetime startDt;
+        Datetime endDt;
+        if (dateFilter == 'CUSTOM' && startDate != null && endDate != null) {
+            startDt = Datetime.newInstance(startDate, Time.newInstance(0, 0, 0, 0));
+            endDt   = Datetime.newInstance(endDate.addDays(1), Time.newInstance(0, 0, 0, 0)); // inclusive end day
+            conds.add('CreatedDate >= :startDt');
+            conds.add('CreatedDate < :endDt');
+        } else {
+            String lit = dateLiteral(dateFilter);
+            if (lit != null) {
+                conds.add('CreatedDate = ' + lit); // safe: value validated against allow-list
+            }
+        }
+
+        String q = 'SELECT COUNT() FROM Intake__c';
+        if (!conds.isEmpty()) {
+            q += ' WHERE ' + String.join(conds, ' AND ');
+        }
+        return Database.countQuery(q);
+    }
+
+    // whitelist of SOQL date literals -> prevents injection, ignores anything unknown/ALL
+    private static String dateLiteral(String f) {
+        Set<String> allowed = new Set<String>{
+            'TODAY','YESTERDAY','THIS_WEEK','LAST_WEEK','THIS_MONTH','LAST_MONTH',
+            'THIS_QUARTER','LAST_QUARTER','THIS_YEAR','LAST_YEAR'
+        };
+        return allowed.contains(f) ? f : null;
+    }
+
+    
+    
    @AuraEnabled(cacheable=true)
-public static List<ResponseTimeWrapper> getResponseTimeData() {
+    public static List<ResponseTimeWrapper> getResponseTimeData() {
+        List<ResponseTimeWrapper> results = new List<ResponseTimeWrapper>();
+        Decimal maxTime = 0;
 
-    List<ResponseTimeWrapper> results = new List<ResponseTimeWrapper>();
+        List<AggregateResult> queryResults = [
+            SELECT Source__c source, AVG(Business_Response_Minutes__c) avgTime
+            FROM Intake__c
+            WHERE Business_Response_Minutes__c != NULL
+            AND Business_Response_Minutes__c >= 0
+            GROUP BY Source__c
+        ];
 
-    Decimal maxTime = 0;
+        for (AggregateResult ar : queryResults) {
+            Decimal avgTime = (Decimal) ar.get('avgTime');
+            if (avgTime != null && avgTime > maxTime) maxTime = avgTime;
+        }
 
-    List<AggregateResult> queryResults = [
+        for (AggregateResult ar : queryResults) {
+            ResponseTimeWrapper row = new ResponseTimeWrapper();
+            row.source = (String) ar.get('source');
+            Decimal avgTime = (Decimal) ar.get('avgTime');
+            row.avgResponseTime = (avgTime == null || avgTime < 0) ? 0 : avgTime;
+            row.percentage = maxTime > 0
+                ? ((maxTime - row.avgResponseTime) / maxTime) * 100
+                : 100;
+            results.add(row);
+        }
 
-        SELECT
-            Source__c source,
-            AVG(Response_Time_Minutes__c) avgTime
+        results.sort(new ResponseTimeSorter());
+        return results;
+    }
 
-        FROM Intake__c
+    // ---------- FLOW: business-hours response minutes ----------
+    @InvocableMethod(label='Business-Hours Response Minutes')
+    public static List<MinutesResult> computeBusinessMinutes(List<MinutesRequest> reqs) {
+        List<MinutesResult> out = new List<MinutesResult>();
+        BusinessHours bh = [SELECT Id FROM BusinessHours WHERE IsDefault = true LIMIT 1];
 
-        WHERE Response_Time_Minutes__c != NULL
-        AND Response_Time_Minutes__c >= 0
+        for (MinutesRequest r : reqs) {
+            MinutesResult res = new MinutesResult();
+            if (r.createdDt != null && r.firstResponseDt != null
+                && r.firstResponseDt >= r.createdDt) {
+                Long ms = BusinessHours.diff(bh.Id, r.createdDt, r.firstResponseDt);
+                res.minutes = ms / 60000.0;   // milliseconds -> minutes
+            } else {
+                res.minutes = null;
+            }
+            out.add(res);
+        }
+        return out;
+    }
 
-        GROUP BY Source__c
-    ];
+    // ---------- wrappers ----------
+    public class MinutesRequest {
+        @InvocableVariable public Datetime createdDt;
+        @InvocableVariable public Datetime firstResponseDt;
+    }
+    public class MinutesResult {
+        @InvocableVariable public Decimal minutes;
+    }
 
-    for (AggregateResult ar : queryResults) {
+    public class ResponseTimeWrapper {
+        @AuraEnabled public String source;
+        @AuraEnabled public Decimal avgResponseTime;
+        @AuraEnabled public Decimal percentage;
+    }
 
-        Decimal avgTime = (Decimal) ar.get('avgTime');
-
-        if (avgTime > maxTime) {
-            maxTime = avgTime;
+    public class ResponseTimeSorter implements Comparator<ResponseTimeWrapper> {
+        public Integer compare(ResponseTimeWrapper a, ResponseTimeWrapper b) {
+            if (a.avgResponseTime > b.avgResponseTime) return 1;
+            if (a.avgResponseTime < b.avgResponseTime) return -1;
+            return 0;
         }
     }
 
-    for (AggregateResult ar : queryResults) {
-
-        ResponseTimeWrapper row = new ResponseTimeWrapper();
-
-        row.source = (String) ar.get('source');
-
-        row.avgResponseTime =
-            (Decimal) ar.get('avgTime');
-
-        if (row.avgResponseTime < 0) {
-            row.avgResponseTime = 0;
-        }
-
-        row.percentage =
-            maxTime > 0
-            ? ((maxTime - row.avgResponseTime) / maxTime) * 100
-            : 100;
-
-        results.add(row);
-    }
-
-    results.sort(new ResponseTimeSorter());
-
-    return results;
-}
-
-public class ResponseTimeWrapper {
-
-    @AuraEnabled
-    public String source;
-
-    @AuraEnabled
-    public Decimal avgResponseTime;
-
-    @AuraEnabled
-    public Decimal percentage;
-}
-
-public class ResponseTimeSorter
-implements Comparator<ResponseTimeWrapper> {
-
-    public Integer compare(
-        ResponseTimeWrapper a,
-        ResponseTimeWrapper b
-    ) {
-
-        if (a.avgResponseTime > b.avgResponseTime) {
-            return 1;
-        }
-
-        if (a.avgResponseTime < b.avgResponseTime) {
-            return -1;
-        }
-
-        return 0;
-    }
-}
 }

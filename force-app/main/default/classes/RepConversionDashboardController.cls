@@ -18,11 +18,9 @@ public with sharing class RepConversionDashboardController {
     @AuraEnabled(cacheable=true)
     public static List<RepDTO> getRepConversionData() {
 
-        Map<Id, RepDTO> repMap =
-            new Map<Id, RepDTO>();
-         
+        Map<Id, RepDTO> repMap = new Map<Id, RepDTO>();
 
-        // Total Intakes by Specialist
+        // Total Intakes by Specialist (Exclude MVA Priority Queue)
         for (AggregateResult ar : [
 
             SELECT OwnerId,
@@ -31,6 +29,8 @@ public with sharing class RepConversionDashboardController {
 
             FROM Intake__c
 
+            WHERE Owner.Name != 'MVA Priority Queue'
+
             GROUP BY OwnerId,
                      Owner.Name
 
@@ -38,14 +38,9 @@ public with sharing class RepConversionDashboardController {
 
             RepDTO row = new RepDTO();
 
-            row.repName =
-                (String) ar.get('ownerName');
-
-            row.totalIntakes =
-                (Integer) ar.get('totalCount');
-
+            row.repName = (String) ar.get('ownerName');
+            row.totalIntakes = (Integer) ar.get('totalCount');
             row.convertedIntakes = 0;
-
             row.conversionRate = 0;
 
             repMap.put(
@@ -54,7 +49,7 @@ public with sharing class RepConversionDashboardController {
             );
         }
 
-        // Converted Intakes by Specialist
+        // Converted Intakes by Specialist (Exclude MVA Priority Queue)
         for (AggregateResult ar : [
 
             SELECT OwnerId,
@@ -63,33 +58,30 @@ public with sharing class RepConversionDashboardController {
             FROM Intake__c
 
             WHERE Status__c = 'Converted'
+              AND Owner.Name != 'MVA Priority Queue'
 
             GROUP BY OwnerId
 
         ]) {
 
-            Id ownerId =
-                (Id) ar.get('OwnerId');
+            Id ownerId = (Id) ar.get('OwnerId');
 
-            if(repMap.containsKey(ownerId)) {
+            if (repMap.containsKey(ownerId)) {
 
-                repMap.get(ownerId)
-                    .convertedIntakes =
-                        (Integer) ar.get('convertedCount');
+                repMap.get(ownerId).convertedIntakes =
+                    (Integer) ar.get('convertedCount');
             }
         }
 
         // Calculate Conversion Rate
-        List<RepDTO> results =
-            new List<RepDTO>();
+        List<RepDTO> results = new List<RepDTO>();
 
-        for(RepDTO row : repMap.values()) {
+        for (RepDTO row : repMap.values()) {
 
-            if(row.totalIntakes > 0) {
+            if (row.totalIntakes > 0) {
 
                 row.conversionRate =
-                    ((Decimal) row.convertedIntakes
-                    / row.totalIntakes) * 100;
+                    ((Decimal) row.convertedIntakes / row.totalIntakes) * 100;
             }
 
             results.add(row);
@@ -101,23 +93,15 @@ public with sharing class RepConversionDashboardController {
         return results;
     }
 
-    public class ConversionComparator
-        implements Comparator<RepDTO> {
+    public class ConversionComparator implements Comparator<RepDTO> {
 
-        public Integer compare(
-            RepDTO a,
-            RepDTO b
-        ) {
+        public Integer compare(RepDTO a, RepDTO b) {
 
-            if(a.conversionRate >
-               b.conversionRate) {
-
+            if (a.conversionRate > b.conversionRate) {
                 return -1;
             }
 
-            if(a.conversionRate <
-               b.conversionRate) {
-
+            if (a.conversionRate < b.conversionRate) {
                 return 1;
             }
 

@@ -1,115 +1,49 @@
 <template>
-
     <lightning-card class="ai-card">
 
         <!-- HEADER -->
         <div class="header">
-
             <div class="header-left">
-
-                <lightning-icon
-                    icon-name="utility:einstein"
-                    size="small"
-                    class="einstein-icon">
-                </lightning-icon>
-
-                <div>
-                    <h2 class="title">
-                        AI Recommended Actions
-                    </h2>
-
-                    <p class="subtitle">
-                        Strategic intake guidance
-                    </p>
-                </div>
-
+                <div class="icon-tile">⚡</div>
+                <h2 class="title">AI Recommended Actions</h2>
             </div>
-
-            <div class="live-badge">
-
-                <span class="live-dot"></span>
-
-                LIVE
-
-            </div>
-
+            <template if:false={isLoading}>
+                <div class="count">{actionCount}</div>
+            </template>
         </div>
 
         <!-- LOADING -->
-
-        <template if:true={isTyping}>
-
+        <template if:true={isLoading}>
             <div class="loading-section">
-
-                <lightning-spinner
-                    size="small"
-                    alternative-text="Analyzing">
-                </lightning-spinner>
-
-                <span>
-                    AI analyzing case behavior...
-                </span>
-
+                <lightning-spinner size="small" alternative-text="Analyzing"></lightning-spinner>
+                <span>AI analyzing case behavior...</span>
             </div>
-
         </template>
 
-        <!-- CONTENT -->
+        <!-- ACTION LIST -->
+        <template if:false={isLoading}>
+            <ul class="action-list">
+                <template for:each={actions} for:item="a">
+                    <li key={a.id} class="action-item">
 
-        <div class="content-section">
+                        <div class="action-head" data-index={a.index} onclick={handleToggle}>
+                            <span class={a.badgeClass}>{a.priority}</span>
+                            <span class="action-title">{a.title}</span>
+                            <lightning-icon
+                                icon-name={a.chevron}
+                                size="xx-small"
+                                class="chevron">
+                            </lightning-icon>
+                        </div>
 
-            <div class="section-title">
+                        <template if:true={a.expanded}>
+                            <div class="action-body">{a.description}</div>
+                        </template>
 
-                <lightning-icon
-                    icon-name="utility:insights"
-                    size="x-small">
-                </lightning-icon>
-
-                <span>
-                    {currentSection.title}
-                </span>
-
-            </div>
-
-            <div class="section-content">
-                {displayedContent}
-            </div>
-
-        </div>
-
-        <!-- PROGRESS -->
-
-        <div class="progress-container">
-
-            <lightning-progress-bar
-                value={progressValue}>
-            </lightning-progress-bar>
-
-        </div>
-
-        <!-- FOOTER -->
-
-        <div class="footer">
-
-            <lightning-button
-                label="Previous"
-                onclick={handlePrevious}
-                disabled={isFirst}>
-            </lightning-button>
-
-            <div class="counter">
-                {currentIndexDisplay}
-            </div>
-
-            <lightning-button
-                variant="brand"
-                label="Next"
-                onclick={handleNext}
-                disabled={isLast}>
-            </lightning-button>
-
-        </div>
+                    </li>
+                </template>
+            </ul>
+        </template>
 
     </lightning-card>
-
 </template>

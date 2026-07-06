@@ -1,0 +1,10 @@
+.row {
+    padding: 0.75rem 0.25rem;
+    border-top: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+}
+.title { font-weight: 700; }
+.meta {
+    font-size: 0.8rem;
+    color: var(--slds-g-color-neutral-base-30, #5c5c5c);
+}
+.actions { display: flex; align-items: center; }

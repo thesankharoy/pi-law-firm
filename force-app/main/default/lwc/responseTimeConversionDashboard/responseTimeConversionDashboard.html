@@ -1,55 +1,247 @@
 <template>
+    <div class="dashboard">
 
-    <lightning-card
-        title="Response Time vs Conversion Analysis"
-        icon-name="utility:trend">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <div class="logo-box">
+                    <lightning-icon
+                        icon-name="utility:call"
+                        size="medium">
+                    </lightning-icon>
+                </div>
 
-        <div class="container">
+                <div>
+                    <h1>Response-Time-vs-Conversion Analysis</h1>
+                    <p>
+                        See how quickly answering calls impacts client conversions
+                    </p>
+                </div>
+            </div>
+        </div>
 
-            <template
-                for:each={analysisData}
-                for:item="item">
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
 
-                <div
-                    key={item.bucket}
-                    class="row">
+            <div class="kpi-card">
+                <div class="kpi-icon blue">
+                    <lightning-icon
+                        icon-name="utility:clock"
+                        size="small">
+                    </lightning-icon>
+                </div>
 
-                    <div class="header">
-
-                        <span class="bucket">
-                            {item.bucket}
-                        </span>
-
-                        <span class="rate">
-                            {item.conversionRate}%
-                        </span>
-
+                <div>
+                    <div class="kpi-title">
+                        Average Answer Time
                     </div>
 
-                    <div class="progress-container">
+                    <div class="kpi-value blue-text">
+                        {avgAnswerTime} sec
+                    </div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon green">
+                    <lightning-icon
+                        icon-name="utility:call"
+                        size="small">
+                    </lightning-icon>
+                </div>
+
+                <div>
+                    <div class="kpi-title">
+                        Total Incoming Calls
+                    </div>
+
+                    <div class="kpi-value green-text">
+                        {totalCalls}
+                    </div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon purple">
+                    <lightning-icon
+                        icon-name="utility:success"
+                        size="small">
+                    </lightning-icon>
+                </div>
+
+                <div>
+                    <div class="kpi-title">
+                        Conversion Rate
+                    </div>
+
+                    <div class="kpi-value purple-text">
+                        {conversionRate}%
+                    </div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon orange">
+                    <lightning-icon
+                        icon-name="utility:warning"
+                        size="small">
+                    </lightning-icon>
+                </div>
+
+                <div>
+                    <div class="kpi-title">
+                        Missed Call Rate
+                    </div>
+
+                    <div class="kpi-value orange-text">
+                        {missedCallRate}%
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Content -->
+        <div class="content-grid">
+
+            <!-- Left -->
+            <div class="table-card">
+
+                <div class="card-header">
+                    Response Time Bucket Performance
+                </div>
+
+                <table class="bucket-table">
+
+                    <thead>
+                        <tr>
+                            <th>Response Time</th>
+                            <th>Calls</th>
+                            <th>Converted Clients</th>
+                            <th>Conversion Rate</th>
+                            <th>% Of Total Calls</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <template
+                            for:each={buckets}
+                            for:item="row">
+
+                            <tr key={row.bucket}>
+
+                                <td>{row.bucket}</td>
+
+                                <td>{row.calls}</td>
+
+                                <td>{row.converted}</td>
+
+                                <td>
+
+                                    <div class="conversion-cell">
+
+                                        <div class="progress">
+
+                                            <div
+                                                class={row.barClass}
+                                                style={row.barStyle}>
+                                            </div>
+
+                                        </div>
+
+                                        <span>
+                                            {row.conversionRate}%
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+                                <td>
+                                    {row.totalCallPercent}%
+                                </td>
+
+                            </tr>
+
+                        </template>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <!-- Right -->
+            <div class="sidebar">
+
+                <!-- Insights -->
+                <div class="sidebar-card">
+
+                    <h2>
+                        Key Insights
+                    </h2>
+
+                    <template
+                        for:each={insights}
+                        for:item="item">
 
                         <div
-                            class="progress-bar"
-                            style={item.widthStyle}>
+                            key={item}
+                            class="insight-row">
+
+                            <lightning-icon
+                                icon-name="utility:insights"
+                                size="x-small">
+                            </lightning-icon>
+
+                            <span>{item}</span>
+
+                        </div>
+
+                    </template>
+
+                </div>
+
+                <!-- Recommendation -->
+                <div class="sidebar-card">
+
+                    <h2>
+                        Recommended Action
+                    </h2>
+
+                    <p>
+                        {recommendation}
+                    </p>
+
+                    <div class="goal-bar">
+
+                        <div
+                            class="goal-fill"
+                            style={currentProgressStyle}>
                         </div>
 
                     </div>
 
-                    <div class="detail">
+                    <div class="goal-footer">
 
-                        {item.convertedIntakes}
-                        Converted of
-                        {item.totalIntakes}
-                        Intakes
+                        <span>
+                            Current:
+                            {conversionRate}%
+                        </span>
+
+                        <span>
+                            Target:
+                            80%
+                        </span>
 
                     </div>
 
                 </div>
 
-            </template>
+            </div>
 
         </div>
 
-    </lightning-card>
-
+    </div>
 </template>

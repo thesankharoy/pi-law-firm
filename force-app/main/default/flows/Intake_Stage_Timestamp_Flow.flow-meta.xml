@@ -56,7 +56,7 @@
         <locationX>466</locationX>
         <locationY>866</locationY>
         <assignmentItems>
-            <assignToReference>$Record.Qualified_Entered_At__c</assignToReference>
+            <assignToReference>$Record.Deferred_Entered_At__c</assignToReference>
             <operator>Assign</operator>
             <value>
                 <elementReference>$Flow.CurrentDateTime</elementReference>
@@ -165,7 +165,7 @@
     <decisions>
         <name>Which_Stage</name>
         <label>Which Stage?</label>
-        <locationX>211</locationX>
+        <locationX>210</locationX>
         <locationY>361</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
@@ -235,7 +235,7 @@
                 <leftValueReference>$Record.Status__c</leftValueReference>
                 <operator>EqualTo</operator>
                 <rightValue>
-                    <stringValue>Qualified</stringValue>
+                    <stringValue>Deferred</stringValue>
                 </rightValue>
             </conditions>
             <connector>
@@ -359,15 +359,15 @@
             </value>
         </inputAssignments>
         <inputAssignments>
-            <field>New_Entered_At__c</field>
+            <field>Deferred_Entered_At__c</field>
             <value>
-                <elementReference>$Record.New_Entered_At__c</elementReference>
+                <elementReference>$Record.Deferred_Entered_At__c</elementReference>
             </value>
         </inputAssignments>
         <inputAssignments>
-            <field>Qualified_Entered_At__c</field>
+            <field>New_Entered_At__c</field>
             <value>
-                <elementReference>$Record.Qualified_Entered_At__c</elementReference>
+                <elementReference>$Record.New_Entered_At__c</elementReference>
             </value>
         </inputAssignments>
         <inputAssignments>

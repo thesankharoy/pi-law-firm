@@ -1,6 +1,25 @@
-/* ====================================
-   CONTAINER
-==================================== */
+.dashboard-header {
+    background: #ffffff;
+    border: 1px solid #d8dde6;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #16325c;
+}
+
+.header-icon {
+    font-size: 20px;
+}
 
 .leaderboard-container {
 

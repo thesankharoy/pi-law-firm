@@ -9,7 +9,13 @@
         </value>
     </customProperties>
     <environments>Default</environments>
+    <formulas>
+        <name>cleanStatus</name>
+        <dataType>String</dataType>
+        <expression>SUBSTITUTE({!varIntakeStatus}, &apos;%20&apos;, &apos; &apos;)</expression>
+    </formulas>
     <interviewLabel>Quote Status Update {!$Flow.CurrentDateTime}</interviewLabel>
+    <isAdditionalPermissionRequiredToRun>true</isAdditionalPermissionRequiredToRun>
     <label>Intake Status Update</label>
     <processMetadataValues>
         <name>BuilderType</name>
@@ -70,11 +76,12 @@
         <inputAssignments>
             <field>Status__c</field>
             <value>
-                <elementReference>varIntakeStatus</elementReference>
+                <elementReference>cleanStatus</elementReference>
             </value>
         </inputAssignments>
         <object>Intake__c</object>
     </recordUpdates>
+    <runInMode>SystemModeWithoutSharing</runInMode>
     <screens>
         <name>Display_Message</name>
         <label>Display Message</label>

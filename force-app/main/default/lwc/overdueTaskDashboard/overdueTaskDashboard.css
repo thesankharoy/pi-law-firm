@@ -1,0 +1,195 @@
+.dashboard-container {
+    padding: 16px;
+    background: #f4f6f9;
+    min-height: 100vh;
+}
+
+/* CARD */
+
+lightning-card {
+    display: block;
+}
+
+:host {
+    --slds-c-card-radius-border: 6px;
+}
+
+/* HEADER */
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f3f3f3;
+    border-bottom: 1px solid #d8dde6;
+}
+
+.title-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #16325c;
+}
+
+.header-icon {
+    --slds-c-icon-color-foreground-default: #16325c;
+}
+
+/* TABLE */
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.task-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+}
+
+.task-table thead {
+    background: #f3f3f3;
+}
+
+.task-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    color: #54698d;
+    border-bottom: 1px solid #d8dde6;
+    text-transform: uppercase;
+}
+
+.task-table td {
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #080707;
+    border-bottom: 1px solid #ecebea;
+    vertical-align: middle;
+}
+
+.task-table tbody tr:hover {
+    background: #fafaf9;
+}
+
+/* STATUS */
+
+.status-notstarted {
+    background: #e8f3ff;
+    color: #0176d3;
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+.status-incomplete {
+    background: #fff1d6;
+    color: #e67e00;
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+.status-completed {
+    background: #d8f5e3;
+    color: #2e844a;
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+/* PRIORITY */
+
+.priority-pill {
+    background: #d8edff;
+    color: #0176d3;
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+/* DUE DATE */
+
+.due-date {
+    color: #0176d3;
+    font-weight: 600;
+}
+
+/* DAYS OVER */
+
+.days-over-red {
+    background: #0176d3;
+    color: white;
+    min-width: 30px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+    text-align: center;
+}
+
+.days-over-orange {
+    background: #ffffff;
+    color: #e67e00;
+    border: 1px solid #e67e00;
+    min-width: 30px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+    text-align: center;
+}
+
+/* PAGINATION */
+
+.pagination-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-top: 1px solid #d8dde6;
+    background: #ffffff;
+}
+
+.record-count {
+    font-size: 13px;
+    color: #706e6b;
+}
+
+.pager-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+/* RESPONSIVE */
+
+@media screen and (max-width: 768px) {
+
+    .task-table {
+        min-width: 900px;
+    }
+
+    .pagination-bar {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+}

@@ -88,9 +88,9 @@ public with sharing class IntakeConversionController {
             row.signedClients = signed;
 
             row.conversionRate =
-                total > 0
-                ? ((Decimal)signed / total) * 100
-                : 0;
+                  total > 0
+            ? (Decimal)signed / total
+            : 0;
 
             results.add(row);
         }

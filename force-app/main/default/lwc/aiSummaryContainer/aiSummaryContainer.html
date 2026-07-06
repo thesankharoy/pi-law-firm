@@ -6,21 +6,15 @@
 
             <div class="header-left">
 
-                <lightning-icon
-                    icon-name="utility:einstein"
-                    size="small"
-                    class="einstein-icon">
-                </lightning-icon>
-
-                <div>
-                    <h2 class="title">
-                        AI Lead Analysis
-                    </h2>
-
-                    <p class="subtitle">
-                        Real-time intelligence summary
-                    </p>
+                <div class="icon-tile">
+                    <lightning-icon
+                        icon-name="utility:einstein"
+                        size="small"
+                        class="einstein-icon">
+                    </lightning-icon>
                 </div>
+
+                <h2 class="title">AI Lead Analysis</h2>
 
             </div>
 
@@ -33,75 +27,65 @@
 
         <!-- Loading -->
         <template if:true={isLoading}>
-
             <div class="loading-section">
-
                 <lightning-spinner
                     size="small"
                     alternative-text="Analyzing">
                 </lightning-spinner>
+                <div class="loading-text">Analyzing conversation...</div>
+            </div>
+        </template>
 
-                <div class="loading-text">
-                    Analyzing conversation...
+        <template if:false={isLoading}>
+
+            <!-- Score -->
+            <div class="score-row">
+
+                <div class="gauge-wrap">
+                    <svg viewBox="0 0 36 36" class="gauge" xmlns="http://www.w3.org/2000/svg">
+                        <path class="gauge-track"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831">
+                        </path>
+                        <path class={gaugeArcClass} style={gaugeStyle}
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831">
+                        </path>
+                    </svg>
+                    <div class="gauge-center">
+                        <span class="gauge-num">{confidence}</span>
+                        <span class="gauge-den">/100</span>
+                    </div>
                 </div>
 
+                <div class="score-meta">
+
+                    <div class="score-title">Lead Qualification Score</div>
+                    <div class="score-sub">{conversionLikelihood} &middot; Updated just now</div>
+
+                    <div class="insights">
+                        <span class={tempChipClass}>{leadTemperature}</span>
+                        <span class="chip chip-ai">AI Generated</span>
+                        <template if:true={showLiability}>
+                            <span class="chip chip-liability">High Liability</span>
+                        </template>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Insights -->
+            <div class="content">
+                <ul class="bullets">
+                    <template for:each={insights} for:item="item">
+                        <li key={item.id} class="bullet">
+                            <span class={item.dotClass}></span>
+                            <span class="bullet-text">{item.text}</span>
+                        </li>
+                    </template>
+                </ul>
             </div>
 
         </template>
-
-        <!-- Summary -->
-        <div class="content">
-
-            <div class="summary-text">
-                {displayedText}
-            </div>
-
-            <template if:false={isLoading}>
-
-                <div class="insights">
-
-                    <lightning-pill
-                        label={leadTemperature}>
-                    </lightning-pill>
-
-                    <lightning-pill
-                        label="AI Generated">
-                    </lightning-pill>
-
-                </div>
-
-            </template>
-
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-
-            <div class="confidence">
-
-                <div class="score-header">
-
-                    <span>
-                        Lead Qualification Score
-                    </span>
-
-                    <span>
-                        {confidence}/100
-                    </span>
-
-                </div>
-
-                <lightning-progress-bar
-                    value={confidence}>
-                </lightning-progress-bar>
-
-            </div>
-
-            <div class="timestamp">
-                Updated just now
-            </div>
-
-        </div>
 
     </lightning-card>
 </template>

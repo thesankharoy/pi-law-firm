@@ -1,256 +1,181 @@
-/* =========================
-   DASHBOARD LAYOUT
-========================= */
+/* ===================================
+   HOST
+=================================== */
 
-.dashboard-grid {
+:host {
+    display: block;
+    background: #f4f6f9;
+    padding: 16px;
+
+    --slds-c-table-color-background-header: #f3f2f2;
+    --slds-c-table-heading-color: #444;
+    --slds-c-table-cell-color-border: #d8dde6;
+    --slds-c-table-row-color-background-hover: #fafaf9;
+}
+
+/* ===================================
+   KPI SECTION
+=================================== */
+
+.summary-container {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-    margin-bottom: 24px;
+
+    background: #ffffff;
+    border: 1px solid #d8dde6;
+
+    margin-bottom: 20px;
 }
 
-/* =========================
-   KPI CARDS
-========================= */
-
-.metric-card {
-    position: relative;
-    overflow: hidden;
-
-    padding: 26px;
-    border-radius: 24px;
-
-    color: #fff;
+.summary-box {
+    padding: 18px;
     text-align: center;
 
-    backdrop-filter: blur(12px);
-
-    box-shadow:
-        0 8px 25px rgba(15, 23, 42, 0.12),
-        0 4px 10px rgba(15, 23, 42, 0.08);
-
-    transition: all 0.35s ease;
-
-    animation: cardFadeIn 0.6s ease;
+    border-right: 1px solid #d8dde6;
 }
 
-/* Top Shine Effect */
-
-.metric-card::before {
-    content: '';
-
-    position: absolute;
-    top: -50%;
-    left: -120%;
-
-    width: 60%;
-    height: 220%;
-
-    background: rgba(255,255,255,0.15);
-
-    transform: rotate(25deg);
-
-    transition: all .8s ease;
+.summary-box:last-child {
+    border-right: none;
 }
 
-.metric-card:hover::before {
-    left: 150%;
-}
-
-/* Hover Effect */
-
-.metric-card:hover {
-    transform:
-        translateY(-8px)
-        scale(1.03);
-
-    box-shadow:
-        0 20px 40px rgba(0,0,0,0.18);
-}
-
-/* =========================
-   ICON
-========================= */
-
-.metric-card lightning-icon {
-    --slds-c-icon-color-foreground-default: white;
-
-    transform: scale(1.15);
-
-    margin-bottom: 10px;
-}
-
-/* =========================
-   VALUE
-========================= */
-
-.metric-value {
-    font-size: 2.4rem;
-    font-weight: 800;
-    letter-spacing: -.5px;
-
-    margin-top: 8px;
-    text-shadow:
-        0 2px 8px rgba(0,0,0,.15);
-}
-
-/* =========================
-   TITLE
-========================= */
-
-.metric-title {
-    margin-top: 8px;
-
-    font-size: .85rem;
-    font-weight: 600;
-
+.summary-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #706e6b;
+    letter-spacing: .5px;
     text-transform: uppercase;
-    letter-spacing: 1px;
-
-    opacity: .95;
 }
 
-/* =========================
-   STATUS CARD
-========================= */
+.summary-value {
+    margin-top: 10px;
 
-.status {
-    background:
-        linear-gradient(
-            135deg,
-            #4facfe 0%,
-            #00f2fe 100%
-        );
+    font-size: 34px;
+    font-weight: 700;
+    color: #080707;
 }
 
-/* =========================
-   OWNER CARD
-========================= */
-
-.owner {
-    background:
-        linear-gradient(
-            135deg,
-            #43e97b 0%,
-            #38f9d7 100%
-        );
+.total-link {
+    color: #0176d3;
+    cursor: pointer;
 }
 
-/* =========================
-   SOURCE CARD
-========================= */
+/* ===================================
+   AUDIT CARD
+=================================== */
 
-.source {
-    background:
-        linear-gradient(
-            135deg,
-            #f6d365 0%,
-            #fda085 100%
-        );
-}
-
-/* =========================
-   TOTAL CARD
-========================= */
-
-.total {
-    background:
-        linear-gradient(
-            135deg,
-            #a18cd1 0%,
-            #fbc2eb 100%
-        );
-}
-
-/* =========================
-   TABLE SECTION
-========================= */
-
-.table-container {
+.audit-card {
     background: #fff;
-
-    padding: 18px;
-
-    border-radius: 22px;
-
-    box-shadow:
-        0 8px 30px rgba(15,23,42,.08);
-
+    border: 1px solid #d8dde6;
+    border-radius: 4px;
     overflow: hidden;
 }
 
-lightning-datatable {
-    border-radius: 16px;
+/* ===================================
+   HEADER
+=================================== */
+
+.audit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 12px 16px;
+
+    background: #fafaf9;
+    border-bottom: 1px solid #d8dde6;
 }
 
-/* =========================
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #032d60;
+}
+
+.header-right {
+    font-size: 13px;
+    color: #706e6b;
+}
+
+/* ===================================
+   TABLE
+=================================== */
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    background: white;
+}
+
+/* Remove all extra spacing */
+
+.table-wrapper lightning-datatable {
+    width: 100%;
+}
+
+/* ===================================
    PAGINATION
-========================= */
+=================================== */
 
 .pagination {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 24px;
 
-    margin-top: 10px;
-    padding: 18px;
+    padding: 12px 16px;
 
-    background: linear-gradient(
-        180deg,
-        #ffffff,
-        #f8fafc
-    );
-
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid #d8dde6;
+    background: #ffffff;
 }
 
 .page-info {
-    font-size: 14px;
-    font-weight: 700;
-    color: #334155;
+    font-size: 13px;
+    color: #444;
 }
 
-/* =========================
-   ANIMATIONS
-========================= */
-
-@keyframes cardFadeIn {
-
-    from {
-        opacity: 0;
-        transform:
-            translateY(25px)
-            scale(.95);
-    }
-
-    to {
-        opacity: 1;
-        transform:
-            translateY(0)
-            scale(1);
-    }
+.button-group {
+    display: flex;
+    gap: 8px;
 }
 
-/* =========================
+/* ===================================
    RESPONSIVE
-========================= */
+=================================== */
 
-@media (max-width: 1200px) {
+@media (max-width: 900px) {
 
-    .dashboard-grid {
-        grid-template-columns:
-            repeat(2, 1fr);
+    .summary-container {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
 
-    .dashboard-grid {
+    .summary-container {
         grid-template-columns: 1fr;
     }
 
-    .metric-value {
-        font-size: 2rem;
+    .summary-box {
+        border-right: none;
+        border-bottom: 1px solid #d8dde6;
     }
+
+    .pagination {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+.old-value-orange {
+    color: #ff8c00 !important;
+    font-weight: 600;
+}
+
+.new-value-green {
+    color: #2e844a !important;
+    font-weight: 600;
 }

@@ -1,0 +1,98 @@
+<template>
+    <lightning-card>
+            <!-- Custom Header -->
+    <div class="card-header">
+        <span class="icon">📵</span>
+        <span class="title">Missed Call Dashboard</span>
+    </div>
+
+      <div class="topSection">
+
+    <!-- KPI Card -->
+    <div class="metric-card blue">
+
+        <div class="metric-number">
+            {dashboard.missedCalls}
+        </div>
+
+        <div class="metric-label">
+            Missed Calls
+        </div>
+
+    </div>
+
+    <!-- Filter Card -->
+    <div class="filterCard">
+
+        <lightning-combobox
+            label="Date Range"
+            value={selectedFilter}
+            options={filterOptions}
+            onchange={handleFilterChange}>
+        </lightning-combobox>
+
+    </div>
+
+</div>
+
+
+<!-- Table -->
+<div class="tableSection">
+
+    <table class="modern-table">
+
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>Disposition</th>
+                <th>Incoming Time</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <template for:each={pagedMissedCalls} for:item="item">
+                <tr key={item.Id}>
+                    <td>{item.Subject}</td>
+                    <td>{item.CallDisposition}</td>
+                    <td>{item.Incoming_Time__c}</td>
+                </tr>
+            </template>
+
+            <template if:false={pagedMissedCalls.length}>
+                <tr>
+                    <td colspan="3" class="noData">
+                        No missed calls found.
+                    </td>
+                </tr>
+            </template>
+        </tbody>
+
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination">
+
+        <lightning-button
+            label="Previous"
+            onclick={handlePrevious}
+            disabled={disablePrevious}>
+        </lightning-button>
+
+        <span class="pageInfo">
+            Page {currentPage} of {totalPages}
+        </span>
+
+        <lightning-button
+            label="Next"
+            onclick={handleNext}
+            disabled={disableNext}>
+        </lightning-button>
+
+    </div>
+
+</div>
+        </div>
+
+    </lightning-card>
+
+</template>

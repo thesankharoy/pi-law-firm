@@ -2,76 +2,69 @@
 
     <div class="analytics-grid">
 
-        <!-- Where Intake Are Lost -->
-        <lightning-card title="Where Intake Are Lost">
+        <!-- Where Intakes Are Lost -->
+        <lightning-card>
+            <div class="card-header">
+                <span class="icon">🚧</span>
+                <span class="title">Where Intakes Are Lost</span>
+            </div>
 
             <div class="container">
+
+                <div class="section-header">
+                    STAGE DROP-OFF & VOLUME
+                </div>
 
                 <template for:each={leakageData} for:item="item">
 
                     <div key={item.stageName} class="row">
 
-                        <div
-                            class="stage-box"
-                            style={item.widthStyle}>
-
-                            <span class="stage-name">
-                                {item.stageName}
-                            </span>
-
-                            <span class="stage-count">
-                                {item.count}
-                            </span>
-
+                        <!-- Stage Name -->
+                        <div class="stage-label">
+                            {item.stageName}
                         </div>
 
-                        <div class="dropoff">
-
-                            <span class="red">
-                                {item.dropOff}
-                                ({item.dropOffPercent}%)
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                </template>
-
-            </div>
-
-        </lightning-card>
-
-        <!-- Response Time -->
-        <lightning-card title="Response Time by Intake Source">
-
-            <div class="response-container">
-
-                <template for:each={responseData} for:item="item">
-
-                    <div key={item.source} class="response-row">
-
-                        <div class="response-label">
-
-                            <span class="source">
-                                {item.source}
-                            </span>
-
-                            <span class="time">
-                                {item.avgResponseTime} min
-                            </span>
-
-                        </div>
-
-                        <div class="bar-container">
+                        <!-- Track -->
+                        <div class="track">
 
                             <div
-                                class="bar"
+                                class={item.stageClass}
                                 style={item.widthStyle}>
+
+                                <span class="count">
+                                    {item.count}
+                                </span>
+
                             </div>
 
                         </div>
 
+                        <!-- Drop Off -->
+                        <div class="dropoff">
+
+                            <template if:true={item.dropOff}>
+
+                                <span class={item.dropClass}>
+                                    ↓{item.dropOff}
+
+                                    <template if:true={item.dropOffPercent}>
+                                        ({item.dropOffPercent}%)
+                                    </template>
+
+                                </span>
+
+                            </template>
+
+                            <template if:false={item.dropOff}>
+
+                                <span class="neutral">
+                                    —
+                                </span>
+
+                            </template>
+
+                        </div>
+
                     </div>
 
                 </template>
@@ -79,6 +72,52 @@
             </div>
 
         </lightning-card>
+
+        <!-- First Response Time -->
+       <lightning-card>
+        <div class="card-header">
+            <span class="icon">⚡</span>
+            <span class="title">First Response Time by Source</span>
+        </div>
+
+    <div class="response-container">
+
+        <template
+            for:each={responseData}
+            for:item="item">
+
+            <div
+                key={item.source}
+                class="response-row">
+
+                <div class="response-header">
+
+                    <span class="source">
+                        {item.source}
+                    </span>
+
+                    <span class="time">
+                        {item.avgResponseTime}
+                    </span>
+
+                </div>
+
+                <div class="bar-container">
+
+                    <div
+                        class={item.responseClass}
+                        style={item.widthStyle}>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </template>
+
+    </div>
+
+</lightning-card>
 
     </div>
 

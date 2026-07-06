@@ -1,4 +1,4 @@
-public class RetainerAgreementController {
+public without sharing class RetainerAgreementController {
     // ── Firm (from Salesforce Organization object) ─────────────────
     public String firmName { get; private set; }
     public String firmAddress { get; private set; }

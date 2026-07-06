@@ -1,269 +1,210 @@
+.dashboard-header {
+    background: #ffffff;
+    border: 1px solid #d8dde6;
+    border-bottom: none;
+    border-radius: 0.5rem 0.5rem 0 0;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #16325c;
+}
+
+.header-icon {
+    font-size: 20px;
+}
+
+/* Join the header with the card */
+
+lightning-card {
+    display: block;
+}
+
+lightning-card .slds-card {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
 .table-container {
-
-    padding: 20px;
-
+    padding: 0;
     overflow-x: auto;
-
-    background:
-        linear-gradient(
-            135deg,
-            #f8fafc,
-            #eef2ff
-        );
 }
 
 .modern-table {
-
     width: 100%;
-
-    border-collapse: separate;
-
-    border-spacing: 0 12px;
+    border-collapse: collapse;
+    font-size: 13px;
 }
 
 /* Header */
 
 thead th {
-
-    background:
-        linear-gradient(
-            90deg,
-            #1e40af,
-            #2563eb
-        );
-
-    color: white;
-
-    padding: 14px;
-
-    text-align: left;
-
-    font-size: 13px;
-
+    background: #fafafa;
+    color: #5f6773;
+    text-transform: uppercase;
+    font-size: 11px;
     font-weight: 700;
-}
-
-/* Rows */
-
-tbody tr {
-
-    background: white;
-
-    box-shadow:
-        0 5px 18px
-        rgba(15,23,42,.08);
-
-    transition: all .3s ease;
-
-    animation:
-        slideUp .5s ease;
-}
-
-tbody tr:hover {
-
-    transform:
-        translateY(-4px);
-
-    box-shadow:
-        0 12px 30px
-        rgba(15,23,42,.15);
+    letter-spacing: .4px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 tbody td {
-
-    padding: 16px;
-
-    color: #334155;
-
-    font-weight: 500;
+    padding: 12px 14px;
+    border-bottom: 1px solid #f1f3f5;
+    color: #1f2937;
+    vertical-align: middle;
 }
 
-/* Rep */
-
-.rep-info {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 8px;
-
-    font-weight: 600;
+tbody tr:hover {
+    background: #fafbfc;
 }
 
 /* Rank */
 
 .rank {
+    width: 40px;
+    font-size: 18px;
+}
 
-    font-size: 20px;
+/* Specialist */
+
+.rep-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #c9a227;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.rep-name {
+    font-size: 13px;
+    font-weight: 500;
 }
 
 /* Progress */
 
 .progress-wrapper {
-
     display: flex;
-
     align-items: center;
-
-    gap: 12px;
+    gap: 6px;
 }
 
 .progress-track {
-
-    width: 140px;
-
-    height: 12px;
-
-    background: #e2e8f0;
-
-    border-radius: 999px;
-
+    width: 70px;
+    height: 5px;
+    background: #e5e5e5;
+    border-radius: 20px;
     overflow: hidden;
 }
 
 .progress-bar {
-
     height: 100%;
-
-    border-radius: 999px;
-
-    animation:
-        growBar 1s ease;
+    border-radius: 20px;
 }
 
-/* Colors */
+/* Bar Colors */
 
 .green-bar {
-
-    background:
-        linear-gradient(
-            90deg,
-            #22c55e,
-            #16a34a
-        );
-}
-
-.blue-bar {
-
-    background:
-        linear-gradient(
-            90deg,
-            #3b82f6,
-            #2563eb
-        );
-}
-
-.orange-bar {
-
-    background:
-        linear-gradient(
-            90deg,
-            #fb923c,
-            #ea580c
-        );
+    background: #2e8b57;
 }
 
 .red-bar {
+    background: #c8102e;
+}
 
-    background:
-        linear-gradient(
-            90deg,
-            #ef4444,
-            #dc2626
-        );
+.orange-bar {
+    background: #f59e0b;
+}
+
+.blue-bar {
+    background: #2563eb;
 }
 
 /* Percentage */
 
-.percent {
-
+.percent-green {
+    color: #15803d;
     font-weight: 700;
-
-    min-width: 45px;
 }
 
-/* Status Badge */
+.percent-red {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.percent-orange {
+    color: #ea580c;
+    font-weight: 700;
+}
+
+.percent-blue {
+    color: #2563eb;
+    font-weight: 700;
+}
+
+/* Status */
 
 .badge {
-
-    padding: 6px 12px;
-
-    border-radius: 999px;
-
-    font-size: 12px;
-
-    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-block;
 }
 
 .green {
-
-    background: #dcfce7;
-
+    background: #e8f7ee;
     color: #15803d;
 }
 
-.blue {
-
-    background: #dbeafe;
-
-    color: #1d4ed8;
+.red {
+    background: #fdecec;
+    color: #c81e1e;
 }
 
 .orange {
-
-    background: #ffedd5;
-
-    color: #ea580c;
+    background: #fff4e5;
+    color: #d97706;
 }
 
-.red {
-
-    background: #fee2e2;
-
-    color: #dc2626;
-}
-
-/* Animation */
-
-@keyframes growBar {
-
-    from {
-
-        width: 0;
-    }
-}
-
-@keyframes slideUp {
-
-    from {
-
-        opacity: 0;
-
-        transform:
-            translateY(15px);
-    }
-
-    to {
-
-        opacity: 1;
-
-        transform:
-            translateY(0);
-    }
+.blue {
+    background: #e8f0fe;
+    color: #2563eb;
 }
 
 /* Mobile */
 
-@media(max-width:768px){
+@media (max-width:768px) {
 
     .modern-table {
+        min-width: 720px;
+    }
 
-        font-size: 12px;
+    thead th,
+    tbody td {
+        padding: 10px;
     }
 
     .progress-track {
-
-        width: 80px;
+        width: 60px;
     }
 }

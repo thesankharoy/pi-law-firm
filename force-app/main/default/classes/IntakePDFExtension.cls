@@ -36,7 +36,7 @@ public class IntakePDFExtension {
         this.intake = [
             SELECT
                 Id, Name,                                    // {!retainerRefNumber}
-                
+
                 // Client — {!clientFullName}, {!clientPhone}, {!clientEmail}
                 Client__c,
                 Client__r.Name, Client__r.Email, Client__r.Phone,
@@ -210,10 +210,14 @@ public class IntakePDFExtension {
     @InvocableMethod(label='Create Intake PDF & Send Email')
     public static void saveIntakePdfAndSendEmail(List<String> intakeIds) {
 
-        String intakeId;
-        for (String s : intakeIds) { intakeId = s; }
+        String intakeIdParam;
+        for (String s : intakeIds) {
+            intakeIdParam = s;
+        }
 
         try {
+            // Re-query fresh, matching QuotePDFExtension's pattern of pulling a
+            // clean record inside the invocable rather than trusting the caller's data.
             Intake__c intake = [
                 SELECT
                     Id, Name, Status__c,
@@ -221,7 +225,7 @@ public class IntakePDFExtension {
                     Incident_Type__c,
                     Incident_Location__City__s, Incident_Location__StateCode__s
                 FROM Intake__c
-                WHERE Id = :intakeId
+                WHERE Id = :intakeIdParam
                 LIMIT 1
             ];
 
@@ -229,24 +233,27 @@ public class IntakePDFExtension {
                 throw new AuraHandledException('Intake not linked to contact!');
             }
 
-            List<Contact> conList = [
-                SELECT Id, Name, Email
+            Contact con = [
+                SELECT Id, Name, Email, AccountId
                 FROM Contact
                 WHERE Id = :intake.Client__c
                 LIMIT 1
             ];
 
-            if (conList.isEmpty()) {
-                throw new AuraHandledException('Could not find Contact record!');
-            }
-
-            Contact con = conList[0];
-
             if (String.isBlank(con.Email)) {
                 throw new AuraHandledException('Contact Email is blank!');
             }
 
-            // Build PDF
+            // Build location string
+            String locationStr = '';
+            if (String.isNotBlank(intake.Incident_Location__City__s)) {
+                locationStr += intake.Incident_Location__City__s;
+            }
+            if (String.isNotBlank(intake.Incident_Location__StateCode__s)) {
+                locationStr += (locationStr != '' ? ', ' : '') + intake.Incident_Location__StateCode__s;
+            }
+
+            // Render the VF page as PDF
             PageReference pdfPage = Page.RetainerAgreement;
             pdfPage.getParameters().put('id', intake.Id);
             Blob pdfBlob;
@@ -266,16 +273,10 @@ public class IntakePDFExtension {
             );
             insert cv;
 
-            // Build location string
-            String locationStr = '';
-            if (String.isNotBlank(intake.Incident_Location__City__s))
-                locationStr += intake.Incident_Location__City__s;
-            if (String.isNotBlank(intake.Incident_Location__StateCode__s))
-                locationStr += (locationStr != '' ? ', ' : '') + intake.Incident_Location__StateCode__s;
-
-            String baseUrl    = System.Label.Intake_Status_Update_URL;
-            String approveUrl = baseUrl + intake.Id + '&varIntakeStatus=Retainer%20Agreement%20Signed';
-            String rejectUrl  = baseUrl + intake.Id + '&varIntakeStatus=Turned%20Down';
+            // Build Approve / Reject links (no Review link — not used in this flow)
+            String baseUrl   = System.Label.Intake_Status_Update_URL;
+            String approveUrl = baseUrl + intake.Id + '&varIntakeStatus=Retainer Agreement Signed';
+            String rejectUrl  = baseUrl + intake.Id + '&varIntakeStatus=Turned Down';
 
             // Email body
             String emailBody =
@@ -319,8 +320,13 @@ public class IntakePDFExtension {
                 new Messaging.SingleEmailMessage[]{ email }
             );
 
+            // Only flip status after a confirmed send — mirrors QuotePDFExtension's
+            // "update the parent record's stage only inside the success branch" pattern.
             if (results != null && results[0].isSuccess()) {
-                System.debug('Email sent to: ' + con.Email);
+                System.debug('Success: Email sent successfully to: ' + con.Email);
+
+                intake.Status__c = 'Retainer Agreement Sent';
+                update intake;
             } else {
                 for (Messaging.SendEmailError err : results[0].getErrors()) {
                     System.debug('Email Error: ' + err.getMessage() + ' | Status: ' + err.getStatusCode());

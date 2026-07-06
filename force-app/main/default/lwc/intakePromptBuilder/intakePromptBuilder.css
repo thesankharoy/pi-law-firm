@@ -1,0 +1,240 @@
+:host {
+    --brand:        #4f46e5;
+    --brand-dark:   #16325c;
+    --amber:        #dd7a01;
+    --amber-bg:     #fff8ee;
+    --amber-border: #f2c987;
+    --green:        #2e844a;
+    --green-bg:     #f2f9f4;
+    --ink:          #181818;
+    --muted:        #5c5c6b;
+    --line:         #e5e5ea;
+    display: block;
+}
+
+.intake-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 4px 14px rgba(16, 24, 40, .05);
+    font-family: 'Salesforce Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: linear-gradient(180deg, #fbfbfd 0%, #f5f6fa 100%);
+    border-bottom: 1px solid var(--line);
+}
+
+.title-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--brand) 0%, #6366f1 100%);
+    box-shadow: 0 2px 6px rgba(79, 70, 229, .35);
+}
+
+.title-text h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--brand-dark);
+    line-height: 1.2;
+}
+
+.subtitle {
+    margin: 2px 0 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+}
+
+/* ── Refresh button ─────────────────────────────────── */
+.refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #3b3b47;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+
+.refresh-btn:hover {
+    background: #f4f4f8;
+    border-color: #d0d0d8;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+}
+
+.refresh-btn:active { transform: translateY(1px); }
+.refresh-btn lightning-icon { --slds-c-icon-color-foreground-default: #5c5c6b; }
+
+/* ── Progress bar ───────────────────────────────────── */
+.progress-track {
+    height: 4px;
+    background: #ececf1;
+    width: 100%;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green) 0%, #45a163 100%);
+    border-radius: 0 3px 3px 0;
+    transition: width .5s cubic-bezier(.4, 0, .2, 1);
+}
+
+/* ── Content ────────────────────────────────────────── */
+.content-area { padding: 16px 20px 18px; }
+
+.state-block {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 90px;
+    position: relative;
+}
+
+/* ── Section labels ─────────────────────────────────── */
+.section-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin: 4px 0 10px;
+}
+
+.section-label.attention { color: var(--amber); }
+.section-label.attention lightning-icon { --slds-c-icon-color-foreground-default: var(--amber); }
+
+.section-label.captured {
+    color: var(--green);
+    margin-top: 18px;
+}
+.section-label.captured lightning-icon { --slds-c-icon-color-foreground-default: var(--green); }
+
+/* ── Action cards (missing) ─────────────────────────── */
+.action-card {
+    position: relative;
+    background: var(--amber-bg);
+    border: 1px solid var(--amber-border);
+    border-left: 4px solid var(--amber);
+    border-radius: 8px;
+    padding: 11px 14px;
+    margin-bottom: 8px;
+    transition: box-shadow .15s ease, transform .15s ease;
+}
+
+.action-card:hover {
+    box-shadow: 0 3px 10px rgba(221, 122, 1, .15);
+    transform: translateX(1px);
+}
+
+.action-label {
+    margin: 0 0 3px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #8a4b00;
+}
+
+.action-question {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #6b5330;
+}
+
+/* ── Captured grid ──────────────────────────────────── */
+.captured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 6px 16px;
+}
+
+.captured-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #35353f;
+}
+
+.captured-row lightning-icon { --slds-c-icon-color-foreground-default: var(--green); }
+
+/* ── All done ───────────────────────────────────────── */
+.all-done {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--green-bg);
+    border: 1px solid #bfe3c9;
+    border-radius: 10px;
+    padding: 16px 18px;
+}
+
+.all-done lightning-icon { --slds-c-icon-color-foreground-default: var(--green); }
+
+.all-done-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1c4f2a;
+}
+
+.all-done-sub {
+    margin: 2px 0 0;
+    font-size: 12.5px;
+    color: #3f6b4b;
+}
+
+/* ── Error ──────────────────────────────────────────── */
+.error-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fef1ee;
+    border: 1px solid #f3b9b0;
+    border-left: 4px solid #ba0517;
+    border-radius: 8px;
+    padding: 11px 14px;
+    color: #8e0a17;
+    font-size: 13px;
+    font-weight: 500;
+}
+.error-banner lightning-icon { --slds-c-icon-color-foreground-default: #ba0517; }
+
+/* ── Footer note ────────────────────────────────────── */
+.footer-note {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+    font-size: 11.5px;
+    color: var(--muted);
+}
+.footer-note lightning-icon { --slds-c-icon-color-foreground-default: #a0a0aa; }

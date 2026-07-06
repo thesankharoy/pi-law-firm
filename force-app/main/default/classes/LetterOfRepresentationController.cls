@@ -1,4 +1,4 @@
-public with sharing class LetterOfRepresentationController {
+public without sharing class LetterOfRepresentationController {
 
     public IntakeDocumentDataService.IntakeDocPacket packet { get; private set; }
 

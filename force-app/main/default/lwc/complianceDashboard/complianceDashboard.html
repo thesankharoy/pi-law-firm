@@ -1,0 +1,66 @@
+<template>
+
+    <lightning-card
+        title="AI Compliance Risk Flagging"
+        icon-name="utility:warning">
+
+        <div class="kpi-grid">
+
+            <div class="kpi">
+                <div class="value">{totalCalls}</div>
+                <div class="label">Total Calls</div>
+            </div>
+
+            <div class="kpi">
+                <div class="value">{flaggedCalls}</div>
+                <div class="label">Flagged Calls</div>
+            </div>
+
+            <div class="kpi">
+                <div class="value">{avgRiskScore}</div>
+                <div class="label">Avg Risk Score</div>
+            </div>
+
+        </div>
+
+        <div class="section">
+
+            <h3>Risk Distribution</h3>
+
+            <template for:each={riskLevelList} for:item="risk">
+
+                <div
+                    key={risk.name}
+                    class="row">
+
+                    <span>{risk.name}</span>
+                   <!-- <span>{risk.count}</span>-->
+
+                </div>
+
+            </template>
+
+        </div>
+
+        <div class="section">
+
+            <h3>Issue Types</h3>
+
+            <template for:each={issueTypeList} for:item="issue">
+
+                <div
+                    key={issue.name}
+                    class="row">
+
+                    <span>{issue.name}</span>
+                  <!--  <span>{issue.count}</span>-->
+
+                </div>
+
+            </template>
+
+        </div>
+
+    </lightning-card>
+
+</template>

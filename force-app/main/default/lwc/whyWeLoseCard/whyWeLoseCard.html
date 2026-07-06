@@ -1,0 +1,65 @@
+<template>
+    <lightning-card icon-name="utility:filter" title="Why we lose">
+        <div class="slds-p-horizontal_medium slds-p-bottom_small">
+
+            <template lwc:if={loading}>
+                <div class="slds-is-relative slds-p-vertical_large">
+                    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                </div>
+            </template>
+
+            <template lwc:if={summary}>
+                <template lwc:if={hasData}>
+                    <p class="window slds-text-color_weak slds-m-bottom_x-small">Last {lookbackDays} days</p>
+
+                    <div class="slds-grid slds-gutters_x-small slds-m-bottom_small">
+                        <div class="slds-col slds-size_1-of-3">
+                            <div class="tile"><p class="lbl">Total losses</p><p class="num">{total}</p></div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <div class="tile"><p class="lbl">Fixable</p><p class="num num-fix">{processPct}</p></div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <div class="tile"><p class="lbl">Process losses</p><p class="num">{processCount}</p></div>
+                        </div>
+                    </div>
+
+                    <p class="section">By fault</p>
+                    <template for:each={faultRows} for:item="f">
+                        <div key={f.label} class="bar-row">
+                            <div class="bar-head">
+                                <span class="bar-label">{f.label}</span>
+                                <span class="bar-count">{f.countLabel}</span>
+                            </div>
+                            <div class="bar-track"><div class="bar-fill" style={f.barStyle}></div></div>
+                        </div>
+                    </template>
+
+                    <p class="section slds-m-top_small">Top reasons</p>
+                    <template for:each={reasonRows} for:item="r">
+                        <div key={r.label} class="kv">
+                            <span class="k">{r.label}</span><span class="v">{r.count}</span>
+                        </div>
+                    </template>
+
+                    <p class="section slds-m-top_small">Top objections</p>
+                    <template for:each={objectionRows} for:item="o">
+                        <div key={o.label} class="kv">
+                            <span class="k">{o.label}</span><span class="v">{o.count}</span>
+                        </div>
+                    </template>
+                </template>
+
+                <template lwc:else>
+                    <div class="slds-text-align_center slds-p-vertical_large slds-text-color_weak">
+                        No losses analyzed in the last {lookbackDays} days.
+                    </div>
+                </template>
+            </template>
+
+            <template lwc:if={error}>
+                <div class="slds-text-color_error slds-p-vertical_medium">Couldn&rsquo;t load loss data.</div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

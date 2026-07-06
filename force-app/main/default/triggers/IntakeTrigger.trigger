@@ -20,13 +20,14 @@ trigger IntakeTrigger on Intake__c(before insert, before update, after insert, a
             IntakeAssignmentEngine.assignIntakes(newIntakes);
             // 2. Set Status based on who owns it after assignment
             IntakeLifecycleService.setInitialState(newIntakes);
-            IntakeSpamFilterService.evaluate(Trigger.new);
+            IntakeSpamFilterService.evaluate(newIntakes);
         }
     }
 
     // ── BEFORE UPDATE ────────────────────────────────────────────────────────
     if (Trigger.isBefore && Trigger.isUpdate) {
         IntakeLifecycleService.manageLifecycle(Trigger.new, Trigger.oldMap);
+        IntakeTriggerHandler.flagOnSigning(Trigger.new, Trigger.oldMap);
     }
 
     // ── AFTER INSERT ─────────────────────────────────────────────────────────

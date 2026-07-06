@@ -1,58 +1,92 @@
 <template>
     <div class="dashboard-container">
 
+       <div class="dashboard-header">
+    <h2 class="dashboard-title">Intake Dashboard</h2>
+
+    <div class="dashboard-controls">
+
+        <div class="overall-rate">
+            <div class="rate-label">
+                Overall Conversion
+            </div>
+
+            <div class="rate-value">
+                {overallConversionRate}%
+            </div>
+        </div>
+
+        <div class="filter-panel">
+
+            <lightning-combobox
+                class="filter-combobox"
+                label="Date Filter"
+                value={selectedDateFilter}
+                options={dateFilterOptions}
+                onchange={handleDateFilterChange}>
+            </lightning-combobox>
+
+            <template lwc:if={showCustomRange}>
+
+                <lightning-input
+                    type="date"
+                    label="Start Date"
+                    value={customStartDate}
+                    onchange={handleStartDateChange}>
+                </lightning-input>
+
+                <lightning-input
+                    type="date"
+                    label="End Date"
+                    value={customEndDate}
+                    onchange={handleEndDateChange}>
+                </lightning-input>
+
+                <lightning-button
+                    label="Apply"
+                    variant="brand"
+                    onclick={handleApplyCustom}>
+                </lightning-button>
+
+            </template>
+
+        </div>
+
+    </div>
+</div>
+
         <div class="dashboard-grid">
 
             <!-- Intake Entered -->
-            <div class="metric-card">
-                <div class="icon-wrapper">
-                    <lightning-icon icon-name="standard:lead" size="large">
-                    </lightning-icon>
+            <div class="metric-card intake-card">
+                <div class="card-top">
+                    <div class="metric-title">INTAKE ENTERED</div>
+                    <lightning-icon icon-name="standard:lead" size="small"></lightning-icon>
                 </div>
-
-                <div class="metric-content">
-                    <div class="metric-title">Intake Entered</div>
-                    <div class="metric-value">{totalLeads}</div>
-                    <div class="metric-subtitle">
-                        Total Intake entered into the firm
-                    </div>
-                </div>
+                <div class="metric-value">{totalLeads}</div>
+                <div class="metric-subtitle">Total intakes this period</div>
             </div>
 
             <!-- Signed Clients -->
-            <div class="metric-card">
-                <div class="icon-wrapper signed-icon">
-                    <lightning-icon icon-name="standard:people" size="large">
-                    </lightning-icon>
+            <div class="metric-card signed-card">
+                <div class="card-top">
+                    <div class="metric-title">SIGNED CLIENTS</div>
+                    <lightning-icon icon-name="utility:success" size="small"></lightning-icon>
                 </div>
-
-                <div class="metric-content">
-                    <div class="metric-title">Signed Clients</div>
-                    <div class="metric-value">{signedClients}</div>
-                    <div class="metric-subtitle">
-                        Retainer Agreement Signed
-                    </div>
-                </div>
+                <div class="metric-value">{signedClients}</div>
+                <div class="metric-subtitle">Retainer agreement signed</div>
             </div>
 
             <!-- Conversion Rate -->
-            <div class="metric-card">
-                <div class="icon-wrapper conversion-icon">
-                    <lightning-icon icon-name="utility:chart" size="large">
-                    </lightning-icon>
+            <div class="metric-card conversion-card">
+                <div class="card-top">
+                    <div class="metric-title">CONVERSION RATE</div>
+                    <lightning-icon icon-name="utility:chart" size="small"></lightning-icon>
                 </div>
-
-                <div class="metric-content">
-                    <div class="metric-title">Overall Conversion Rate</div>
-                    <div class="metric-value">{conversionRate}%</div>
-                    <div class="metric-subtitle">
-                        Converted Intakes
-                    </div>
-                </div>
+                <div class="metric-value">{conversionRate}%</div>
+                <div class="metric-subtitle">Intake → signed rate</div>
             </div>
 
         </div>
     </div>
-
-      
 </template>

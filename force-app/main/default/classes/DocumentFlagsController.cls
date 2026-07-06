@@ -1,24 +1,3 @@
-/**
- * DocumentFlagsController
- *
- * @AuraEnabled façade for the intakeDocumentFlags LWC.
- *
- * Logic:
- *   Every intake requires ALL Document_Type__c picklist values — no
- *   incident-type bucketing. The required list is derived at runtime
- *   from Schema.Document__c.Document_Type__c so it automatically
- *   picks up any new values added to the picklist without a code change.
- *
- *   Present = Document__c records on this intake with
- *             Status__c IN ('Active', 'Generated').
- *   Missing = required picklist values with no matching present record.
- *
- * Priority rules (applied after dynamic picklist load):
- *   HIGH   — core legal/medical docs that block case progression.
- *   MEDIUM — supporting docs needed before settlement.
- *   LOW    — everything else (court filings, discovery, etc.).
- *   These are overrides; any doc not in the override map defaults to LOW.
- */
 public with sharing class DocumentFlagsController {
 
     // ─── Public DTOs ─────────────────────────────────────────────────────────

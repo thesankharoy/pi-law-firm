@@ -8,62 +8,98 @@ public with sharing class RetainerAnalyticsController {
         @AuraEnabled public Decimal avgDaysToSign;
     }
 
-    @AuraEnabled(cacheable=true)
-    public static RetainerAnalyticsDTO getAnalytics() {
+   @AuraEnabled(cacheable=true)
+public static RetainerAnalyticsDTO getAnalytics(String filterType) {
 
-        RetainerAnalyticsDTO dto = new RetainerAnalyticsDTO();
+    RetainerAnalyticsDTO dto = new RetainerAnalyticsDTO();
 
-        // ✅ Correct COUNT queries
-        dto.sentCount = (Integer)[
-            SELECT COUNT()
-            FROM Intake__c
-            WHERE Status__c = 'Retainer Agreement Sent'
-        ];
+    String dateFilter = '';
 
-        dto.openCount = (Integer)[
-            SELECT COUNT()
-            FROM Intake__c
-            WHERE Status__c = 'Assigned'
-        ];
+    switch on filterType {
 
-        dto.signedCount = (Integer)[
-            SELECT COUNT()
-            FROM Intake__c
-            WHERE Status__c = 'Retainer Agreement Signed'
-        ];
-
-        // Conversion rate
-        dto.conversionRate = (dto.sentCount > 0)
-            ? (Decimal.valueOf(dto.signedCount) / Decimal.valueOf(dto.sentCount)) * 100
-            : 0;
-
-        // ✅ FIX: Only signed records + proper fields
-        List<Intake__c> signedIntakes = [
-            SELECT Retainer_Agreement_Sent_Entered_At__c,
-                   Retainer_Agreement_Signed_Entered_At__c
-            FROM Intake__c
-            WHERE Status__c = 'Retainer Agreement Signed'
-            AND Retainer_Agreement_Sent_Entered_At__c != null
-            AND Retainer_Agreement_Signed_Entered_At__c != null
-        ];
-
-        Decimal totalDays = 0;
-
-        for (Intake__c i : signedIntakes) {
-
-            Long diffMs =
-                i.Retainer_Agreement_Signed_Entered_At__c.getTime()
-                - i.Retainer_Agreement_Sent_Entered_At__c.getTime();
-
-            Decimal days = diffMs / (1000 * 60 * 60 * 24);
-
-            totalDays += days;
+        when 'TODAY' {
+            dateFilter = ' CreatedDate = TODAY';
         }
-
-        dto.avgDaysToSign = (signedIntakes.size() > 0)
-            ? totalDays / signedIntakes.size()
-            : 0;
-
-        return dto;
+        when 'YESTERDAY' {
+            dateFilter = ' CreatedDate = YESTERDAY';
+        }
+        when 'LAST_7_DAYS' {
+            dateFilter = ' CreatedDate = LAST_N_DAYS:7';
+        }
+        when 'THIS_MONTH' {
+            dateFilter = ' CreatedDate = THIS_MONTH';
+        }
+        when 'LAST_MONTH' {
+            dateFilter = ' CreatedDate = LAST_MONTH';
+        }
+        when 'THIS_YEAR' {
+            dateFilter = ' CreatedDate = THIS_YEAR';
+        }
+        when else {
+            dateFilter = '';
+        }
     }
+
+    String whereClause =
+        (dateFilter == '')
+        ? ''
+        : ' AND ' + dateFilter;
+
+    // Sent
+    dto.sentCount = Database.countQuery(
+        'SELECT COUNT() FROM Intake__c ' +
+        'WHERE Status__c = \'Retainer Agreement Sent\'' +
+        whereClause
+    );
+
+    // Viewed
+    dto.openCount = Database.countQuery(
+        'SELECT COUNT() FROM Intake__c ' +
+        'WHERE Status__c = \'Assigned\'' +
+        whereClause
+    );
+
+    // Signed
+    dto.signedCount = Database.countQuery(
+        'SELECT COUNT() FROM Intake__c ' +
+        'WHERE Status__c = \'Retainer Agreement Signed\'' +
+        whereClause
+    );
+
+    // Conversion Rate
+    dto.conversionRate =
+        dto.sentCount > 0
+        ? (Decimal.valueOf(dto.signedCount) / Decimal.valueOf(dto.sentCount)) * 100
+        : 0;
+
+    // Average Days to Sign
+    String query =
+        'SELECT Retainer_Agreement_Sent_Entered_At__c,' +
+        ' Retainer_Agreement_Signed_Entered_At__c ' +
+        'FROM Intake__c ' +
+        'WHERE Status__c = \'Retainer Agreement Signed\'' +
+        ' AND Retainer_Agreement_Sent_Entered_At__c != null' +
+        ' AND Retainer_Agreement_Signed_Entered_At__c != null' +
+        whereClause;
+
+    List<Intake__c> signedIntakes = Database.query(query);
+
+    Decimal totalDays = 0;
+
+    for (Intake__c i : signedIntakes) {
+
+        Long diffMs =
+            i.Retainer_Agreement_Signed_Entered_At__c.getTime() -
+            i.Retainer_Agreement_Sent_Entered_At__c.getTime();
+
+        totalDays += diffMs / (1000 * 60 * 60 * 24);
+    }
+
+    dto.avgDaysToSign =
+        signedIntakes.isEmpty()
+        ? 0
+        : totalDays / signedIntakes.size();
+
+    return dto;
+}
 }

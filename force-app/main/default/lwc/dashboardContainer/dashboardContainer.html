@@ -1,0 +1,93 @@
+<template>
+    <lightning-card>
+
+        <div class="header">
+
+            <div class="tabs">
+
+                <div class={overviewClass} data-tab="overview" onclick={changeTab}>
+                  <lightning-icon icon-name="utility:chart" size="xx-small"></lightning-icon>
+                    <span>Overview</span>
+                </div>
+
+                <div class={teamClass} data-tab="team" onclick={changeTab}>
+                   <lightning-icon icon-name="utility:people" size="x-small"></lightning-icon>
+                    <span>Team Performance</span>
+                </div>
+
+                <div class={retainerClass} data-tab="retainer" onclick={changeTab}>
+                   <lightning-icon icon-name="utility:contract" size="x-small"></lightning-icon>
+                    <span>Retainer</span>
+                </div>
+
+                <div class={taskClass} data-tab="tasks" onclick={changeTab}>
+                    <lightning-icon icon-name="utility:task" size="x-small"></lightning-icon>
+                    <span>Tasks</span>
+                </div>
+
+                <div class={auditClass} data-tab="audit" onclick={changeTab}>
+                    <lightning-icon icon-name="utility:file" size="xx-small"></lightning-icon>
+                    <span>Audit Trail</span>
+                </div>
+
+                <div class={executiveClass} data-tab="executive" onclick={changeTab}>
+                   <lightning-icon icon-name="utility:chart" size="x-small"></lightning-icon>
+                    <span>Executive</span>
+                </div>
+
+                 <div class={aIClass} data-tab="ai" onclick={changeTab}>
+                  <lightning-icon
+                        icon-name="utility:einstein"
+                        size="x-small">
+                    </lightning-icon>
+                    <span>AI</span>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Child Components -->
+        <template lwc:if={isOverview}>
+            <c-intake-dashboard></c-intake-dashboard>  
+            <c-revenue-Leakage-Dashboard></c-revenue-Leakage-Dashboard>
+            <c-intaketime-Dashboard></c-intaketime-Dashboard>
+            <c-response-Time-Conversion-Dashboard></c-response-Time-Conversion-Dashboard>
+        </template>
+
+        <template lwc:if={isTeam}>
+           <c-rep-Conversion-Dashboard></c-rep-Conversion-Dashboard>    
+           <c-intake-Coverage-Dashboard></c-intake-Coverage-Dashboard>  
+           <c-performance-Dashboard></c-performance-Dashboard>
+           <c-intake-Source-Dashboard></c-intake-Source-Dashboard>
+        </template>
+
+        <template lwc:if={isRetainer}>
+           <c-retainer-Analytics></c-retainer-Analytics>     
+           <c-retainer-Leakage-Dashboard></c-retainer-Leakage-Dashboard>  
+          <c-intake-Fit-Rate-Dashboard></c-intake-Fit-Rate-Dashboard>  
+         </template>
+
+        <template lwc:if={isTasks}>
+            <c-task-Dashboard></c-task-Dashboard>    
+            <c-followupintake-Dashboard></c-followupintake-Dashboard> 
+            <c-overdue-Task-Dashboard></c-overdue-Task-Dashboard>
+        </template>
+
+        <template lwc:if={isAudit}>  
+          <c-audit-Trail-Dashboard></c-audit-Trail-Dashboard> 
+        </template>
+
+        <template lwc:if={isExecutive}>
+            <c-missed-Call-Dashboard></c-missed-Call-Dashboard> 
+            <c-speedskilldashboard></c-speedskilldashboard> 
+            <c-call-Center-Dashboard></c-call-Center-Dashboard>          
+        </template>
+
+         <template lwc:if={isAI}>
+            <c-ai-Sentiment-Dashboard></c-ai-Sentiment-Dashboard> 
+            <c-compliance-Dashboard></c-compliance-Dashboard>  
+            <c-specialist-Risk-Dashboard></c-specialist-Risk-Dashboard>       
+        </template>
+
+    </lightning-card>
+</template>

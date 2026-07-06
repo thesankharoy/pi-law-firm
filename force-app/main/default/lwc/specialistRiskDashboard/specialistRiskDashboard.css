@@ -1,0 +1,159 @@
+:host {
+    display:block;
+}
+
+.dashboard-card {
+    background:#fff;
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+
+.header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:18px 24px;
+    border-bottom:1px solid #e5e7eb;
+}
+
+.title-section {
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.icon {
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    background:#34a853;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+}
+
+.title {
+    font-size:16px;
+    font-weight:600;
+    color:#16325c;
+}
+
+.count {
+    color:#706e6b;
+    font-size:14px;
+}
+
+.stats {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+}
+
+.stat-box {
+    text-align:center;
+    padding:18px;
+    border-right:1px solid #d8dde6;
+}
+
+.stat-box:last-child {
+    border-right:none;
+}
+
+.label {
+    color:#706e6b;
+    font-size:13px;
+    margin-bottom:8px;
+}
+
+.value {
+    font-size:48px;
+    font-weight:700;
+}
+
+.healthy {
+    color:#2e844a;
+}
+
+.watch {
+    color:#dd7a01;
+}
+
+.risk {
+    color:#c23934;
+}
+
+.footer {
+    padding:14px 18px;
+}
+
+.progress-header {
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:8px;
+    font-size:13px;
+}
+
+.progress-bar {
+    height:8px;
+    background:#e5e7eb;
+    border-radius:20px;
+    overflow:hidden;
+}
+
+.progress-fill {
+    height:100%;
+    background:#2e844a;
+    border-radius:20px;
+}
+
+.specialists {
+    border-top:1px solid #e5e7eb;
+}
+
+.specialist-row {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 18px;
+    border-bottom:1px solid #f3f3f3;
+}
+
+.specialist-name {
+    font-weight:600;
+}
+
+.specialist-risk {
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.dot {
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    display:inline-block;
+}
+
+.risk-at {
+    background:#c23934;
+}
+
+.risk-watch {
+    background:#dd7a01;
+}
+
+.risk-healthy {
+    background:#2e844a;
+}
+
+.state {
+    padding:30px;
+    text-align:center;
+    color:#706e6b;
+}
+
+.error {
+    color:#c23934;
+}

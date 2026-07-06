@@ -1,23 +1,3 @@
-/**
- * IntakeSpamFilterService
- *
- * Layer-1 deterministic spam/junk scoring.
- * Called synchronously from IntakeTrigger (before insert).
- *
- * NOTE: This version does NOT use Honeypot or Submit Duration —
- * those require web form access. Layer 1 is accordingly more
- * conservative (lower thresholds) and sends more to Layer 2 AI.
- *
- * Design principles:
- *  - FAIL OPEN: any unexpected exception → Needs Review, never auto-quarantine.
- *  - Never hard-delete: sets Lead_Triage_Status__c only.
- *  - Only obvious bots/spam quarantined here. Ambiguous → AI layer.
- *
- * Verdicts:
- *  'Pending AI Review'  – passed Layer 1; AI Queueable will classify
- *  'Spam'               – hard Layer-1 trip (injection/solicitation/test)
- *  'Needs Review'       – Layer 1 inconclusive OR any error
- */
 public without sharing class IntakeSpamFilterService {
 
     // ── Disposable email domain list ──────────────────────────────────────────
@@ -60,17 +40,30 @@ public without sharing class IntakeSpamFilterService {
         'wwww|xxxx|yyyy|zzzz'
     );
 
-    // ── Result ────────────────────────────────────────────────────────────────
-    public enum Verdict { SPAM, NEEDS_REVIEW, PENDING_AI }
+    static final String STATUS_SPAM = 'Spam';
+    static final String STATUS_NEW  = 'New';
 
+    // ── New_Intake RecordType Id cache ────────────────────────────────────────
+    static Id newIntakeRtId;
+    static Id getNewIntakeRtId() {
+        if (newIntakeRtId == null) {
+            newIntakeRtId = Schema.SObjectType.Intake__c
+                .getRecordTypeInfosByDeveloperName()
+                .get('New_Intake')
+                .getRecordTypeId();
+        }
+        return newIntakeRtId;
+    }
+
+    // ── Result ────────────────────────────────────────────────────────────────
     public class FilterResult {
-        public Verdict verdictValue;
-        public Integer score;
+        public Boolean      isSpam;
+        public Integer      score;
         public List<String> signals;
         public FilterResult() {
-            signals      = new List<String>();
-            score        = 0;
-            verdictValue = Verdict.PENDING_AI;
+            signals = new List<String>();
+            score   = 0;
+            isSpam  = false;
         }
     }
 
@@ -85,19 +78,20 @@ public without sharing class IntakeSpamFilterService {
                 FilterResult result = runLayer1(intake);
                 applyVerdict(intake, result);
             } catch (Exception e) {
-                // FAIL OPEN
-                intake.Lead_Triage_Status__c = 'Needs Review';
-                intake.Triage_Score__c       = null;
-                intake.Triage_Signals__c     = 'Layer-1 error: ' + e.getMessage();
+                // FAIL OPEN — leave Status__c exactly as the lifecycle service
+                // already set it (e.g. 'New') so the record flows through the
+                // normal intake pipeline. Just log the failure for visibility.
+                intake.Triage_Score__c   = null;
+                intake.Triage_Signals__c = 'Layer-1 error (fail-open): ' + e.getMessage();
             }
         }
     }
 
-    /** Called from after-insert trigger. Enqueues AI triage for clean intakes. */
+    /** Called from after-insert trigger. Enqueues AI spam-check for anything Layer 1 didn't already flag. */
     public static void enqueueAITriage(List<Intake__c> intakes) {
         List<Id> toClassify = new List<Id>();
         for (Intake__c i : intakes) {
-            if (i.Lead_Triage_Status__c == 'Pending AI Review') {
+            if (i.Status__c != STATUS_SPAM) {
                 toClassify.add(i.Id);
             }
         }
@@ -130,13 +124,10 @@ public without sharing class IntakeSpamFilterService {
         }
 
         // ── 2. HTML injection in free-text fields ─────────────────────────────
-        // Check for <script>, onclick=, <a href — hard signals
-        String combined = description + ' ' + safeStr(intake.Incident_Description__c);
         Boolean injectionFound = false;
         for (String pat : INJECTION_PATTERNS) {
-            if (combined.contains(pat)) {
+            if (description.contains(pat)) {
                 r.signals.add('Injection/spam pattern detected: ' + pat);
-                // HTML tags = high confidence spam; marketing keywords = medium
                 Integer pts = (pat.startsWith('<') || pat.contains('=')) ? 80 : 55;
                 r.score += pts;
                 injectionFound = true;
@@ -163,7 +154,6 @@ public without sharing class IntakeSpamFilterService {
                 r.score += 30;
             }
         } else {
-            // Blank phone — suspicious but not definitive; let AI decide
             r.signals.add('No phone number provided');
             r.score += 15;
         }
@@ -201,17 +191,9 @@ public without sharing class IntakeSpamFilterService {
             r.score += 80;
         }
 
-        // ── Verdict ───────────────────────────────────────────────────────────
-        // Thresholds are slightly lower than honeypot version because we have
-        // fewer signals — be more conservative to avoid false positives.
-        r.score = Math.min(r.score, 100);
-        if (r.score >= 65) {
-            r.verdictValue = Verdict.SPAM;
-        } else if (r.score >= 30) {
-            r.verdictValue = Verdict.NEEDS_REVIEW;
-        } else {
-            r.verdictValue = Verdict.PENDING_AI;
-        }
+        // ── Verdict — binary spam / not spam ────────────────────────────────
+        r.score  = Math.min(r.score, 100);
+        r.isSpam = r.score >= 65;
 
         return r;
     }
@@ -220,19 +202,22 @@ public without sharing class IntakeSpamFilterService {
     static void applyVerdict(Intake__c intake, FilterResult r) {
         intake.Triage_Score__c   = r.score;
         intake.Triage_Signals__c = r.signals.isEmpty()
-            ? 'No Layer-1 signals detected'
+            ? 'No spam signals detected'
             : String.join(r.signals, '; ');
 
-        switch on r.verdictValue {
-            when SPAM {
-                intake.Lead_Triage_Status__c = 'Spam';
-            }
-            when NEEDS_REVIEW {
-                intake.Lead_Triage_Status__c = 'Needs Review';
-            }
-            when PENDING_AI {
-                intake.Lead_Triage_Status__c = 'Pending AI Review';
-            }
+        if (r.isSpam) {
+            intake.Status__c = STATUS_SPAM;
+        } else {
+            // A brand-new lead is never actually "handled" yet, even if an
+            // assignment rule pointed it straight at a specialist and
+            // IntakeLifecycleService.setInitialState() promoted it to
+            // Active_Intake / Assigned. Every non-spam lead starts life as
+            // New_Intake / New; it only becomes Active/Assigned later, when
+            // a real user picks it up (see manageLifecycle's queue->user
+            // transition). The AI check runs next as a second opinion and
+            // can still flip this to Spam.
+            intake.RecordTypeId = getNewIntakeRtId();
+            intake.Status__c    = STATUS_NEW;
         }
     }
 

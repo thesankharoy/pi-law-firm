@@ -1,4 +1,4 @@
-public class ReferralAgreementController {
+public without sharing class ReferralAgreementController {
 
     // Exposed to VF page
     public String firmName       { get; private set; }
