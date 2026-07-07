@@ -63,10 +63,12 @@ public without sharing class IntakeFollowUpService {
             return;
 
         // Query for Client name — Trigger.new relationship fields are not populated
+        // NOW also pulls Client__r.Phone / Client__r.MobilePhone — needed for the
+        // personalized task description built in buildDescription() below.
         Set<Id> ids = new Map<Id, Intake__c>(userOwned).keySet();
         Map<Id, Intake__c> withClient = new Map<Id, Intake__c>(
             [
-                SELECT Id, Client__c, Client__r.Name, OwnerId, Status__c
+                SELECT Id, Client__c, Client__r.Name, Client__r.Phone, Client__r.MobilePhone, OwnerId, Status__c
                 FROM Intake__c
                 WHERE Id IN :ids
             ]
@@ -83,6 +85,8 @@ public without sharing class IntakeFollowUpService {
 
         Set<String> skipStatuses = getSkipStatuses();
 
+        // NOW also pulls Intake__r.Client__r.Phone / MobilePhone — needed
+        // for the personalized task description built at processSchedules() time.
         List<Intake_Follow_Up__c> due = [
             SELECT
                 Id,
@@ -91,6 +95,8 @@ public without sharing class IntakeFollowUpService {
                 Assigned_To__c,
                 Intake__r.Client__c,
                 Intake__r.Client__r.Name,
+                Intake__r.Client__r.Phone,
+                Intake__r.Client__r.MobilePhone,
                 Intake__r.Status__c
             FROM Intake_Follow_Up__c
             WHERE Scheduled_Date__c <= :Date.today() AND Created__c = FALSE AND Intake__r.Status__c NOT IN :skipStatuses
@@ -159,8 +165,10 @@ public without sharing class IntakeFollowUpService {
             }
 
             if (!needsDay1.isEmpty()) {
+                // NOW also pulls Client__r.Phone / Client__r.MobilePhone —
+                // same reason as scheduleTasks()'s withClient query above.
                 List<Intake__c> freshlyAssigned = [
-                    SELECT Id, Client__c, Client__r.Name, OwnerId, Status__c
+                    SELECT Id, Client__c, Client__r.Name, Client__r.Phone, Client__r.MobilePhone, OwnerId, Status__c
                     FROM Intake__c
                     WHERE Id IN :needsDay1
                 ];
@@ -173,6 +181,8 @@ public without sharing class IntakeFollowUpService {
             if (bhId != null && BusinessHours.isWithin(bhId, System.now())) {
                 Set<String> skipStatuses = getSkipStatuses();
 
+                // NOW also pulls Intake__r.Client__r.Phone / MobilePhone —
+                // same reason as createScheduledTasks()'s due query above.
                 List<Intake_Follow_Up__c> overdue = [
                     SELECT
                         Id,
@@ -181,6 +191,8 @@ public without sharing class IntakeFollowUpService {
                         Assigned_To__c,
                         Intake__r.Client__c,
                         Intake__r.Client__r.Name,
+                        Intake__r.Client__r.Phone,
+                        Intake__r.Client__r.MobilePhone,
                         Intake__r.Status__c
                     FROM Intake_Follow_Up__c
                     WHERE
@@ -211,6 +223,19 @@ public without sharing class IntakeFollowUpService {
 
         Set<String> skipStatuses = getSkipStatuses();
 
+        // Bulk-load specialist names once for the whole batch — needed for
+        // the personalized "Hey {name}, ..." greeting in the Day 1 task
+        // description built below. Avoids a query per record inside the loop.
+        Set<Id> ownerIds = new Set<Id>();
+        for (Intake__c intake : intakes) {
+            if (intake.OwnerId != null && intake.OwnerId.getSObjectType() == Schema.User.SObjectType) {
+                ownerIds.add(intake.OwnerId);
+            }
+        }
+        Map<Id, User> specialistMap = ownerIds.isEmpty()
+            ? new Map<Id, User>()
+            : new Map<Id, User>([SELECT Id, Name FROM User WHERE Id IN :ownerIds]);
+
         DateTime now = System.now();
         Boolean withinBH = BusinessHours.isWithin(bhId, now);
 
@@ -228,6 +253,12 @@ public without sharing class IntakeFollowUpService {
 
             String ownerStr = String.valueOf(intake.OwnerId);
             String clientName = intake.Client__r?.Name;
+            // Prefer MobilePhone over Phone — same convention already used
+            // in ContactIntelligenceService, kept consistent across the platform.
+            String clientPhone = pickPhone(intake.Client__r?.MobilePhone, intake.Client__r?.Phone);
+            String specialistName = specialistMap.containsKey(intake.OwnerId)
+                ? specialistMap.get(intake.OwnerId).Name
+                : null;
 
             // Day 1 = now (if BH) or next BH morning
             // Day 2 = next business morning after Day 1's date
@@ -239,7 +270,16 @@ public without sharing class IntakeFollowUpService {
             if (withinBH) {
                 // Day 1: create tasks right now
                 immediateTasks.addAll(
-                    buildTasks(intake.Id, intake.Client__c, clientName, intake.OwnerId, 1, Date.today())
+                    buildTasks(
+                        intake.Id,
+                        intake.Client__c,
+                        clientName,
+                        clientPhone,
+                        intake.OwnerId,
+                        specialistName,
+                        1,
+                        Date.today()
+                    )
                 );
                 // Day 2 & 3: defer to morning scheduler
                 schedules.add(buildSchedule(intake.Id, 2, day2Start.date(), ownerStr));
@@ -261,6 +301,25 @@ public without sharing class IntakeFollowUpService {
     // ── Shared processor (morning scheduler + mid-day flush) ──────
     public static void processSchedules(List<Intake_Follow_Up__c> schedules) {
         try {
+            // Bulk-load specialist names once for the whole batch — same
+            // reason as startDay1() above. This is where Day 2/3 (and any
+            // off-hours Day 1) tasks actually get their Description built,
+            // so the lookup is needed here independently of startDay1()'s.
+            Set<Id> ownerIds = new Set<Id>();
+            for (Intake_Follow_Up__c s : schedules) {
+                try {
+                    Id oid = Id.valueOf(s.Assigned_To__c);
+                    if (oid.getSObjectType() == Schema.User.SObjectType) {
+                        ownerIds.add(oid);
+                    }
+                } catch (Exception e) {
+                    continue;
+                }
+            }
+            Map<Id, User> specialistMap = ownerIds.isEmpty()
+                ? new Map<Id, User>()
+                : new Map<Id, User>([SELECT Id, Name FROM User WHERE Id IN :ownerIds]);
+
             List<Task> tasks = new List<Task>();
             List<Intake_Follow_Up__c> toMark = new List<Intake_Follow_Up__c>();
 
@@ -278,12 +337,17 @@ public without sharing class IntakeFollowUpService {
                     continue;
 
                 Integer day = s.Day_Number__c != null ? (Integer) s.Day_Number__c : 1;
+                String clientPhone = pickPhone(s.Intake__r?.Client__r?.MobilePhone, s.Intake__r?.Client__r?.Phone);
+                String specialistName = specialistMap.containsKey(ownerId) ? specialistMap.get(ownerId).Name : null;
+
                 tasks.addAll(
                     buildTasks(
                         s.Intake__c,
                         s.Intake__r.Client__c,
                         s.Intake__r.Client__r?.Name,
+                        clientPhone,
                         ownerId,
+                        specialistName,
                         day,
                         Date.today()
                     )
@@ -306,11 +370,15 @@ public without sharing class IntakeFollowUpService {
         Id intakeId,
         Id contactId,
         String contactName,
+        String clientPhone,
         Id ownerId,
+        String specialistName,
         Integer day,
         Date actDate
     ) {
         String nameSuffix = String.isNotBlank(contactName) ? ' — ' + contactName : '';
+        String description = buildDescription(specialistName, contactName, clientPhone, day);
+
         List<Task> tasks = new List<Task>();
         for (String[] def : TASK_DEFS) {
             tasks.add(
@@ -323,15 +391,58 @@ public without sharing class IntakeFollowUpService {
                     Status = 'Not Started',
                     Priority = 'Normal',
                     ActivityDate = actDate,
-                    Description = 'Day ' +
-                        day +
-                        ' automated follow-up. Complete this ' +
-                        def[0].toLowerCase() +
-                        ' before end of business today.'
+                    Description = description
                 )
             );
         }
         return tasks;
+    }
+
+    // ── Personalized task description — NEW ─────────────────────────
+    // PREVIOUSLY a static, channel-generic string: "Day 1 automated
+    // follow-up. Complete this call before end of business today." —
+    // identical regardless of who was assigned, who the client was, or
+    // how to reach them. Now addresses the specialist by first name,
+    // names the actual client, surfaces their best phone number on file,
+    // and states which attempt in the 3x3x3 cadence this is (1st/2nd/3rd).
+    // Shared across all three channel tasks (Call/Email/SMS) for a given
+    // day — the same personalized instruction applies regardless of
+    // which specific channel task the specialist is looking at.
+    private static String buildDescription(String specialistName, String contactName, String clientPhone, Integer day) {
+        String specialistFirst = String.isNotBlank(specialistName) ? specialistName.split(' ')[0] : 'there';
+        String clientDisplay = String.isNotBlank(contactName) ? contactName : 'the client';
+        String phoneDisplay = String.isNotBlank(clientPhone) ? clientPhone : 'the phone number on file';
+
+        return 'Hey ' +
+            specialistFirst +
+            ', please follow up with ' +
+            clientDisplay +
+            ' on ' +
+            phoneDisplay +
+            ' by end of day today — this is the ' +
+            ordinal(day) +
+            ' follow-up from your side.';
+    }
+
+    // ── Ordinal label for the follow-up day number (1 -> "1st", etc.) ──
+    private static String ordinal(Integer n) {
+        if (n == 1)
+            return '1st';
+        if (n == 2)
+            return '2nd';
+        if (n == 3)
+            return '3rd';
+        return n + 'th';
+    }
+
+    // ── Prefer MobilePhone over Phone — same convention already used in
+    // ContactIntelligenceService, kept consistent across the platform. ──
+    private static String pickPhone(String mobilePhone, String phone) {
+        if (String.isNotBlank(mobilePhone))
+            return mobilePhone;
+        if (String.isNotBlank(phone))
+            return phone;
+        return null;
     }
 
     private static Intake_Follow_Up__c buildSchedule(Id intakeId, Integer day, Date schedDate, String ownerId) {
