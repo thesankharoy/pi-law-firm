@@ -376,6 +376,10 @@ export default class IntakeAvailabilityToggle extends NavigationMixin(LightningE
         return `stroke-dasharray:${circ.toFixed(1)};stroke-dashoffset:${offset.toFixed(1)};stroke:${color};`;
     }
 
+    get capacitySectionClass() {
+        return this.isOverCapacity ? "capacity-section" : "capacity-section capacity-section-centered";
+    }
+
     // Sort
     get isDefaultSort() {
         return this.sortMode === "default";
