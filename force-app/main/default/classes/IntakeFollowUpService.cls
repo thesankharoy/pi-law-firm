@@ -63,12 +63,21 @@ public without sharing class IntakeFollowUpService {
             return;
 
         // Query for Client name — Trigger.new relationship fields are not populated
-        // NOW also pulls Client__r.Phone / Client__r.MobilePhone — needed for the
-        // personalized task description built in buildDescription() below.
+        // NOW also pulls Client__r.Phone / Client__r.MobilePhone / Client__r.Email —
+        // needed for the channel-specific task description built in
+        // buildDescription() below (Call/SMS use phone, Email uses email address).
         Set<Id> ids = new Map<Id, Intake__c>(userOwned).keySet();
         Map<Id, Intake__c> withClient = new Map<Id, Intake__c>(
             [
-                SELECT Id, Client__c, Client__r.Name, Client__r.Phone, Client__r.MobilePhone, OwnerId, Status__c
+                SELECT
+                    Id,
+                    Client__c,
+                    Client__r.Name,
+                    Client__r.Phone,
+                    Client__r.MobilePhone,
+                    Client__r.Email,
+                    OwnerId,
+                    Status__c
                 FROM Intake__c
                 WHERE Id IN :ids
             ]
@@ -85,8 +94,9 @@ public without sharing class IntakeFollowUpService {
 
         Set<String> skipStatuses = getSkipStatuses();
 
-        // NOW also pulls Intake__r.Client__r.Phone / MobilePhone — needed
-        // for the personalized task description built at processSchedules() time.
+        // NOW also pulls Intake__r.Client__r.Phone / MobilePhone / Email —
+        // needed for the channel-specific task description built at
+        // processSchedules() time.
         List<Intake_Follow_Up__c> due = [
             SELECT
                 Id,
@@ -97,6 +107,7 @@ public without sharing class IntakeFollowUpService {
                 Intake__r.Client__r.Name,
                 Intake__r.Client__r.Phone,
                 Intake__r.Client__r.MobilePhone,
+                Intake__r.Client__r.Email,
                 Intake__r.Status__c
             FROM Intake_Follow_Up__c
             WHERE Scheduled_Date__c <= :Date.today() AND Created__c = FALSE AND Intake__r.Status__c NOT IN :skipStatuses
@@ -165,10 +176,19 @@ public without sharing class IntakeFollowUpService {
             }
 
             if (!needsDay1.isEmpty()) {
-                // NOW also pulls Client__r.Phone / Client__r.MobilePhone —
-                // same reason as scheduleTasks()'s withClient query above.
+                // NOW also pulls Client__r.Phone / Client__r.MobilePhone /
+                // Client__r.Email — same reason as scheduleTasks()'s
+                // withClient query above.
                 List<Intake__c> freshlyAssigned = [
-                    SELECT Id, Client__c, Client__r.Name, Client__r.Phone, Client__r.MobilePhone, OwnerId, Status__c
+                    SELECT
+                        Id,
+                        Client__c,
+                        Client__r.Name,
+                        Client__r.Phone,
+                        Client__r.MobilePhone,
+                        Client__r.Email,
+                        OwnerId,
+                        Status__c
                     FROM Intake__c
                     WHERE Id IN :needsDay1
                 ];
@@ -181,7 +201,7 @@ public without sharing class IntakeFollowUpService {
             if (bhId != null && BusinessHours.isWithin(bhId, System.now())) {
                 Set<String> skipStatuses = getSkipStatuses();
 
-                // NOW also pulls Intake__r.Client__r.Phone / MobilePhone —
+                // NOW also pulls Intake__r.Client__r.Phone / MobilePhone / Email —
                 // same reason as createScheduledTasks()'s due query above.
                 List<Intake_Follow_Up__c> overdue = [
                     SELECT
@@ -193,6 +213,7 @@ public without sharing class IntakeFollowUpService {
                         Intake__r.Client__r.Name,
                         Intake__r.Client__r.Phone,
                         Intake__r.Client__r.MobilePhone,
+                        Intake__r.Client__r.Email,
                         Intake__r.Status__c
                     FROM Intake_Follow_Up__c
                     WHERE
@@ -256,6 +277,7 @@ public without sharing class IntakeFollowUpService {
             // Prefer MobilePhone over Phone — same convention already used
             // in ContactIntelligenceService, kept consistent across the platform.
             String clientPhone = pickPhone(intake.Client__r?.MobilePhone, intake.Client__r?.Phone);
+            String clientEmail = intake.Client__r?.Email;
             String specialistName = specialistMap.containsKey(intake.OwnerId)
                 ? specialistMap.get(intake.OwnerId).Name
                 : null;
@@ -275,6 +297,7 @@ public without sharing class IntakeFollowUpService {
                         intake.Client__c,
                         clientName,
                         clientPhone,
+                        clientEmail,
                         intake.OwnerId,
                         specialistName,
                         1,
@@ -338,6 +361,7 @@ public without sharing class IntakeFollowUpService {
 
                 Integer day = s.Day_Number__c != null ? (Integer) s.Day_Number__c : 1;
                 String clientPhone = pickPhone(s.Intake__r?.Client__r?.MobilePhone, s.Intake__r?.Client__r?.Phone);
+                String clientEmail = s.Intake__r?.Client__r?.Email;
                 String specialistName = specialistMap.containsKey(ownerId) ? specialistMap.get(ownerId).Name : null;
 
                 tasks.addAll(
@@ -346,6 +370,7 @@ public without sharing class IntakeFollowUpService {
                         s.Intake__r.Client__c,
                         s.Intake__r.Client__r?.Name,
                         clientPhone,
+                        clientEmail,
                         ownerId,
                         specialistName,
                         day,
@@ -371,16 +396,23 @@ public without sharing class IntakeFollowUpService {
         Id contactId,
         String contactName,
         String clientPhone,
+        String clientEmail,
         Id ownerId,
         String specialistName,
         Integer day,
         Date actDate
     ) {
         String nameSuffix = String.isNotBlank(contactName) ? ' — ' + contactName : '';
-        String description = buildDescription(specialistName, contactName, clientPhone, day);
 
         List<Task> tasks = new List<Task>();
         for (String[] def : TASK_DEFS) {
+            // PREVIOUSLY one shared description was built ONCE per intake
+            // and stamped identically onto all three channel tasks — which
+            // is how a phone number ended up on the Email task description.
+            // Now built PER CHANNEL, inside this loop, so each task
+            // references the contact detail that channel actually uses.
+            String description = buildDescription(specialistName, contactName, clientPhone, clientEmail, day, def[0]);
+
             tasks.add(
                 new Task(
                     WhatId = intakeId,
@@ -398,29 +430,71 @@ public without sharing class IntakeFollowUpService {
         return tasks;
     }
 
-    // ── Personalized task description — NEW ─────────────────────────
-    // PREVIOUSLY a static, channel-generic string: "Day 1 automated
-    // follow-up. Complete this call before end of business today." —
-    // identical regardless of who was assigned, who the client was, or
-    // how to reach them. Now addresses the specialist by first name,
-    // names the actual client, surfaces their best phone number on file,
-    // and states which attempt in the 3x3x3 cadence this is (1st/2nd/3rd).
-    // Shared across all three channel tasks (Call/Email/SMS) for a given
-    // day — the same personalized instruction applies regardless of
-    // which specific channel task the specialist is looking at.
-    private static String buildDescription(String specialistName, String contactName, String clientPhone, Integer day) {
+    // ── Personalized, CHANNEL-SPECIFIC task description ──────────────
+    // PREVIOUSLY: one generic sentence shared across Call/Email/SMS,
+    // always referencing the phone number — nonsensical on the Email
+    // task ("please follow up... on +91..." makes no sense for an
+    // email). Now branches on channelType so each task tells the
+    // specialist to use the actual channel it represents, with the
+    // matching contact detail: Call and SMS reference the phone number
+    // (different verb: "call" vs "text"), Email references the client's
+    // actual email address instead.
+    private static String buildDescription(
+        String specialistName,
+        String contactName,
+        String clientPhone,
+        String clientEmail,
+        Integer day,
+        String channelType
+    ) {
         String specialistFirst = String.isNotBlank(specialistName) ? specialistName.split(' ')[0] : 'there';
         String clientDisplay = String.isNotBlank(contactName) ? contactName : 'the client';
+        String ordinalLabel = ordinal(day);
         String phoneDisplay = String.isNotBlank(clientPhone) ? clientPhone : 'the phone number on file';
+        String emailDisplay = String.isNotBlank(clientEmail) ? clientEmail : 'the email address on file';
 
+        if (channelType == 'Call') {
+            return 'Hey ' +
+                specialistFirst +
+                ', please call ' +
+                clientDisplay +
+                ' at ' +
+                phoneDisplay +
+                ' by end of day today — this is the ' +
+                ordinalLabel +
+                ' follow-up call from your side.';
+        }
+        if (channelType == 'SMS') {
+            return 'Hey ' +
+                specialistFirst +
+                ', please text ' +
+                clientDisplay +
+                ' at ' +
+                phoneDisplay +
+                ' by end of day today — this is the ' +
+                ordinalLabel +
+                ' follow-up text from your side.';
+        }
+        if (channelType == 'Email') {
+            return 'Hey ' +
+                specialistFirst +
+                ', please email ' +
+                clientDisplay +
+                ' at ' +
+                emailDisplay +
+                ' by end of day today — this is the ' +
+                ordinalLabel +
+                ' follow-up email from your side.';
+        }
+
+        // Fallback for any unexpected channel type — generic, no contact
+        // detail assumed since we don't know which one applies.
         return 'Hey ' +
             specialistFirst +
             ', please follow up with ' +
             clientDisplay +
-            ' on ' +
-            phoneDisplay +
             ' by end of day today — this is the ' +
-            ordinal(day) +
+            ordinalLabel +
             ' follow-up from your side.';
     }
 
