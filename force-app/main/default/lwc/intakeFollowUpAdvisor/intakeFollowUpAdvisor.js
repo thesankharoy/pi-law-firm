@@ -71,6 +71,16 @@ export default class IntakeFollowUpAdvisor extends LightningElement {
         return `conf-pill conf-${c}`;
     }
 
+    // reasoningBullets → keyed + numbered objects for the template.
+    // `index` drives the numbered badge marker in the redesigned list.
+    get reasoningBulletItems() {
+        return (this.rec?.reasoningBullets || []).map((text, idx) => ({
+            key: `bullet-${idx}`,
+            index: idx + 1,
+            text
+        }));
+    }
+
     // Group tasks by Day label and attach AI hints
     get groupedDays() {
         const groups = {};
